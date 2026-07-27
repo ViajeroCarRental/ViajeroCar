@@ -1,9 +1,130 @@
+
+(function (global) {
+    'use strict';
+
+    const CONFIG = {
+        mensajes: [
+            'Procesando tu información…',
+            'Preparando los cambios…',
+            'Generando tu actualización…'
+        ],
+        intervaloMensajes: 1500,
+        retrasoEnvio: 800,
+        tiempoMaximo: 12000,
+        duracionExito: 1200,
+        selectorExito: '.visor-alert.alert-success, .alert-success',
+        claveSesion: 'vrUpdated'
+    };
+
+    const $ = (id) => document.getElementById(id);
+    let temporizadorMsg = null;
+
+    function rotarMensajes(lista) {
+        const el = $('vrUpdateMsg');
+        const mensajes = (lista && lista.length) ? lista : CONFIG.mensajes;
+        let i = 0;
+        if (el) el.textContent = mensajes[0];
+        clearInterval(temporizadorMsg);
+        temporizadorMsg = setInterval(() => {
+            i = (i + 1) % mensajes.length;
+            if (!el) return;
+            el.textContent = mensajes[i];
+            el.style.animation = 'none';
+            void el.offsetWidth;
+            el.style.animation = '';
+        }, CONFIG.intervaloMensajes);
+    }
+
+    function mostrar(estado, opciones) {
+        const overlay = $('vrUpdateOverlay');
+        if (!overlay) return;
+
+        opciones = opciones || {};
+
+        overlay.classList.remove('is-loading', 'is-success');
+        overlay.classList.add('show', estado === 'success' ? 'is-success' : 'is-loading');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+
+        if (estado === 'success') {
+            clearInterval(temporizadorMsg);
+            const t = $('vrUpdateTitle'), sub = $('vrUpdateSub');
+            if (t && opciones.titulo) t.textContent = opciones.titulo;
+            if (sub && opciones.subtitulo) sub.textContent = opciones.subtitulo;
+        } else {
+            rotarMensajes(opciones.mensajes);
+        }
+    }
+
+    function ocultar() {
+        const overlay = $('vrUpdateOverlay');
+        if (!overlay) return;
+        clearInterval(temporizadorMsg);
+        overlay.classList.remove('show');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    }
+
+    function conectar() {
+        const overlay = $('vrUpdateOverlay');
+        if (!overlay) return;
+
+        overlay.addEventListener('click', () => {
+            if (overlay.classList.contains('is-success')) ocultar();
+        });
+        document.querySelectorAll('form[data-overlay-actualizacion]').forEach((form) => {
+            form.addEventListener('submit', function (e) {
+                if (e.defaultPrevented) return;
+                if (form.dataset.enviando) return;
+
+                e.preventDefault();
+                form.dataset.enviando = '1';
+
+                try { sessionStorage.setItem(CONFIG.claveSesion, '1'); } catch (_) {}
+
+                mostrar('loading');
+                setTimeout(() => form.submit(), CONFIG.retrasoEnvio);
+                setTimeout(() => {
+                    if (overlay.classList.contains('is-loading')) ocultar();
+                }, CONFIG.tiempoMaximo);
+            });
+        });
+
+        let veniaGuardando = false;
+        try {
+            veniaGuardando = sessionStorage.getItem(CONFIG.claveSesion) === '1';
+            sessionStorage.removeItem(CONFIG.claveSesion);
+        } catch (_) {}
+
+        const hayExito = !!document.querySelector(CONFIG.selectorExito);
+
+        if (hayExito && veniaGuardando) {
+            mostrar('success');
+            setTimeout(ocultar, CONFIG.duracionExito);
+        }
+    }
+
+    global.OverlayActualizacion = {
+        cargando: (o) => mostrar('loading', o),
+        exito:    (o) => mostrar('success', o),
+        ocultar:  ocultar,
+        config:   CONFIG
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', conectar);
+    } else {
+        conectar();
+    }
+
+})(window);
+
 (function() {
     "use strict";
 
-    /* =========================================
-    01. FUNCIONES DE VALIDACIÓN
-    ========================================= */
+    /* ==============================
+       VALIDACION
+    ============================== */
     function mostrarError(elemento, mensaje) {
         if (!elemento) return;
 
@@ -423,9 +544,9 @@
         return;
     }
 
-    /* =========================================
-    02. BLOQUEO DE ACORDEONES
-    ========================================= */
+    /* ==============================
+       ACORDEONES
+    ============================== */
     let categoriaDesbloqueada = false;
     let adicionalesDesbloqueada = false;
     let proteccionesDesbloqueada = false;
@@ -537,8 +658,6 @@
         if (indicator && !indicator.classList.contains('expanded')) {
             indicator.classList.add('expanded');
         }
-
-        console.log('📂 Sección cliente expandida (sin scroll automático)');
     }
 
     function desbloquearProteccionesSinExpandir() {
@@ -562,9 +681,9 @@
         }
     }
 
-    /* =========================================
-    03. EVENTO PRINCIPAL DEL BOTÓN
-    ========================================= */
+    /* ==============================
+       BOTON PRINCIPAL
+    ============================== */
 function configurarBotonPrincipal() {
     const btn = document.getElementById('btnBuscarReservacion');
     if (!btn) {
@@ -572,7 +691,6 @@ function configurarBotonPrincipal() {
         return;
     }
 
-    // Ocultar navbar en móvil al iniciar
     const navbar = document.getElementById('resNavbar');
     if (navbar && window.innerWidth <= 860) {
         navbar.classList.add('hidden-mobile');
@@ -585,16 +703,11 @@ function configurarBotonPrincipal() {
         e.preventDefault();
         e.stopPropagation();
 
-        console.log('🔍 Validando campos de ubicación...');
-
         const esValido = validarCamposUbicacion();
 
         if (esValido) {
-            console.log('✅ Validación exitosa');
-
              document.body.classList.add('buscar-realizado');
 
-            // Mostrar navbar en móvil
             if (navbar && navbar.classList.contains('hidden-mobile')) {
                 navbar.classList.remove('hidden-mobile');
             }
@@ -603,11 +716,9 @@ function configurarBotonPrincipal() {
                 const seccionCategoria = document.querySelector('.acordeon-item[data-seccion="categoria"]');
                 if (seccionCategoria && !seccionCategoria.classList.contains('unlocked')) {
                     seccionCategoria.classList.add('unlocked');
-                    console.log('📱 Sección de categoría visible en móvil');
                 }
             }
 
-            // Abrir modal de categorías
             const modalCategorias = document.getElementById('catPop');
             if (modalCategorias) {
                 modalCategorias.style.display = 'flex';
@@ -616,14 +727,12 @@ function configurarBotonPrincipal() {
             if (typeof desbloquearCategoria === 'function') {
                 desbloquearCategoria();
             }
-        } else {
-            console.log('❌ Validación fallida - Corrige los campos en rojo');
         }
     });
 }
-    /* =========================================
-    04. OBSERVADORES Y CONFIGURACIÓN
-    ========================================= */
+    /* ==============================
+       OBSERVADORES
+    ============================== */
     function configurarBotonesSiguiente() {
         const btnSiguienteAdicionales = document.querySelector('.acordeon-item[data-seccion="adicionales"] .btn-siguiente');
         if (btnSiguienteAdicionales) {
@@ -699,11 +808,9 @@ function configurarBotonPrincipal() {
                 setTimeout(() => {
                     if (typeof desbloquearProteccionesSinExpandir === 'function') {
                         desbloquearProteccionesSinExpandir();
-                        console.log("🔓 Protecciones desbloqueadas (sin expandir)");
                     }
                     if (typeof desbloquearClienteSinExpandir === 'function') {
                         desbloquearClienteSinExpandir();
-                        console.log("🔓 Cliente desbloqueado (sin expandir)");
                     }
                 }, 150);
             }
@@ -804,15 +911,8 @@ function configurarBotonPrincipal() {
         setTimeout(validar, 100);
     }
 function init() {
-        console.log('🚀 Sistema unificado iniciado...');
         initSelect2Sucursales();
          initEditBaseTotal();
-        /* =========================================================================
-           NOTA: La lógica de sincronización DropOff ↔ sucursal_entrega y la
-           exclusión de sucursales de Querétaro se maneja de forma centralizada
-           en la sección 41 (SINCRONIZACIÓN BIDIRECCIONAL). Bloque duplicado
-           eliminado para evitar bucles de eventos.
-        ========================================================================= */
         configurarBotonPrincipal();
         configurarBotonesSiguiente();
         configurarClicEncabezados();
@@ -822,17 +922,14 @@ function init() {
         setTimeout(() => {
             if (typeof initTimeValidation === 'function') {
                 initTimeValidation();
-                console.log('✅ Validación de horas inicializada');
             }
 
             if (typeof initDateValidation === 'function') {
                 initDateValidation();
-                console.log('✅ Validación de fechas inicializada');
             }
 
             if (typeof initValidacionHorasTiempoReal === 'function') {
                 initValidacionHorasTiempoReal();
-                console.log('✅ Validación de horas en misma fecha inicializada');
             }
 
             document.querySelectorAll('.tp-hour').forEach(select => {
@@ -858,8 +955,6 @@ function init() {
             categoriaDesbloqueada = true;
             actualizarTodasSecciones();
         }
-
-        console.log('✅ Sistema listo');
     }
 
     if (document.readyState === 'loading') {
@@ -868,9 +963,9 @@ function init() {
         setTimeout(init, 500);
     }
 
-    /* =========================================
-    05. HELPERS Y UTILIDADES
-    ========================================= */
+    /* ==============================
+       HELPERS
+    ============================== */
     const qs = (s) => document.querySelector(s);
     const qsa = (s) => Array.from(document.querySelectorAll(s));
 
@@ -894,7 +989,6 @@ function init() {
             .replaceAll("'", "&#039;");
     };
 
-    // Convierte **texto** en <strong>texto</strong>.
     const aplicarNegritas = (str) => {
         return String(str || "").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
     };
@@ -933,9 +1027,9 @@ function init() {
         });
     };
 
-    /* =========================================
-    06. ESTADO GLOBAL
-    ========================================= */
+    /* ==============================
+       ESTADO GLOBAL
+    ============================== */
     const state = {
         days: 0,
         categoria: null,
@@ -972,9 +1066,9 @@ function init() {
     };
     window.state = state;
 
-    /* =========================================
-    07. HIDDEN INPUTS (BACKEND)
-    ========================================= */
+    /* ==============================
+       HIDDEN INPUTS
+    ============================== */
     function ensureHidden(name, id) {
         let input = qs(`#${id}`);
         if (!input) {
@@ -1068,8 +1162,6 @@ function init() {
             const qty = Number(it.qty || 0);
             if (qty <= 0) return;
 
-            // DINÁMICO: it.id ya es el id_servicio real (número) de la card.
-            // Ya no hace falta mapear silla_bebe→7 ni conductor_extra→4.
             const idServicio = it.id;
 
             const fields = [
@@ -1090,8 +1182,6 @@ function init() {
 
             i++;
         });
-
-        console.log("✅ Addons sincronizados:", state.addons.size);
     }
 
     function syncIndividualesHidden() {
@@ -1123,9 +1213,9 @@ function init() {
         });
     }
 
-    /* =========================================
-    08. SERVICIOS (SWITCHES)
-    ========================================= */
+    /* ==============================
+       SERVICIOS
+    ============================== */
     function syncServiciosHidden() {
         ensureServiciosHidden();
 
@@ -1138,9 +1228,9 @@ function init() {
         if (g) g.value = state.servicios.gasolina ? "1" : "0";
     }
 
-    /* =========================================
-    09. DELIVERY (Switch + Campos + Total)
-    ========================================= */
+    /* ==============================
+       DELIVERY
+    ============================== */
     function getDeliveryEls() {
         const wrap = qs(".delivery-wrapper");
         if (!wrap) return null;
@@ -1172,7 +1262,6 @@ function init() {
         if (!els) return 0;
 
         if (!state.categoria || !state.categoria.precio_km) {
-            console.warn("⚠️ No hay categoría o precio_km para delivery");
             return 0;
         }
 
@@ -1306,9 +1395,9 @@ function init() {
         });
     }
 
-    /* =========================================
-    10. DROPOFF
-    ========================================= */
+    /* ==============================
+       DROPOFF
+    ============================== */
     function getDropoffEls() {
         const wrap = qs(".dropoff-wrapper");
         if (!wrap) return null;
@@ -1341,7 +1430,6 @@ function init() {
         ensureDropoffHidden();
 
         if (!state.categoria || !state.categoria.precio_km) {
-            console.warn("⚠️ No hay categoría o precio_km para dropoff");
             return 0;
         }
 
@@ -1356,8 +1444,6 @@ function init() {
             km = opt ? parseFloat(opt.dataset.km) || 0 : 0;
         }
 
-        // MODO EDICIÓN: si el dropoff se restauró con un total guardado y todavía
-        // no se eligió una ubicación (val vacío), respetar ese total en vez de 0.
         if (state.dropoff.restaurado && val === "") {
             const totalRestaurado = parseFloat(state.dropoff.total) || 0;
             if (els.totalTxt) els.totalTxt.textContent = money(totalRestaurado);
@@ -1509,8 +1595,6 @@ function init() {
             els.ubicacion = newUbicacion;
 
             els.ubicacion.addEventListener("change", () => {
-                // El usuario eligió una ubicación: dejar de respetar el total
-                // restaurado y volver a calcular normal por km.
                 state.dropoff.restaurado = false;
                 syncDropoffGroups(els);
                 if (state.servicios.dropoff) {
@@ -1548,14 +1632,10 @@ function init() {
         }
     }
 
-    /* =========================================
-    11. GASOLINA
-    ========================================= */
+    /* ==============================
+       GASOLINA
+    ============================== */
     function getGasolinaEls() {
-        // DINÁMICO (Opción 1): la card de Gasolina ahora sale del @foreach
-        // como card de tanque. Buscamos sus elementos por clase relativa a
-        // la card .svc-card--tanque, en vez de por IDs fijos.
-        // El cálculo (computeGasolina) NO cambia; solo cambia de dónde lee.
         const card = document.querySelector('.svc-card--tanque[data-tanque="1"]');
         if (!card) {
             return { toggle: null, fields: null, totalTxt: null, totalHid: null, litrosLabel: null, card: null };
@@ -1575,7 +1655,6 @@ function init() {
         if (!els) return 0;
 
         if (!state.categoria || !state.categoria.capacidad_tanque) {
-            console.warn("⚠️ No hay categoría o capacidad_tanque");
             return 0;
         }
 
@@ -1662,9 +1741,9 @@ function init() {
         return labels;
     }
 
-    /* =========================================
-    12. FECHAS/HORAS: UI + HIDDEN
-    ========================================= */
+    /* ==============================
+       FECHAS
+    ============================== */
     function syncDateHiddenFromUI(uiId, hiddenId) {
         const ui = qs(uiId);
         const hid = qs(hiddenId);
@@ -1703,9 +1782,9 @@ function init() {
         hid.value = val || "";
     }
 
-    /* =========================================
-    13. DÍAS
-    ========================================= */
+    /* ==============================
+       DIAS
+    ============================== */
     function computeDays() {
         const fi = qs("#fecha_inicio")?.value || "";
         const ff = qs("#fecha_fin")?.value || "";
@@ -1779,9 +1858,9 @@ function init() {
         actualizarTotalNavbar();
     }
 
-    /* =========================================
-    14. AEROPUERTO (No. vuelo)
-    ========================================= */
+    /* ==============================
+       AEROPUERTO
+    ============================== */
     function normalizarTexto(txt) {
         return String(txt || "")
             .toLowerCase()
@@ -1831,9 +1910,9 @@ function init() {
         }
     }
 
-    /* =========================================
-    15. CATEGORÍA
-    ========================================= */
+    /* ==============================
+       CATEGORIA
+    ============================== */
     function setCategoria(cat) {
         state.categoria = cat;
 
@@ -1952,9 +2031,9 @@ function init() {
         }, 100);
     }
 
-    /* =========================================
-    16. PROTECCIONES (PAQUETE)
-    ========================================= */
+    /* ==============================
+       PROTECCIONES
+    ============================== */
     function clearIndividuales() {
         state.individuales.clear();
         syncIndividualesHidden();
@@ -1993,9 +2072,9 @@ function init() {
         refreshSummary();
     }
 
-    /* =========================================
-    17. INDIVIDUALES
-    ========================================= */
+    /* ==============================
+       INDIVIDUALES
+    ============================== */
     function getGrupoLabelFromTrack(trackId) {
         const map = {
             "insColisionTrack": "Colisión y robo",
@@ -2215,8 +2294,6 @@ function init() {
     }
 
     function preseleccionarProteccionesIndividuales() {
-        console.log("🎯 Preseleccionando protecciones individuales...");
-
         state.individuales.clear();
 
         const todasLasTarjetas = document.querySelectorAll('.individual-item');
@@ -2246,7 +2323,6 @@ function init() {
             if (esLI && grupo === "Daños a terceros") {
                 idLIDaniosTerceros = id;
                 datosLIDaniosTerceros = { id, nombre, desc, precio, grupo };
-                console.log(`🎯 LI (Daños a terceros) identificado para preselección: ${nombre}`);
             }
 
             const esDeclineCDW = (nombreUpper.includes("DECLINE") || nombreUpper.includes("RECHAZAR")) &&
@@ -2255,12 +2331,10 @@ function init() {
             if (esDeclineCDW) {
                 idDeclineCDW = id;
                 datosDeclineCDW = { id, nombre, desc, precio, grupo };
-                console.log(`🎯 DECLINE CDW identificado para preselección: ${nombre}`);
             }
 
             if (grupo === "Protecciones automáticas") {
                 idsProteccionesAuto.push({ id, nombre, desc, precio, grupo });
-                console.log(`🛡️ Protección automática: ${nombre}`);
             }
         });
 
@@ -2273,7 +2347,6 @@ function init() {
                 charge: "por_dia",
                 grupo: "Daños a terceros"
             });
-            console.log(`✅ LI (Daños a terceros) preseleccionado por defecto: ${datosLIDaniosTerceros.nombre}`);
         }
 
         if (idDeclineCDW && datosDeclineCDW) {
@@ -2285,7 +2358,6 @@ function init() {
                 charge: "por_dia",
                 grupo: "Colisión y robo"
             });
-            console.log(`✅ DECLINE CDW preseleccionado por defecto: ${datosDeclineCDW.nombre}`);
         }
 
         idsProteccionesAuto.forEach(auto => {
@@ -2298,7 +2370,6 @@ function init() {
                     charge: "por_dia",
                     grupo: "Protecciones automáticas"
                 });
-                console.log(`✅ Protección automática seleccionada: ${auto.nombre}`);
             }
         });
 
@@ -2307,13 +2378,11 @@ function init() {
         syncIndividualesHidden();
         syncTotalsHidden();
         refreshSummary();
-
-        console.log("🎯 Preselección completada. Total en state.individuales:", state.individuales.size);
     }
 
-    /* =========================================
-    18. ADDONS
-    ========================================= */
+    /* ==============================
+       ADDONS
+    ============================== */
     function setAddonQty(item, qty) {
         const q = Math.max(0, Number(qty || 0));
         if (q <= 0) state.addons.delete(String(item.id));
@@ -2326,14 +2395,9 @@ function init() {
     }
 
     function getAddonConfig(addonId) {
-        // DINÁMICO: la config se lee de los data-* de la card en el DOM.
-        // addonId aquí es el id_servicio real (número), que es el data-addon
-        // del toggle y el data-id-servicio de la card. Ya no hay mapeos fijos.
         const card = document.querySelector(`.svc-card--servicio[data-id-servicio="${addonId}"]`);
         if (!card) return null;
 
-        // Las cards de tanque (Gasolina) NO usan este motor de cantidad;
-        // tienen su propio cálculo especial (computeGasolina).
         if (card.dataset.tanque === '1') return null;
 
         const expanded = card.querySelector('.svc-addon-expanded-dyn');
@@ -2470,9 +2534,6 @@ function init() {
     }
 
     function initAddonsWithSwitch() {
-        // DINÁMICO: recorremos TODAS las cards de servicio con cantidad
-        // (excluye tanque/Gasolina, que tiene su propio binder).
-        // El addonId es el data-id-servicio (número real).
         const cards = document.querySelectorAll('.svc-card--servicio:not(.svc-card--tanque)');
 
         cards.forEach(card => {
@@ -2574,9 +2635,9 @@ function init() {
         return sum;
     }
 
-    /* =========================================
-    19. TOTALES + HIDDEN
-    ========================================= */
+    /* ==============================
+       TOTALES
+    ============================== */
 function calcTotals() {
     const days = Number(state.days || 0);
 
@@ -2631,9 +2692,9 @@ function syncTotalsHidden() {
     actualizarTotalNavbar();
 }
 
-/* =========================================
-    20. RESUMEN (VERSIÓN CORREGIDA)
-========================================= */
+/* ==============================
+   RESUMEN
+================================= */
 function refreshSummary() {
     const days = Number(state.days || 0);
 
@@ -3039,9 +3100,9 @@ function refreshSummary() {
     }
 }
 
-/* =========================================
-   EDITAR TARIFA BASE EN RESUMEN
-========================================= */
+/* ==============================
+   EDITAR TARIFA BASE
+================================= */
 function initEditBaseTotal() {
     const btn = document.getElementById("btnEditBase");
 
@@ -3167,9 +3228,9 @@ function initEditBaseTotal() {
     });
 }
 
-    /* =========================================
-    21. VALIDACIÓN
-    ========================================= */
+    /* ==============================
+       VALIDACION FINAL
+    ============================== */
     function syncTelefonoFinal() {
         const lada = (qs("#telefono_lada")?.value || "+52").trim();
         const num = String(qs("#telefono_ui")?.value || "").trim().replace(/\s+/g, "");
@@ -3346,9 +3407,9 @@ function initEditBaseTotal() {
         return allValid;
     }
 
-    /* =========================================
-    22. FLATPICKR (CALENDARIO)
-    ========================================= */
+    /* ==============================
+       FLATPICKR
+    ============================== */
     function initFlatpickrModalCalendar() {
     if (!window.flatpickr) return;
 
@@ -3393,7 +3454,6 @@ function initEditBaseTotal() {
         backdrop.onclick = null;
     }
 
-    // ========== PROTECCIÓN ANTI-TECLADO (móvil) ==========
     function createProtectedPicker(inputElement, additionalConfig = {}) {
         if (!inputElement) return null;
         let picker;
@@ -3534,10 +3594,9 @@ function initEditBaseTotal() {
     });
 }
 
-    // =========================================
-    // 23. SELECCIONADORES DE HORA Y VALIDACIONES
-    // =========================================
-
+    /* ==============================
+       SELECTORES DE HORA
+    ============================== */
 function initTimeSelectors() {
     function createTimeSelectsBelow(input, hiddenInput, placeholderText) {
         const wrap = input.closest(".time-field") || input.parentElement;
@@ -3599,9 +3658,9 @@ function initTimeSelectors() {
     }
 }
 
-// =========================================
-// 23.1 FILTRO DE HORAS PASADAS
-// =========================================
+/* ==============================
+   FILTRO DE HORAS PASADAS
+================================= */
 function filtrarHorasPasadas() {
     const selRetiro = document.querySelector('#hora_retiro_ui')
         ?.closest('.dt-field-admin, .time-field-admin')
@@ -3776,9 +3835,9 @@ function initValidacionHorasTiempoReal() {
     setTimeout(validar, 100);
 }
 
-    /* =========================================
-    24. SUBMIT POR AJAX
-    ========================================= */
+    /* ==============================
+       SUBMIT AJAX
+    ============================== */
     async function submitReservaAjax(e) {
         e.preventDefault();
 
@@ -3843,20 +3902,25 @@ function initValidacionHorasTiempoReal() {
                 sucursalEntrega.disabled = false;
             }
         }
-
-        if (!validateBeforeSubmit()) return;
+if (!validateBeforeSubmit()) return;
 
         const btn = qs("#btnReservar");
+        const esEdicion = !!(window.reservacionEditar && window.reservacionEditar.id_reservacion);
         const setLoading = (on) => {
             if (!btn) return;
             btn.disabled = on;
             btn.style.opacity = on ? "0.85" : "1";
             btn.style.cursor = on ? "not-allowed" : "pointer";
-            btn.textContent = on ? "⏳ Registrando..." : "✅ Registrar reservación";
+            if (on) {
+                btn.textContent = esEdicion ? "Actualizando..." : "Registrando...";
+            } else {
+                btn.textContent = esEdicion ? "Actualizar reservación" : "Registrar reservación";
+            }
         };
 
         try {
             setLoading(true);
+            OverlayActualizacion.cargando();
 
             const action = form.getAttribute("action");
             const fd = new FormData(form);
@@ -3925,12 +3989,14 @@ function initValidacionHorasTiempoReal() {
                     if (first) errorMsg = first;
                 }
 
+                OverlayActualizacion.ocultar();
                 mostrarToast(errorMsg, 'error');
                 setLoading(false);
                 return;
             }
 
             if (!res.ok) {
+                OverlayActualizacion.ocultar();
                 mostrarToast("Ocurrió un error al registrar la reservación.", 'error');
                 setLoading(false);
                 return;
@@ -3958,20 +4024,31 @@ function initValidacionHorasTiempoReal() {
                 }
             }
 
-            closeAllPops();
-            openPop(confirmPop);
+            OverlayActualizacion.exito({
+                titulo: esEdicion ? "¡Reservación actualizada!" : "¡Reservación registrada!",
+                subtitulo: esEdicion
+                    ? "Los cambios se guardaron correctamente"
+                    : "La reservación se creó correctamente"
+            });
+
+            setTimeout(() => {
+                OverlayActualizacion.ocultar();
+                closeAllPops();
+                openPop(confirmPop);
+            }, 1400);
 
         } catch (err) {
             console.error(err);
+            OverlayActualizacion.ocultar();
             mostrarToast("Error de conexión. Intenta de nuevo.", 'error');
         } finally {
             setLoading(false);
         }
     }
 
-    /* =========================================
-    25. TABS EN MODAL PROTECCIONES
-    ========================================= */
+    /* ==============================
+       TABS PROTECCIONES
+    ============================== */
     function setProteTab(tabId) {
         const btns = qsa("#proteccionPop .tab-btn[data-tab]");
         const panels = qsa("#proteccionPop .tab-panel");
@@ -3990,9 +4067,9 @@ function initValidacionHorasTiempoReal() {
         });
     }
 
-    /* =========================================
-    26. LOAD PROTECCIONES (PAQUETES)
-    ========================================= */
+    /* ==============================
+       LOAD PROTECCIONES
+    ============================== */
     async function loadProtecciones() {
         const track = qs("#protePacksTrack");
         if (!track) return;
@@ -4012,7 +4089,7 @@ function initValidacionHorasTiempoReal() {
                 const nombre = raw.nombre ?? "Protección";
                 const desc = raw.descripcion ?? "";
                 const precio = Number(raw.precio_por_dia ?? raw.precio_dia ?? raw.precio ?? 0);
-                const charge = "por_dia"; // 🔧 el paquete usa precio_por_dia → siempre por día
+                const charge = "por_dia";
                 return { id, nombre, desc, precio, charge };
             }).sort((a, b) => Number(b.precio || 0) - Number(a.precio || 0));
 
@@ -4167,9 +4244,9 @@ function initValidacionHorasTiempoReal() {
         }
     }
 
-    /* =========================================
-    27. PAISES + LADA + ISO2
-    ========================================= */
+    /* ==============================
+       PAISES
+    ============================== */
     const COUNTRY_DATA = [
         { name: "MÉXICO", iso2: "MX", dial: "+52" },
         { name: "ESTADOS UNIDOS", iso2: "US", dial: "+1" },
@@ -4304,9 +4381,9 @@ function initValidacionHorasTiempoReal() {
         setPhoneCountry(initial);
     }
 
-    /* =========================================
-    28. EVENTOS UI
-    ========================================= */
+    /* ==============================
+       EVENTOS UI
+    ============================== */
     function bindUI() {
         ["#fecha_inicio_ui", "#fecha_fin_ui"].forEach((id) => {
             qs(id)?.addEventListener("change", () => {
@@ -4479,9 +4556,9 @@ function initValidacionHorasTiempoReal() {
         });
     }
 
-    /* =========================================
-    29. BOOT (INICIALIZACIÓN)
-    ========================================= */
+    /* ==============================
+       BOOT
+    ============================== */
     document.addEventListener("DOMContentLoaded", () => {
         ensureCategoriaHiddenFix();
         ensureTotalsHidden();
@@ -4531,13 +4608,12 @@ function initValidacionHorasTiempoReal() {
 
         setTimeout(() => {
             preseleccionarProteccionesIndividuales();
-            console.log("🎯 Preselección de protecciones ejecutada");
         }, 500);
     });
 
-    /* =========================================
-    30. SELECT2 CON ICONOS
-    ========================================= */
+    /* ==============================
+       SELECT2 CON ICONOS
+    ============================== */
     function initSelect2Sucursales() {
         function formatOption(option) {
             let iconClass = 'fa-location-dot';
@@ -4576,23 +4652,18 @@ function initValidacionHorasTiempoReal() {
         if (deliverySelect) {
             if ($(deliverySelect).data('select2')) $(deliverySelect).select2('destroy');
             $(deliverySelect).select2(select2Config);
-            // Listener de cálculo real está en bindDeliveryUI (sección 09).
-            // Se elimina el dispatchEvent que se auto-disparaba y causaba bucle infinito.
         }
 
         const dropoffSelect = document.getElementById('dropUbicacion');
         if (dropoffSelect) {
             if ($(dropoffSelect).data('select2')) $(dropoffSelect).select2('destroy');
             $(dropoffSelect).select2(select2Config);
-            // Listener de cálculo real está en bindDropoffUI (sección 10) y en la
-            // sincronización de la sección 41. Se elimina el dispatchEvent que se
-            // auto-disparaba y causaba el bucle infinito (Maximum call stack size).
         }
     }
 
-    /* =========================================
-    31. CHECKBOX "DEVOLVER EN OTRO DESTINO"
-    ========================================= */
+    /* ==============================
+       CHECKBOX DROPOFF
+    ============================== */
     document.addEventListener('DOMContentLoaded', function() {
         const checkbox = document.getElementById('differentDropoffAdmin');
         const dropoffWrapper = document.getElementById('dropoffWrapperAdmin');
@@ -4629,9 +4700,9 @@ function initValidacionHorasTiempoReal() {
         }
     });
 
-    /* =========================================
-    32. NAVBAR RESERVACIONES
-    ========================================= */
+    /* ==============================
+       NAVBAR
+    ============================== */
     (function() {
         function crearNavbarReservaciones() {
             if (document.getElementById('resNavbar')) return;
@@ -4692,9 +4763,9 @@ function initValidacionHorasTiempoReal() {
         });
     })();
 
-    /* =========================================
-    33. EDITAR TARIFA DESDE LA VISTA PREVIA DE CATEGORÍA
-    ========================================= */
+    /* ==============================
+       EDITAR CATEGORIA PREVIEW
+    ============================== */
   function initEditarCategoriaPreview() {
     const btnEditar = document.getElementById('btnEditarCategoriaPreview');
     const container = document.getElementById('catMiniRate');
@@ -4750,21 +4821,17 @@ function initValidacionHorasTiempoReal() {
             state.base_editable = nuevoTotal;
             state.categoria.precio_dia = nuevoValor;
 
-            // Actualizar el precio por día en la vista previa
             container.textContent = `${money(nuevoValor).replace(" MXN", "")} MXN / día`;
 
-            // ACTUALIZAR TAMBIÉN EL CÁLCULO TOTAL (catMiniCalc)
             const calcElement = document.getElementById('catMiniCalc');
             if (calcElement) {
                 const nuevoCalculo = nuevoValor * days;
                 calcElement.textContent = money(nuevoCalculo);
             }
 
-            // Actualizar el subtítulo de la categoría si existe
             const sub = document.getElementById('catSelSub');
             if (sub) sub.textContent = `${money(nuevoValor)} / día · ${days} día(s)`;
 
-            // Forzar actualización de totales y resumen
             syncTotalsHidden();
             refreshSummary();
 
@@ -4805,9 +4872,9 @@ function initValidacionHorasTiempoReal() {
     });
     observerPreview.observe(document.body, { childList: true, subtree: true });
 
-    /* =========================================
-    34. MODAL DE CARACTERÍSTICAS DE CATEGORÍAS
-    ========================================= */
+    /* ==============================
+       MODAL CARACTERISTICAS
+    ============================== */
     (function() {
         let featuresModal = null;
 
@@ -4950,9 +5017,9 @@ function initValidacionHorasTiempoReal() {
         if (catPop) catPop.style.display = 'none';
     }
 
-    /* =========================================
-    35. ACORDEÓN Y FLUJO SECUENCIAL
-    ========================================= */
+    /* ==============================
+       ACORDEON
+    ============================== */
     (function() {
         let seccionesCompletadas = { categoria: false };
 
@@ -5138,9 +5205,9 @@ function initValidacionHorasTiempoReal() {
         }
     })();
 
-    /* =========================================
-    36. TOOLTIPS PARA ADICIONALES
-    ========================================= */
+    /* ==============================
+       TOOLTIPS
+    ============================== */
     (function() {
         const descripciones = {
             'Conductor adicional': 'Agregar un conductor extra.',
@@ -5271,9 +5338,9 @@ function initValidacionHorasTiempoReal() {
         window.addEventListener('resize', hideTooltipImmediately);
     })();
 
-    /* =========================================
-    37. PERMITIR AUTOCOMPLETADO PERO PREVENIR SCROLL
-    ========================================= */
+    /* ==============================
+       PREVENIR SCROLL EN CLIENTE
+    ============================== */
     (function() {
         let clienteSectionTop = null;
         let preventScroll = true;
@@ -5328,9 +5395,9 @@ function initValidacionHorasTiempoReal() {
         setTimeout(saveClienteSectionPosition, 500);
     })();
 
- /* =========================================
-    38. ACORDEÓN PARA DECLINE PROTECTIONS
-    ========================================= */
+ /* ==============================
+    ACORDEON DECLINE
+================================= */
     (function() {
         function aplicarAcordeonADecline() {
             const proteccionesTrack = document.getElementById('protePacksTrack');
@@ -5422,12 +5489,11 @@ function initValidacionHorasTiempoReal() {
         }
 
         setTimeout(aplicarAcordeonADecline, 1000);
-
-
     })();
-    /* =========================================
-    39. FIX: POSICIÓN EN INDIVIDUALES
-    ========================================= */
+
+    /* ==============================
+       FIX POSICION INDIVIDUALES
+    ============================== */
     (function() {
         let proteccionModalAbierto = false;
         let posicionOriginal = null;
@@ -5481,9 +5547,9 @@ function initValidacionHorasTiempoReal() {
         observer.observe(modal, { attributes: true, attributeFilter: ['style'] });
     })();
 
-    /* =========================================
-    40. RESUMEN CARRITO DINÁMICO PARA PROTECCIONES
-    ========================================= */
+    /* ==============================
+       CARRITO PROTECCIONES
+    ============================== */
     (function() {
         function crearOCarritoEnModal() {
             const modalHeader = document.querySelector('#proteccionPop .modal-head');
@@ -5601,9 +5667,9 @@ function initValidacionHorasTiempoReal() {
         }
     })();
 
-        /* =========================================
-            41. SINCRONIZACIÓN BIDIRECCIONAL (Formulario ↔ DropOff)
-        ========================================= */
+    /* ==============================
+       SINCRONIZACION BIDIRECCIONAL
+    ============================== */
 (function() {
     let syncInProgress = false;
     let select2Initialized = false;
@@ -5657,7 +5723,6 @@ function initValidacionHorasTiempoReal() {
         if (typeof refreshSummary === 'function') refreshSummary();
     }
 
-    // ========== FORMULARIO → DROPOFF ==========
     function syncFormToDropoff() {
     if (syncInProgress) return;
     syncInProgress = true;
@@ -5670,12 +5735,10 @@ function initValidacionHorasTiempoReal() {
         return;
     }
 
-    // Solo si el checkbox está marcado
     if (checkbox.checked) {
         if (!dropoffToggle.checked) {
             dropoffToggle.checked = true;
             dropoffToggle.dispatchEvent(new Event('change', { bubbles: true }));
-            console.log('✅ DropOff activado siempre (modo siempre activo)');
         }
     } else {
         if (dropoffToggle.checked) {
@@ -5687,14 +5750,11 @@ function initValidacionHorasTiempoReal() {
     syncInProgress = false;
 }
 
-    // ========== DROPOFF → FORMULARIO ==========
     function syncDropoffToForm() {
-        // Solo refrescar resumen/totales; no modificar el valor de sucursal_entrega.
         if (typeof refreshSummary === 'function') refreshSummary();
         if (typeof syncTotalsHidden === 'function') syncTotalsHidden();
     }
 
-    // ========== CONFIGURAR EVENTOS ==========
     function initSync() {
         const checkbox = document.getElementById('differentDropoffAdmin');
         const sucursalEntrega = document.getElementById('sucursal_entrega');
@@ -5744,8 +5804,6 @@ function initValidacionHorasTiempoReal() {
                 }
             });
         }
-
-        console.log('✅ Sincronización bidireccional inicializada (corregida)');
     }
 
     if (document.readyState === 'loading') {
@@ -5754,9 +5812,10 @@ function initValidacionHorasTiempoReal() {
         initSync();
     }
 })();
-/* =========================================
-42. ACTIVAR/DESACTIVAR DROPOFF SEGÚN CHECKBOX
-========================================= */
+
+/* ==============================
+   DROPOFF SEGUN CHECKBOX
+================================= */
 (function() {
     function actualizarUI() {
         const checkbox = document.getElementById('differentDropoffAdmin');
@@ -5776,9 +5835,10 @@ function initValidacionHorasTiempoReal() {
     }
     actualizarUI();
 })();
-    /* =========================================
-    43. EXPONER API GLOBAL
-    ========================================= */
+
+    /* ==============================
+       API GLOBAL
+    ============================== */
     window._reservaAPI = {
         setGasolinaActive: setGasolinaActive,
         setDropoffActive: setDropoffActive,
@@ -5798,14 +5858,10 @@ function initValidacionHorasTiempoReal() {
         },
         getState: () => state,
 
-        // ---- Helpers para MODO EDICIÓN (no afectan el flujo de creación) ----
-
-        // Activa una card de addon dinámica (enciende switch + cantidad + total),
-        // leyendo el charge/precio REAL desde la card del DOM.
         activarAddonEdicion: function(idServicio, cantidad) {
             const qty = Math.max(1, Number(cantidad || 1));
             const cfg = getAddonConfig(idServicio);
-            if (!cfg) return false;          // no existe o es tanque (gasolina)
+            if (!cfg) return false;
             setAddonActive(idServicio, true);
             if (cfg.qtyEl) {
                 cfg.qtyEl.textContent = qty;
@@ -5815,13 +5871,9 @@ function initValidacionHorasTiempoReal() {
             return true;
         },
 
-        // Selecciona una protección INDIVIDUAL guardada, reutilizando el mismo
-        // flujo que el clic del usuario (toggleIndividualFromCard). Localiza la
-        // card por su data-id y, si no está ya seleccionada, la activa.
         seleccionarIndividualEdicion: function(idIndividual) {
             const card = document.querySelector(`.individual-item[data-id="${idIndividual}"]`);
             if (!card) return false;
-            // Evita doble toggle si por algún motivo ya está activa.
             if (state.individuales.has(String(idIndividual)) ||
                 state.individuales.has(Number(idIndividual))) {
                 return true;
@@ -5830,44 +5882,35 @@ function initValidacionHorasTiempoReal() {
             return true;
         },
 
-        // Coloca fecha en el input UI (Flatpickr) y sincroniza el hidden + días.
         setFechaEdicion: function(uiId, hiddenId, valorISO) {
             const ui = qs(uiId);
             const hid = qs(hiddenId);
             if (!ui || !valorISO) return;
 
-            const iso = String(valorISO).slice(0, 10); // "YYYY-MM-DD"
+            const iso = String(valorISO).slice(0, 10);
             const partes = iso.split("-").map(Number);
-            // Construir Date local sin desfase de zona horaria (año, mes-1, día)
             const fechaObj = new Date(partes[0], (partes[1] || 1) - 1, partes[2] || 1, 0, 0, 0);
 
             const fp = ui._flatpickr;
             if (fp) {
-                // Opción B: bloquear fechas pasadas EXCEPTO la fecha original de la reserva.
-                // Si la fecha de la reserva ya pasó, el minDate se ajusta a esa fecha
-                // (para poder mostrarla). Si es de hoy o futura, el minDate se queda en hoy.
                 const hoy = new Date();
                 hoy.setHours(0, 0, 0, 0);
 
                 if (fechaObj < hoy) {
-                    // La fecha original ya pasó: permitir desde esa fecha
                     fp.set("minDate", fechaObj);
                 } else {
-                    // La fecha original es de hoy en adelante: bloquear todo lo anterior a hoy
                     fp.set("minDate", "today");
                 }
 
-                fp.setDate(fechaObj, true);   // objeto Date + dispara onChange
+                fp.setDate(fechaObj, true);
             } else {
                 ui.value = iso;
             }
 
-            // Asegurar el hidden en formato ISO (por si onChange no alcanzó)
             if (hid) hid.value = iso;
             syncDays();
         },
 
-        // Coloca hora en el time-picker custom (.tp-hour) y sincroniza el hidden.
         setHoraEdicion: function(uiId, hiddenId, valorHora) {
             const ui = qs(uiId);
             const hid = qs(hiddenId);
@@ -5876,49 +5919,42 @@ function initValidacionHorasTiempoReal() {
             const sel = ui.closest('.dt-field-admin, .time-field-admin')?.querySelector('.tp-hour');
             if (sel) {
                 sel.value = hh;
-                sel.dispatchEvent(new Event("change"));  // sincroniza hidden + syncDays
+                sel.dispatchEvent(new Event("change"));
             } else {
                 ui.value = `${hh}:00`;
                 if (hid) hid.value = `${hh}:00`;
             }
         },
 
-        // Desbloquea todas las secciones de golpe (reserva ya completa).
         desbloquearTodoEdicion: function() {
             if (typeof completarFlujo === 'function') completarFlujo();
         },
 
-
-        // Opción B: abre (expande) las 4 secciones a la vez, sin scroll brusco.
         expandirTodasEdicion: function() {
             const secciones = ['categoria', 'adicionales', 'protecciones', 'cliente'];
             secciones.forEach(sec => {
                 const el = document.querySelector(`.acordeon-item[data-seccion="${sec}"]`);
                 if (el && typeof abrirSeccion === 'function') {
-                    abrirSeccion(el, true);   // true = evitar scroll
+                    abrirSeccion(el, true);
                 }
             });
         },
 
-        // Restaura el Drop Off en edición con el TOTAL guardado tal cual (Opción A),
-        // sin recalcular por ubicación (que se perdería y daría 0).
         restaurarDropoffEdicion: function(totalGuardado) {
             const els = getDropoffEls();
             if (!els) return;
 
             const total = parseFloat(totalGuardado) || 0;
 
-            // Encender el switch y mostrar los campos, sin recalcular.
             state.servicios.dropoff = true;
             state.dropoff.activo = true;
-            state.dropoff.total = total;   // ← total fijo restaurado
-            state.dropoff.restaurado = true;   // ← respetar este total hasta que elijan ubicación
+            state.dropoff.total = total;
+            state.dropoff.restaurado = true;
 
             if (els.toggle) els.toggle.checked = true;
             if (els.fields) els.fields.style.display = "block";
             if (els.totalTxt) els.totalTxt.textContent = money(total);
 
-            // Volcar a hidden + resumen usando el total ya fijado.
             syncServiciosHidden();
             syncDropoffHidden();
             syncTotalsHidden();
@@ -5926,42 +5962,32 @@ function initValidacionHorasTiempoReal() {
         },
     };
 
-    /* =========================================
-    44. CARGA DE EDICIÓN (RESERVACIÓN EXISTENTE)
-    ========================================= */
+    /* ==============================
+       CARGA DE EDICION
+    ============================== */
     async function __cargarEdicionReserva() {
         const API = window._reservaAPI;
 
-        // Solo corre en EDICIÓN real: debe existir un id_reservacion válido.
         if (!API) return;
         if (!window.reservacionEditar || !window.reservacionEditar.id_reservacion) return;
 
         const r = window.reservacionEditar;
 
-        // ============================================================
-        // 1) DESBLOQUEAR todas las secciones (la reserva ya está completa,
-        //    no hay que forzar el flujo secuencial del botón "Buscar").
-        // ============================================================
         if (typeof API.desbloquearTodoEdicion === 'function') {
             API.desbloquearTodoEdicion();
         }
         document.body.classList.add('buscar-realizado');
 
-        // Opción B: abrir las 4 secciones expandidas de una vez.
         if (typeof API.expandirTodasEdicion === 'function') {
             API.expandirTodasEdicion();
         }
 
-        // ============================================================
-        // 2) SUCURSALES (retiro y entrega) + checkbox "devolver en otro destino"
-        // ============================================================
         const selRetiro = document.getElementById("sucursal_retiro");
         if (selRetiro && r.sucursal_retiro != null) {
             selRetiro.value = String(r.sucursal_retiro);
             selRetiro.dispatchEvent(new Event("change"));
         }
 
-        // Si la entrega es distinta al retiro, activar el dropoff diferente
         const hayDropoffDistinto = r.sucursal_entrega != null &&
                                    String(r.sucursal_entrega) !== String(r.sucursal_retiro);
 
@@ -5982,17 +6008,11 @@ function initValidacionHorasTiempoReal() {
             }
         }
 
-        // ============================================================
-        // 3) FECHAS y HORAS (se perdían: ahora se cargan vía Flatpickr / tp-hour)
-        // ============================================================
         if (r.fecha_inicio) API.setFechaEdicion("#fecha_inicio_ui", "#fecha_inicio", r.fecha_inicio);
         if (r.fecha_fin)    API.setFechaEdicion("#fecha_fin_ui", "#fecha_fin", r.fecha_fin);
         if (r.hora_retiro)  API.setHoraEdicion("#hora_retiro_ui", "#hora_retiro", r.hora_retiro);
         if (r.hora_entrega) API.setHoraEdicion("#hora_entrega_ui", "#hora_entrega", r.hora_entrega);
 
-        // ============================================================
-        // 4) DATOS DEL CLIENTE
-        // ============================================================
         const setVal = (id, val) => {
             const el = document.getElementById(id);
             if (el && val != null) el.value = val;
@@ -6000,13 +6020,11 @@ function initValidacionHorasTiempoReal() {
         setVal("nombre_cliente", r.nombre_cliente);
         setVal("email_cliente", r.email_cliente);
 
-        // Separar lada (+52) del número para no duplicarla al editar
         const ladaActual = (document.getElementById("telefono_lada")?.value || "+52").trim();
         let telSinLada = String(r.telefono_cliente || "").trim();
         if (ladaActual && telSinLada.startsWith(ladaActual)) {
             telSinLada = telSinLada.slice(ladaActual.length);
         } else {
-            // Respaldo: si viene con +52 aunque la lada activa sea otra, quitarlo igual
             telSinLada = telSinLada.replace(/^\+52/, "");
         }
 
@@ -6015,9 +6033,6 @@ function initValidacionHorasTiempoReal() {
         setVal("comentarios", r.comentarios);
         setVal("no_vuelo", r.no_vuelo);
 
-        // ============================================================
-        // 5) CATEGORÍA (igual que antes, con su espera para que calcule)
-        // ============================================================
         if (r.id_categoria) {
             const card = document.querySelector(`.card-pick[data-id="${r.id_categoria}"]`);
             if (card) {
@@ -6033,9 +6048,6 @@ function initValidacionHorasTiempoReal() {
             }
         }
 
-        // ============================================================
-        // 6) DELIVERY (igual que antes)
-        // ============================================================
         if (r.delivery_activo == 1) {
             API.setDeliveryActive(true);
             await new Promise(res => setTimeout(res, 150));
@@ -6055,38 +6067,22 @@ function initValidacionHorasTiempoReal() {
             if (dir && r.delivery_direccion) dir.value = r.delivery_direccion;
         }
 
-        // ============================================================
-        // 7) SERVICIOS / ADICIONALES guardados
-        //    - Gasolina (por_tanque, id 1): switch especial.
-        //    - Drop Off (id 11): switch de ubicación.
-        //    - El resto: cards dinámicas con su CHARGE REAL (leído del DOM).
-        // ============================================================
         if (window.serviciosEditar?.length) {
             for (const s of window.serviciosEditar) {
                 const idServ = Number(s.id_servicio);
 
-                // Gasolina: card de tanque (id 1). Su cálculo es especial.
                 if (idServ === 1) {
                     API.setGasolinaActive(true);
                     continue;
                 }
 
-                // Drop Off: card de ubicación (id 11).
-                // Opción A: restaurar el total guardado (precio_unitario) tal cual,
-                // sin recalcular por ubicación (no se guardó cuál era).
                 if (idServ === 11) {
                     API.restaurarDropoffEdicion(s.precio_unitario || 0);
                     continue;
                 }
 
-                // Resto: intentar activarlo como card dinámica de addon.
-                // activarAddonEdicion lee el charge/precio REAL desde la card,
-                // así que por_dia se cobra por día y por_evento por evento.
                 const ok = API.activarAddonEdicion(idServ, s.cantidad || 1);
 
-                // Si por alguna razón no existe la card (servicio deshabilitado
-                // en admin), lo metemos al estado con su precio guardado para no
-                // perder el cobro, usando el charge que traiga (fallback evento).
                 if (!ok) {
                     API.setAddonQty({
                         id: idServ,
@@ -6098,9 +6094,6 @@ function initValidacionHorasTiempoReal() {
             }
         }
 
-        // ============================================================
-        // 8) PROTECCIÓN (paquete)
-        // ============================================================
         if (window.seguroEditar) {
             API.setProteccion({
                 id: window.seguroEditar.id_paquete,
@@ -6110,13 +6103,6 @@ function initValidacionHorasTiempoReal() {
             });
         }
 
-        // ============================================================
-        // 8.b) PROTECCIONES INDIVIDUALES guardadas
-        //      Se re-seleccionan reutilizando el flujo de la card.
-        //      OJO: si hay paquete de seguro, las individuales normalmente
-        //      no aplican (son excluyentes); por eso solo se cargan cuando
-        //      NO hay paquete seleccionado.
-        // ============================================================
         if (!window.seguroEditar && Array.isArray(window.individualesEditar)) {
             for (const ind of window.individualesEditar) {
                 const idInd = ind.id_individual ?? ind.id;
@@ -6126,17 +6112,91 @@ function initValidacionHorasTiempoReal() {
             }
         }
 
-        // ============================================================
-        // 9) Recalcular todo al final
-        // ============================================================
         API.forceRecalc();
+        __bloquearCamposEdicion();
     }
 
-    // La inicialización general corre con setTimeout(init, 500) tras DOMContentLoaded.
-    // La carga de edición DEBE correr DESPUÉS de esa init (Flatpickr, time-pickers,
-    // API y cards ya listos). Por eso esperamos un poco más (700ms > 500ms).
     document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => { __cargarEdicionReserva(); }, 700);
     });
+/* =========================================
+   44.b BLOQUEAR CAMPOS NO EDITABLES (modo edición)
+========================================= */
+function __bloquearCamposEdicion() {
+    if (!document.getElementById("cssBloqueoEdicion")) {
+        const st = document.createElement("style");
+        st.id = "cssBloqueoEdicion";
+        st.textContent = `
+            .edit-locked{ pointer-events:none !important; opacity:.72; user-select:none; }
+            .edit-locked input,.edit-locked select,.edit-locked textarea,
+            .edit-locked button,.edit-locked .select2-selection,
+            .edit-locked .readonly-country{ background:#f1f5f9 !important; cursor:not-allowed !important; }
+            .campo-locked{ pointer-events:none !important; opacity:.72; background:#f1f5f9 !important; cursor:not-allowed !important; }
+        `;
+        document.head.appendChild(st);
+    }
 
+    const bloquear = (cont) => {
+        if (!cont) return;
+        cont.classList.add("edit-locked");
+        cont.setAttribute("aria-disabled", "true");
+        cont.querySelectorAll("input, select, textarea, button").forEach((el) => {
+            el.setAttribute("tabindex", "-1");
+            if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") el.readOnly = true;
+        });
+    };
+
+    const bloquearCampo = (sel) => {
+        const el = qs(sel);
+        if (!el) return;
+
+        el.readOnly = true;
+        el.setAttribute("tabindex", "-1");
+        el.classList.add("campo-locked");
+
+        const fp = el._flatpickr;
+        if (fp) fp.set("clickOpens", false);
+
+        const wrap = el.parentElement;
+        if (wrap && !wrap.querySelector(".campo-lock-shield")) {
+            if (getComputedStyle(wrap).position === "static") {
+                wrap.style.position = "relative";
+            }
+            const shield = document.createElement("div");
+            shield.className = "campo-lock-shield";
+            shield.style.cssText = "position:absolute;inset:0;z-index:20;cursor:not-allowed;background:transparent;";
+            shield.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); });
+            shield.addEventListener("mousedown", (e) => { e.preventDefault(); e.stopPropagation(); });
+            wrap.appendChild(shield);
+        }
+    };
+
+    const contratoIniciado = !!(window.reservacionEditar && window.reservacionEditar.contrato_iniciado);
+
+    if (contratoIniciado) {
+        [
+            "#fecha_inicio_ui",
+            "#fecha_inicio",
+            "#hora_retiro_ui",
+            "#hora_retiro"
+        ].forEach(bloquearCampo);
+    }
+    bloquear(document.querySelector(".cliente-datos-card"));
+    const coment = document.getElementById("comentarios");
+    if (coment) {
+        coment.readOnly = false;
+        coment.disabled = false;
+        coment.removeAttribute("tabindex");
+        coment.closest(".cliente-comentarios-card")?.classList.remove("edit-locked");
+    }
+
+    const btnReservar = document.getElementById("btnReservar");
+    if (btnReservar) {
+        btnReservar.innerHTML = `<i class="fas fa-check-circle"></i> Actualizar reservación`;
+    }
+
+    console.log(contratoIniciado
+        ? "🔒 Contrato ABIERTO: fecha/hora de inicio + datos del cliente bloqueados"
+        : "🔒 Contrato no iniciado: solo datos del cliente bloqueados (fechas/lugar/hora editables)");
+}
 })();

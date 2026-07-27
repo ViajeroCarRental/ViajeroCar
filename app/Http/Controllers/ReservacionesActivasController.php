@@ -161,7 +161,7 @@ class ReservacionesActivasController extends Controller
 
             $servicios = DB::table('reservacion_servicio as rs')
                 ->join('servicios as s', 'rs.id_servicio', '=', 's.id_servicio')
-                ->select('rs.id_reservacion', 's.nombre', 'rs.cantidad')
+                ->select('rs.id_reservacion', 's.nombre', 'rs.cantidad', 'rs.precio_unitario as precio', 's.tipo_cobro')
                 ->get()
                 ->groupBy('id_reservacion');
 
@@ -169,17 +169,19 @@ class ReservacionesActivasController extends Controller
                🛡️ SEGUROS (paquete O individual — solo puede haber uno)
                Se traen por separado y se indexan por reservación.
             ========================================================== */
+             // 🛡️ Paquete de seguro CON precio guardado en la reservación
             $seguroPaquete = DB::table('reservacion_paquete_seguro as rps')
                 ->join('seguro_paquete as sp', 'sp.id_paquete', '=', 'rps.id_paquete')
-                ->select('rps.id_reservacion', 'sp.nombre')
+                ->select('rps.id_reservacion', 'sp.nombre', 'rps.precio_por_dia')
                 ->get()
                 ->keyBy('id_reservacion');
 
             $seguroIndividual = DB::table('reservacion_seguro_individual as rsi')
                 ->join('seguro_individuales as si', 'si.id_individual', '=', 'rsi.id_individual')
-                ->select('rsi.id_reservacion', 'si.nombre')
+                ->select('rsi.id_reservacion', 'si.nombre', 'rsi.precio_por_dia')
                 ->get()
-                ->keyBy('id_reservacion');
+                ->groupBy('id_reservacion');
+
 
             /* ==========================================================
                🔎 RESPUESTA AJAX (búsqueda en vivo)
@@ -192,11 +194,17 @@ class ReservacionesActivasController extends Controller
                     $extras = $servicios[$r->id_reservacion] ?? collect();
 
                     // Solo puede haber uno: paquete o individual
+                    // Paquete (uno) o individuales (pueden ser varios)
+                    $soloAbrev = fn ($n) => trim(preg_replace('/\s*\(.*?\)\s*/', '', (string) $n));
+
                     $nombreSeguro = null;
                     if (isset($seguroPaquete[$r->id_reservacion])) {
-                        $nombreSeguro = $seguroPaquete[$r->id_reservacion]->nombre;
+                        $nombreSeguro = $soloAbrev($seguroPaquete[$r->id_reservacion]->nombre);
                     } elseif (isset($seguroIndividual[$r->id_reservacion])) {
-                        $nombreSeguro = $seguroIndividual[$r->id_reservacion]->nombre;
+                        $nombreSeguro = $seguroIndividual[$r->id_reservacion]
+                            ->pluck('nombre')
+                            ->map($soloAbrev)
+                            ->implode(', ');
                     }
 
                     $inicio = Carbon::parse($r->fecha_inicio);
@@ -237,8 +245,10 @@ class ReservacionesActivasController extends Controller
                         'transmision'           => $r->transmision,
                         'delete_url'            => route('rutaEliminarReservacionActiva', $r->id_reservacion),
                         'extras'                => collect($extras)->map(fn($e) => [
-                            'nombre'   => $e->nombre,
-                            'cantidad' => $e->cantidad,
+                            'nombre'    => $e->nombre,
+                            'cantidad'  => $e->cantidad,
+                            'precio'    => $e->precio,
+                            'tipo_cobro'=> $e->tipo_cobro,
                         ])->values(),
                     ];
                 });
@@ -326,6 +336,8 @@ class ReservacionesActivasController extends Controller
             return view('Admin.ReservacionesActivas', [
                 'reservaciones'            => $reservaciones,
                 'servicios' => $servicios,
+                'seguroPaquete'            => $seguroPaquete,
+                'seguroIndividual'         => $seguroIndividual,
                 'reservaciones_anteriores' => $reservaciones_anteriores, // ✅ YA VA AL BLADE
                 'sucursalSeleccionada'      => $sucursal,
             ]);
@@ -365,6 +377,7 @@ class ReservacionesActivasController extends Controller
                     'r.total',
                     'r.tarifa_modificada',
                     'r.no_vuelo',
+                    'r.comentarios',
                     'r.sucursal_retiro',
                     'r.sucursal_entrega',
                     DB::raw("

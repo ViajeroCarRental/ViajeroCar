@@ -3,10 +3,6 @@
 
 @section('css-vistaReservacionesActivas')
   <link rel="stylesheet" href="{{ asset('css/reservacionesActivas.css') }}">
-
-  {{-- 🔔 Alertify (CSS) --}}
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/default.min.css">
 @endsection
 
 @section('contenidoReservacionesActivas')
@@ -39,7 +35,7 @@
     };
   @endphp
 
-  {{-- ===================== 🔍 FILTROS ===================== --}}
+  {{-- FILTROS --}}
   <form method="GET" class="toolbar">
 
     <input
@@ -96,28 +92,35 @@
 
   </form>
 
-  {{-- ⚙️ ACCIONES (fuera del form de filtros para que Exportar funcione) --}}
+  {{-- ACCIONES --}}
   <div class="toolbar-actions">
 
-    {{-- ⬇️ Exportar respaldo COMPLETO (5 tablas) --}}
     <a
       href="{{ route('rutaExportarReservacionesRespaldo') }}"
       class="btn primary"
       id="btnExportExcel"
     >
-      ⬇️ Exportar Excel
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Exportar Excel
     </a>
 
-    {{-- ⬆️ Importar respaldo --}}
     <button
       type="button"
       class="btn primary"
       id="btnImportExcel"
     >
-      ⬆️ Importar Excel
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      Importar Excel
     </button>
 
-    {{-- Form oculto que envía el archivo --}}
     <form
       id="formImportExcel"
       action="{{ route('rutaImportarReservacionesRespaldo') }}"
@@ -135,12 +138,18 @@
       id="btnPrevBookings"
       title="Ver reservaciones del día anterior"
     >
-      🗓️ Reservaciones anteriores
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      Reservaciones anteriores
     </button>
 
   </div>
 
-  {{-- ======================= 📋 TABLA ACTUAL ======================= --}}
+  {{-- TABLA ACTUAL --}}
   <section id="tablaActivas" class="table {{ $esAeropuerto ? 'is-airport' : '' }}" data-cols="{{ $cols }}">
     <div class="thead">
       <div></div>
@@ -194,16 +203,31 @@
 
           $extras = $servicios[$r->id_reservacion] ?? [];
 
-          // 🛡️ Seguro (paquete O individual — solo puede haber uno)
-          $seguroNombre = null;
+          $soloAbrev = fn ($n) => trim(preg_replace('/\s*\(.*?\)\s*/', '', (string) $n));
+
+          $diasReserva = (int) ($r->dias ?? 0);
+          if ($diasReserva <= 0 && !empty($r->fecha_inicio) && !empty($r->fecha_fin)) {
+              $diasReserva = max(1, \Carbon\Carbon::parse($r->fecha_inicio)
+                  ->diffInDays(\Carbon\Carbon::parse($r->fecha_fin)));
+          }
+          $diasReserva = max(1, $diasReserva);
+
+          $listaSeguros = [];
           if (isset($seguroPaquete[$r->id_reservacion])) {
-            $seguroNombre = $seguroPaquete[$r->id_reservacion]->nombre;
+              $p = $seguroPaquete[$r->id_reservacion];
+              $listaSeguros[] = [
+                  'nombre' => $soloAbrev($p->nombre),
+                  'total'  => (float) $p->precio_por_dia * $diasReserva,
+              ];
           } elseif (isset($seguroIndividual[$r->id_reservacion])) {
-            $seguroNombre = $seguroIndividual[$r->id_reservacion]->nombre;
+              foreach ($seguroIndividual[$r->id_reservacion] as $s) {
+                  $listaSeguros[] = [
+                      'nombre' => $soloAbrev($s->nombre),
+                      'total'  => (float) $s->precio_por_dia * $diasReserva,
+                  ];
+              }
           }
 
-          // En la tabla general se conserva oficina_compacta (AIQ, TAQ u OCP).
-          // En el resumen mini se usan exclusivamente los nombres completos.
           $oficinaRetiro = collect([
             $r->oficina_retiro_completa ?? null,
           ])->first(fn ($valor) => $valor !== null && trim((string) $valor) !== '');
@@ -291,13 +315,15 @@
               Reservación Confirmada el: {{ $r->created_at ? \Carbon\Carbon::parse($r->created_at)->format('d-M-Y H:i:s') : '—' }}
             </div>
 
-            <div class="reserva-summary-line summary-full summary-contact">
-              <b>Datos de Contacto:</b>
+           <div class="reserva-summary-line summary-full summary-contact">
+             <b>Datos de Contacto:</b>
+             <b style="font-weight: 900; font-size: 14px; color: #000000; background: #FFF9FA; padding: 4px 10px; border-radius: 6px; display: inline-block; border: 1px solid #FFD1D6;">
               {{ $r->pais_cliente ?? $r->pais ?? 'MEXICO (MX)' }}
-              | {{ $r->telefono_cliente ?? '—' }}
-              | {{ $nombreCompleto }}
-              | {{ $r->email_cliente ?? '—' }}
-            </div>
+               | {{ $r->telefono_cliente ?? '—' }}
+               | {{ $nombreCompleto }}
+               | {{ $r->email_cliente ?? '—' }}
+            </b>
+           </div>
 
             <div class="reserva-summary-line">
               <b>Entrega:</b>
@@ -336,12 +362,17 @@
               {{ $r->no_vuelo ?? '—' }}
             </div>
 
-            <div class="reserva-summary-line">
+         <div class="reserva-summary-line">
               <b>Adicionales Requeridos:</b>
-
               @if(count($extras))
                 @foreach($extras as $e)
-                  <div>- {{ $e->nombre }} (x{{ $e->cantidad }})</div>
+                  @php
+                    $precioBaseAd = ($e->precio ?? 0) * ($e->cantidad ?? 1);
+                    $totalAd = ($e->tipo_cobro ?? 'por_dia') === 'por_dia'
+                        ? $precioBaseAd * $diasReserva
+                        : $precioBaseAd;
+                  @endphp
+                  <div>- {{ $e->nombre }} (x{{ $e->cantidad }}) — ${{ number_format($totalAd, 2) }} MXN</div>
                 @endforeach
               @else
                 <span style="color:#999;">Ninguno</span>
@@ -350,9 +381,14 @@
 
             <div class="reserva-summary-line">
               <b>Seguros:</b>
-              <div>{{ $seguroNombre ?? '—' }}</div>
+              @if(count($listaSeguros))
+                @foreach($listaSeguros as $sg)
+                  <div>- {{ $sg['nombre'] }} — ${{ number_format($sg['total'], 2) }} MXN</div>
+                @endforeach
+              @else
+                <span style="color:#999;">—</span>
+              @endif
             </div>
-
             <div class="reserva-summary-line summary-total"
                 style="grid-column: 2 / 3 !important;">
                 <b>Total(MXN):</b>
@@ -361,7 +397,6 @@
 
             <div class="summary-actions">
 
-              {{-- IZQUIERDA --}}
               <div class="summary-actions-left">
 
                 <button
@@ -388,7 +423,6 @@
 
               </div>
 
-              {{-- DERECHA --}}
               <div class="summary-actions-right">
 
                 <button
@@ -422,10 +456,20 @@
       @endforelse
     </div>
   </section>
+  {{-- Modal de aviso reutilizable --}}
+<div id="modalAviso" class="aviso-overlay" aria-hidden="true">
+  <div class="aviso-box" role="dialog" aria-modal="true">
+    <div class="aviso-icono" id="avisoIcono"></div>
+    <h3 class="aviso-titulo" id="avisoTitulo">Aviso</h3>
+    <p class="aviso-texto" id="avisoTexto"></p>
+    <div class="aviso-acciones">
+      <button type="button" class="aviso-btn aviso-btn-cancel" id="avisoCancelar" style="display:none;">Cancelar</button>
+      <button type="button" class="aviso-btn" id="avisoAceptar">Aceptar</button>
+    </div>
+  </div>
+</div>
 
-  {{-- ==========================================================
-     🗓️ MODAL: RESERVACIONES ANTERIORES
-  =========================================================== --}}
+  {{-- MODAL RESERVACIONES ANTERIORES --}}
   <div class="pop" id="modalPrev" aria-hidden="true">
     <div class="box box-xl">
       <header>
@@ -581,9 +625,7 @@
     </div>
   </div>
 
-  {{-- ============================
-       🪟 MODAL DETALLE RESERVACIÓN
-  ============================ --}}
+  {{-- MODAL DETALLE RESERVACIÓN --}}
   <div class="pop" id="modal">
     <div class="box">
       <header>
@@ -596,7 +638,8 @@
       <div class="cnt">
         <div class="kv"><strong>Fechas -</strong><span id="mFechas">—</span></div>
         <div class="kv"><strong>Vehículo -</strong><span id="mVehiculo">—</span></div>
-        <div class="kv"><strong>Forma de pago -</strong><span id="mFormaPago">—</span></div>
+       <div class="kv"><strong>Cliente -</strong><span id="mCliente">—</span></div>
+        <div class="kv"><strong>Comentarios -</strong><span id="mComentarios">—</span></div>
       </div>
 
       <div class="actions">
@@ -606,9 +649,7 @@
     </div>
   </div>
 
-  {{-- ============================
-     🪟 MODAL EDICIÓN RESERVACIÓN
-  ============================ --}}
+  {{-- MODAL EDICIÓN RESERVACIÓN --}}
   <div class="pop" id="modalEdit">
     <div class="box">
       <header>
@@ -656,9 +697,7 @@
     </div>
   </div>
 
-  {{-- ============================
-     🪟 MODAL ACCIONES
-  ============================= --}}
+  {{-- MODAL ACCIONES --}}
   <div class="pop" id="modalActions" aria-hidden="true">
     <div class="box box-sm">
       <header>
@@ -713,9 +752,7 @@
     </div>
   </div>
 
-  {{-- ============================
-     🪟 MODAL APARTAR VEHÍCULO
-  ============================= --}}
+  {{-- MODAL APARTAR VEHÍCULO --}}
   <div class="pop" id="modalVehiculos">
     <div class="box box-xl">
       <header>
@@ -754,9 +791,7 @@
     </div>
   </div>
 
-  {{-- ============================
-     🪟 MODAL CONFIRMAR EDICIÓN INVENTARIO
-  ============================= --}}
+  {{-- MODAL CONFIRMAR EDICIÓN INVENTARIO --}}
   <div class="pop" id="modalConfirmInv" aria-hidden="true" style="z-index:100001;">
     <div class="box box-sm">
       <header>
@@ -782,6 +817,95 @@
     </div>
   </div>
 
+  {{-- MODAL CONFIRMAR SELECCIÓN DE VEHÍCULO --}}
+  <div id="modalConfirmarVehiculo" class="modal-vehiculos">
+    <div class="modal-vehiculos-content">
+
+      <div class="modal-vehiculos-header">
+        <span class="modal-vehiculos-titulo">
+          <i class="fas fa-check-circle"></i> Confirmar selección
+        </span>
+        <button type="button" id="cerrarConfirmarVehiculo" class="modal-close-btn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-vehiculos-body">
+
+        <div class="vehiculo-info-card">
+          <div class="vehiculo-info-row">
+            <span class="vehiculo-info-label"><i class="fas fa-id-card"></i> Placas</span>
+            <span class="vehiculo-info-value" id="confPlacasVehiculo">—</span>
+          </div>
+          <div class="vehiculo-info-row">
+            <span class="vehiculo-info-label"><i class="fas fa-car"></i> Modelo</span>
+            <span class="vehiculo-info-value" id="confModeloVehiculo">—</span>
+          </div>
+          <div class="vehiculo-info-row">
+            <span class="vehiculo-info-label"><i class="fas fa-tag"></i> Categoría</span>
+            <span class="vehiculo-info-value" id="confCategoriaVehiculo">—</span>
+          </div>
+          <div class="vehiculo-info-row" style="border-bottom: none;">
+            <span class="vehiculo-info-label"><i class="fas fa-palette"></i> Color</span>
+            <span class="vehiculo-info-value" id="confColorVehiculo">—</span>
+          </div>
+        </div>
+
+        <div class="campo-gasolina">
+          <label><i class="fas fa-gas-pump"></i> Nivel de gasolina</label>
+          <div class="gasolina-select-wrapper">
+            <select id="confGasolinaSelect">
+              <option value="0">0/16</option>
+              <option value="1">1/16</option>
+              <option value="2">2/16</option>
+              <option value="3">3/16</option>
+              <option value="4">4/16</option>
+              <option value="5">5/16</option>
+              <option value="6">6/16</option>
+              <option value="7">7/16</option>
+              <option value="8">8/16</option>
+              <option value="9">9/16</option>
+              <option value="10">10/16</option>
+              <option value="11">11/16</option>
+              <option value="12">12/16</option>
+              <option value="13">13/16</option>
+              <option value="14">14/16</option>
+              <option value="15">15/16</option>
+              <option value="16" selected>16/16</option>
+            </select>
+            <span class="gasolina-texto" id="confLitrosTexto">~0 L</span>
+          </div>
+        </div>
+
+        <div class="campo-kilometraje">
+          <label><i class="fas fa-tachometer-alt"></i> Kilometraje actual</label>
+          <div class="kilometraje-input-wrapper">
+            <input type="number" id="confKilometrajeInput" min="0" step="1" placeholder="Ej. 25000">
+            <span class="kilometraje-unidad">km</span>
+          </div>
+          <div class="kilometraje-hint">
+            <i class="fas fa-info-circle"></i> Ingresa el kilometraje actual del vehículo
+          </div>
+        </div>
+
+        <div class="warning-box">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>Verifica que los datos sean correctos antes de confirmar la selección.</span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-cancelar" id="cancelarConfirmarVehiculo">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button type="button" class="btn btn-confirmar" id="confirmarSeleccionVehiculo">
+          <i class="fas fa-check"></i> Confirmar
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   {{ $reservaciones->links() }}
 </main>
 @endsection
@@ -792,12 +916,10 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 
-  {{-- 🔔 Alertify (JS) — debe cargarse ANTES de reservacionesActivas.js porque ese archivo usa alertify.* --}}
-  <script src="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
 
   <script src="{{ asset('js/reservacionesActivas.js') }}"></script>
 
-  {{-- ✅ Importar respaldo con confirmación (Alertify) --}}
+  {{-- IMPORTAR RESPALDO --}}
   <script>
     window.addEventListener("DOMContentLoaded", () => {
       const btnImport   = document.getElementById('btnImportExcel');
@@ -806,50 +928,41 @@
 
       if (!btnImport || !inputImport || !formImport) return;
 
-      // Posición de las notificaciones tipo toast
-      if (window.alertify) {
-        alertify.set('notifier', 'position', 'top-right');
-      }
-
-      // Al hacer clic en "Importar", abre el selector de archivo
       btnImport.addEventListener('click', () => {
         inputImport.click();
       });
 
-      // Cuando se selecciona un archivo, pide confirmación (Alertify) y envía
       inputImport.addEventListener('change', () => {
         if (!inputImport.files.length) return;
 
         const nombre = inputImport.files[0].name;
 
-        alertify.confirm(
-          'Importar respaldo',
-          `¿Seguro que deseas IMPORTAR el archivo "${nombre}"?<br><br>` +
-          `Esto restaurará o actualizará las reservaciones comparando por ID. ` +
-          `Las que ya existan se sobrescribirán con los datos del archivo.`,
-          function () {
-            // ✅ Aceptar
+        Aviso.confirmar({
+          titulo: 'Importar respaldo',
+          mensaje: `¿Seguro que deseas IMPORTAR el archivo "${nombre}"? ` +
+                   `Esto restaurará o actualizará las reservaciones comparando por ID; ` +
+                   `las que ya existan se sobrescribirán con los datos del archivo.`,
+          textoOk: 'Sí, importar'
+        }).then((ok) => {
+          if (ok) {
             formImport.submit();
-          },
-          function () {
-            // ❌ Cancelar: limpiar selección
+          } else {
             inputImport.value = "";
-            alertify.warning('Importación cancelada');
+            mostrarAviso('Importación cancelada', 'warn');
           }
-        ).set('labels', { ok: 'Sí, importar', cancel: 'Cancelar' });
+        });
       });
 
-      // Mostrar mensajes flash del servidor (resultado de la importación)
       @if(session('success'))
-        alertify.success(@json(session('success')));
+        mostrarAviso(@json(session('success')), 'ok');
       @endif
       @if(session('error'))
-        alertify.error(@json(session('error')));
+        mostrarAviso(@json(session('error')), 'error');
       @endif
     });
   </script>
 
-  {{-- ✅ Abrir/cerrar resumen de reservación --}}
+  {{-- TOGGLE RESUMEN --}}
   <script>
     document.addEventListener('click', function(e) {
       const btn = e.target.closest('[data-toggle-detail]');

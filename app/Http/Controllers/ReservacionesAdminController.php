@@ -798,6 +798,13 @@ class ReservacionesAdminController extends Controller
             abort(404, 'Reservación no encontrada');
         }
 
+        // ¿Tiene contrato ABIERTO? (aperturado/iniciado)
+        // Si sí, en el front se bloquean fecha y hora de INICIO.
+        $reservacion->contrato_iniciado = DB::table('contratos')
+            ->where('id_reservacion', $reservacion->id_reservacion)
+            ->where('estado', 'abierto')
+            ->exists();
+
         // 🔵 SUCURSALES — DROPOFF (entrega): todas las activas, sin filtrar por ver_admin
         $sucursales = DB::table('sucursales as s')
             ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
@@ -1280,117 +1287,8 @@ class ReservacionesAdminController extends Controller
            datos YA ACTUALIZADOS de la reserva editada.
         ========================================================== */
 
-        // ✅ Ficha "Tu Auto" (capacidad por código de categoría)
-        $predeterminados = [
-            'C'  => ['pax' => 5,  'small' => 2, 'big' => 1],
-            'D'  => ['pax' => 5,  'small' => 2, 'big' => 1],
-            'E'  => ['pax' => 5,  'small' => 2, 'big' => 2],
-            'F'  => ['pax' => 5,  'small' => 2, 'big' => 2],
-            'IC' => ['pax' => 5,  'small' => 2, 'big' => 2],
-            'I'  => ['pax' => 5,  'small' => 3, 'big' => 2],
-            'IB' => ['pax' => 7,  'small' => 3, 'big' => 2],
-            'M'  => ['pax' => 7,  'small' => 4, 'big' => 2],
-            'L'  => ['pax' => 13, 'small' => 4, 'big' => 3],
-            'H'  => ['pax' => 5,  'small' => 3, 'big' => 2],
-            'HI' => ['pax' => 5,  'small' => 3, 'big' => 2],
-        ];
-        $codigoCat = strtoupper(trim((string)($categoria->codigo ?? '')));
-        $tuAuto = $predeterminados[$codigoCat] ?? ['pax' => 5, 'small' => 2, 'big' => 1];
-
-        // 📧 Correos destino
-        $correoCliente = $request->email_cliente ?? null;
-        $correoEmpresa = env('MAIL_FROM_ADDRESS', 'reservaciones@viajerocarental.com');
-
-        // 🔄 Re-consultar la reserva YA actualizada
-        $reservacion = DB::table('reservaciones')
-            ->where('id_reservacion', $id)
-            ->first();
-
-        // 🛡️ Paquete de seguro guardado
-        $seguroReserva = DB::table('reservacion_paquete_seguro as rps')
-            ->join('seguro_paquete as sp', 'sp.id_paquete', '=', 'rps.id_paquete')
-            ->where('rps.id_reservacion', $id)
-            ->select('sp.id_paquete', 'sp.nombre', 'sp.descripcion', 'rps.precio_por_dia')
-            ->first();
-
-        // ➕ Servicios guardados (con total)
-        $extrasReserva = DB::table('reservacion_servicio as rs')
-            ->join('servicios as s', 's.id_servicio', '=', 'rs.id_servicio')
-            ->where('rs.id_reservacion', $id)
-            ->select(
-                's.id_servicio',
-                's.nombre',
-                's.descripcion',
-                'rs.cantidad',
-                'rs.precio_unitario',
-                DB::raw('(rs.cantidad * rs.precio_unitario) as total')
-            )
-            ->get();
-
-        // 📍 Lugares de retiro y entrega (Ciudad - Sucursal)
-        $retiroInfo = DB::table('sucursales as s')
-            ->join('ciudades as c', 'c.id_ciudad', '=', 's.id_ciudad')
-            ->where('s.id_sucursal', $reservacion->sucursal_retiro)
-            ->select('s.nombre as sucursal', 'c.nombre as ciudad')
-            ->first();
-
-        $entregaInfo = DB::table('sucursales as s')
-            ->join('ciudades as c', 'c.id_ciudad', '=', 's.id_ciudad')
-            ->where('s.id_sucursal', $reservacion->sucursal_entrega)
-            ->select('s.nombre as sucursal', 'c.nombre as ciudad')
-            ->first();
-
-        $lugarRetiro = $retiroInfo ? ($retiroInfo->ciudad . ' - ' . $retiroInfo->sucursal) : '-';
-        $lugarEntrega = $entregaInfo ? ($entregaInfo->ciudad . ' - ' . $entregaInfo->sucursal) : '-';
-
-        // 🖼️ Imagen de la categoría
-        $catImages = [
-            1  => 'img/aveo.png',
-            2  => 'img/virtus.png',
-            3  => 'img/jetta.png',
-            4  => 'img/camry.png',
-            5  => 'img/renegade.png',
-            6  => 'img/taos.png',
-            7  => 'img/avanza.png',
-            8  => 'img/Odyssey.png',
-            9  => 'img/Hiace.png',
-            10 => 'img/Frontier.png',
-            11 => 'img/Tacoma.png',
-        ];
-        $catId = (int)($categoria->id_categoria ?? 0);
-        $baseUrl = rtrim(config('app.url'), '/');
-        $imgPath = $catImages[$catId] ?? 'img/categorias/placeholder.png';
-        $imgCategoria = $baseUrl . '/' . ltrim($imgPath, '/');
-
-        // 💵 Recalcular opciones de renta para el correo (misma fórmula que creación)
-        $extrasServiciosTotalCorreo = 0;
-        if (!empty($extrasReserva)) {
-            $extrasServiciosTotalCorreo = (float) $extrasReserva->sum('total');
-        }
-        $seguroTotalCorreo = 0;
-        if (!empty($seguroReserva) && isset($seguroReserva->precio_por_dia)) {
-            $seguroTotalCorreo = (float) $seguroReserva->precio_por_dia * (float) $dias;
-        }
-        $opcionesRentaTotalCorreo = round(
-            $seguroTotalCorreo + $extrasServiciosTotalCorreo + $deliveryTotal + $dropoffTotal,
-            2
-        );
-
-        // ✉️ Envío
-        try {
-            if ($correoCliente) {
-                Mail::to($correoCliente)
-                    ->cc($correoEmpresa)
-                    ->send(new ReservacionAdminMail($reservacion, $categoria, $seguroReserva, $extrasReserva, $lugarRetiro, $lugarEntrega, $imgCategoria, $opcionesRentaTotalCorreo, $tuAuto));
-            } else {
-                Mail::to($correoEmpresa)
-                    ->send(new ReservacionAdminMail($reservacion, $categoria, $seguroReserva, $extrasReserva, $lugarRetiro, $lugarEntrega, $imgCategoria, $opcionesRentaTotalCorreo, $tuAuto));
-            }
-        } catch (\Throwable $e) {
-            Log::error('❌ Error al enviar correo de reserva (update): ' . $e->getMessage());
-        }
-
         return redirect()->route('rutaReservacionesActivas')
             ->with('success', 'Reservación actualizada correctamente');
     }
 }
+
