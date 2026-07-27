@@ -566,6 +566,23 @@ window.addEventListener("DOMContentLoaded", () => {
       return "—";
     };
 
+    const primeraOficina = (...oficinas) => {
+      const oficina = oficinas.find(valor => {
+        const texto = String(valor ?? "").trim();
+        return texto !== "" && !/^\d+$/.test(texto);
+      });
+      return oficina ? String(oficina).trim() : "—";
+    };
+
+    const nombreCompletoOficina = (oficina) => {
+      const nombres = {
+        AIQ: "Querétaro Aeropuerto",
+        TAQ: "Querétaro Central de Autobuses",
+        OCP: "Querétaro Oficina Plaza Central Park",
+      };
+      return nombres[oficina] || oficina;
+    };
+
     function construirFila(r) {
       const nombre = r.nombre_completo && r.nombre_completo !== ""
         ? r.nombre_completo
@@ -588,6 +605,19 @@ window.addEventListener("DOMContentLoaded", () => {
       if (r.extras && r.extras.length) {
         extrasHtml = r.extras.map(e => `<div>- ${escapeHtml(e.nombre)} (x${escapeHtml(e.cantidad)})</div>`).join("");
       }
+
+      const oficinaRecoleccion = nombreCompletoOficina(primeraOficina(
+        r.oficina_retiro_completa,
+        r.oficina_retiro,
+        r.oficina_compacta
+      ));
+      const oficinaDevolucionPropia = nombreCompletoOficina(primeraOficina(
+        r.oficina_devolucion_completa,
+        r.oficina_devolucion
+      ));
+      const oficinaDevolucion = oficinaDevolucionPropia === "—"
+        ? oficinaRecoleccion
+        : oficinaDevolucionPropia;
 
       const estadoTxt = (r.estado || "").charAt(0).toUpperCase() + (r.estado || "").slice(1);
 
@@ -623,16 +653,18 @@ window.addEventListener("DOMContentLoaded", () => {
         <div class="row-detail" style="display:none;">
           <div class="reserva-summary">
             <div class="summary-title">Reservación Confirmada el: ${fmtFechaHora(r.created_at)}</div>
-            <div class="reserva-summary-line"><b>Datos de Contacto:</b> MEXICO (MX) ${escapeHtml(r.telefono_cliente || "—")}</div>
+            <div class="reserva-summary-line summary-full summary-contact"><b>Datos de Contacto:</b> ${escapeHtml(r.pais_cliente || r.pais || "MEXICO (MX)")} | ${escapeHtml(r.telefono_cliente || "—")} | ${escapeHtml(nombre)} | ${escapeHtml(r.email_cliente || "—")}</div>
             <div class="reserva-summary-line"><b>Entrega:</b> ${fmtFecha(r.fecha_inicio)} a las ${fmtHora(r.hora_retiro)} HRS</div>
             <div class="reserva-summary-line"><b>Devolución:</b> ${fmtFecha(r.fecha_fin)} a las ${fmtHora(r.hora_entrega)} HRS</div>
-            <div class="reserva-summary-line"><b>Total(MXN):</b> ${totalFmt} - Forma de pago: (${escapeHtml(r.metodo_pago || "mostrador")})</div>
+            <div class="reserva-summary-line"><b>Oficina de entrega:</b> ${escapeHtml(oficinaRecoleccion)}</div>
+            <div class="reserva-summary-line"><b>Oficina de devolución:</b> ${escapeHtml(oficinaDevolucion)}</div>
             <div class="reserva-summary-line summary-full">
               <b>Vehículo Requerido:</b> ${escapeHtml(r.categoria || "")} | ${escapeHtml(r.categoria_nombre || "Sin asignar")} ${escapeHtml(r.transmision || "Sin transmisión")} ${escapeHtml(r.categoria_descripcion || "")} | Costo online: ${costoOnline} | Costo oficina: ${costoOficina}
             </div>
             <div class="reserva-summary-line"><b>Número de vuelo:</b> ${escapeHtml(r.no_vuelo || "—")}</div>
             <div class="reserva-summary-line"><b>Adicionales Requeridos:</b> ${extrasHtml}</div>
             <div class="reserva-summary-line"><b>Seguros:</b><br>${r.seguro ? escapeHtml(r.seguro) : "—"}</div>
+            <div class="reserva-summary-line summary-total summary-total-devolucion"><b>Total(MXN):</b> ${totalFmt} - Forma de pago: (${escapeHtml(r.metodo_pago || "mostrador")})</div>
 
             <div class="summary-actions">
               <div class="summary-actions-left">

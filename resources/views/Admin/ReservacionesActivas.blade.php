@@ -201,6 +201,17 @@
           } elseif (isset($seguroIndividual[$r->id_reservacion])) {
             $seguroNombre = $seguroIndividual[$r->id_reservacion]->nombre;
           }
+
+          // En la tabla general se conserva oficina_compacta (AIQ, TAQ u OCP).
+          // En el resumen mini se usan exclusivamente los nombres completos.
+          $oficinaRetiro = collect([
+            $r->oficina_retiro_completa ?? null,
+          ])->first(fn ($valor) => $valor !== null && trim((string) $valor) !== '');
+
+          $oficinaDevolucion = collect([
+            $r->oficina_devolucion_completa ?? null,
+            $oficinaRetiro,
+          ])->first(fn ($valor) => $valor !== null && trim((string) $valor) !== '');
         @endphp
 
         <div
@@ -280,9 +291,12 @@
               Reservación Confirmada el: {{ $r->created_at ? \Carbon\Carbon::parse($r->created_at)->format('d-M-Y H:i:s') : '—' }}
             </div>
 
-            <div class="reserva-summary-line">
+            <div class="reserva-summary-line summary-full summary-contact">
               <b>Datos de Contacto:</b>
-              MEXICO (MX) {{ $r->telefono_cliente ?? '—' }}
+              {{ $r->pais_cliente ?? $r->pais ?? 'MEXICO (MX)' }}
+              | {{ $r->telefono_cliente ?? '—' }}
+              | {{ $nombreCompleto }}
+              | {{ $r->email_cliente ?? '—' }}
             </div>
 
             <div class="reserva-summary-line">
@@ -298,8 +312,13 @@
             </div>
 
             <div class="reserva-summary-line">
-              <b>Total(MXN):</b>
-              ${{ number_format($r->total, 2) }} - Forma de pago: ({{ $r->metodo_pago ?? 'mostrador' }})
+              <b>Oficina de entrega:</b>
+              {{ $oficinaRetiro ?? '—' }}
+            </div>
+
+            <div class="reserva-summary-line">
+              <b>Oficina de devolución:</b>
+              {{ $oficinaDevolucion ?? $oficinaRetiro ?? '—' }}
             </div>
 
             <div class="reserva-summary-line summary-full">
@@ -332,6 +351,12 @@
             <div class="reserva-summary-line">
               <b>Seguros:</b>
               <div>{{ $seguroNombre ?? '—' }}</div>
+            </div>
+
+            <div class="reserva-summary-line summary-total"
+                style="grid-column: 2 / 3 !important;">
+                <b>Total(MXN):</b>
+                ${{ number_format($r->total, 2) }} - Forma de pago: ({{ $r->metodo_pago ?? 'mostrador' }})
             </div>
 
             <div class="summary-actions">

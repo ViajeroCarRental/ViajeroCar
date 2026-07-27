@@ -5,16 +5,68 @@
 @endsection
 
 @section('contenidoContratoFinal')
+    @php
+        $seccionesObligatorias = ['contrato', 'clausulas', 'checklist'];
+
+        if ($tieneConductorAdicional) {
+            $seccionesObligatorias[] = 'conductor_adicional';
+        }
+
+        $seccionesRevisadas = collect($seccionesObligatorias)
+            ->filter(fn ($seccion) => !empty($revisionesContrato[$seccion]))
+            ->count();
+
+        $revisionCompleta = $seccionesRevisadas === count($seccionesObligatorias);
+    @endphp
+
     <div class="contrato-final-container" id="contratoApp" data-id-contrato="{{ $contrato->id_contrato }}">
 
         <!-- ============================
                             BOTONES SUPERIORES
                     ============================= -->
         <div class="acciones-contrato">
-            <button class="btn btn-pdf">Imprimir / Guardar PDF</button>
-            <button id="btnAbrirModalAviso">Enviar correo</button>
-            <span class="badge-ra">RA: —</span>
+            <button type="button" class="btn btn-pdf">Imprimir / Guardar PDF</button>
+
+            <div class="revision-resumen">
+                <span id="contadorRevisiones">
+                    {{ $seccionesRevisadas }} de {{ count($seccionesObligatorias) }} documentos revisados
+                </span>
+            </div>
+
+            <button
+                type="button"
+                id="btnAbrirModalAviso"
+                class="btn-enviar-contrato"
+                {{ $revisionCompleta ? '' : 'disabled' }}
+            >
+                <i class="fa-solid fa-envelope"></i>
+                Enviar correo
+            </button>
+
+            <span class="badge-ra">
+                RA: {{ $contrato->numero_contrato ?? $contrato->id_contrato ?? '—' }}
+            </span>
         </div>
+
+        <div class="documentos-acordeon">
+            <section
+                class="documento-acordeon abierto {{ !empty($revisionesContrato['contrato']) ? 'revisado' : '' }}"
+                data-seccion="contrato"
+                data-revisado="{{ !empty($revisionesContrato['contrato']) ? '1' : '0' }}"
+            >
+                <button type="button" class="documento-encabezado" aria-expanded="true">
+                    <span class="documento-numero">1</span>
+                    <span class="documento-titulo">
+                        <strong>Contrato de arrendamiento</strong>
+                        <small>{{ !empty($revisionesContrato['contrato']) ? 'Revisado' : 'Pendiente de revisión' }}</small>
+                    </span>
+                    <span class="documento-estado">
+                        <i class="fa-solid {{ !empty($revisionesContrato['contrato']) ? 'fa-circle-check' : 'fa-circle' }}"></i>
+                    </span>
+                    <i class="fa-solid fa-chevron-down documento-flecha"></i>
+                </button>
+
+                <div class="documento-contenido">
 
         <!-- ============================
                             TARJETA DEL CONTRATO
@@ -568,17 +620,147 @@
             </div>
         </footer>
 
-    </div>
+                    <div class="confirmacion-revision">
+                        <button
+                            type="button"
+                            class="btn-confirmar-revision"
+                            data-marcar-revision="contrato"
+                            {{ !empty($revisionesContrato['contrato']) ? 'disabled' : '' }}
+                        >
+                            <i class="fa-solid fa-check"></i>
+                            <span>{{ !empty($revisionesContrato['contrato']) ? 'Contrato revisado' : 'Marcar contrato como revisado' }}</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
 
-    <!-- ACCIONES EXTRA -->
-    <div class="acciones-extra">
-        <a href="{{ route('checklist.ver', ['id' => $contrato->id_contrato, 'modo' => 'salida']) }}"
-            class="btn-checklist">
-            Checklist
-        </a>
-        <a href="{{ route('anexo.ver', ['id' => $contrato->id_contrato]) }}" class="btn-checklist">
-            Conductor adicional
-        </a>
+            <section
+                class="documento-acordeon {{ !empty($revisionesContrato['clausulas']) ? 'revisado' : '' }}"
+                data-seccion="clausulas"
+                data-revisado="{{ !empty($revisionesContrato['clausulas']) ? '1' : '0' }}"
+            >
+                <button type="button" class="documento-encabezado" aria-expanded="false">
+                    <span class="documento-numero">2</span>
+                    <span class="documento-titulo">
+                        <strong>Cláusulas del contrato</strong>
+                        <small>{{ !empty($revisionesContrato['clausulas']) ? 'Revisadas' : 'Pendientes de revisión' }}</small>
+                    </span>
+                    <span class="documento-estado">
+                        <i class="fa-solid {{ !empty($revisionesContrato['clausulas']) ? 'fa-circle-check' : 'fa-circle' }}"></i>
+                    </span>
+                    <i class="fa-solid fa-chevron-down documento-flecha"></i>
+                </button>
+
+                <div class="documento-contenido">
+                    <div class="clausulas-documento">
+                        @include('Admin.clausulas-contrato')
+                    </div>
+
+                    <div class="confirmacion-revision">
+                        <button
+                            type="button"
+                            class="btn-confirmar-revision"
+                            data-marcar-revision="clausulas"
+                            {{ !empty($revisionesContrato['clausulas']) ? 'disabled' : '' }}
+                        >
+                            <i class="fa-solid fa-check"></i>
+                            <span>{{ !empty($revisionesContrato['clausulas']) ? 'Cláusulas revisadas' : 'Marcar cláusulas como revisadas' }}</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section
+                class="documento-acordeon {{ !empty($revisionesContrato['checklist']) ? 'revisado' : '' }}"
+                data-seccion="checklist"
+                data-revisado="{{ !empty($revisionesContrato['checklist']) ? '1' : '0' }}"
+            >
+                <button type="button" class="documento-encabezado" aria-expanded="false">
+                    <span class="documento-numero">3</span>
+                    <span class="documento-titulo">
+                        <strong>Checklist del vehículo</strong>
+                        <small>{{ !empty($revisionesContrato['checklist']) ? 'Revisado' : 'Pendiente de revisión' }}</small>
+                    </span>
+                    <span class="documento-estado">
+                        <i class="fa-solid {{ !empty($revisionesContrato['checklist']) ? 'fa-circle-check' : 'fa-circle' }}"></i>
+                    </span>
+                    <i class="fa-solid fa-chevron-down documento-flecha"></i>
+                </button>
+
+                <div class="documento-contenido">
+                    <div class="documento-frame-container">
+                        <iframe
+                            class="documento-frame"
+                            title="Checklist del vehículo"
+                            loading="lazy"
+                            src="{{ route('checklist.ver', [
+                                'id' => $contrato->id_contrato,
+                                'modo' => 'salida',
+                                'embed' => 1
+                            ]) }}"
+                        ></iframe>
+                    </div>
+
+                    <div class="confirmacion-revision">
+                        <button
+                            type="button"
+                            class="btn-confirmar-revision"
+                            data-marcar-revision="checklist"
+                            {{ !empty($revisionesContrato['checklist']) ? 'disabled' : '' }}
+                        >
+                            <i class="fa-solid fa-check"></i>
+                            <span>{{ !empty($revisionesContrato['checklist']) ? 'Checklist revisado' : 'Marcar checklist como revisado' }}</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            @if ($tieneConductorAdicional)
+                <section
+                    class="documento-acordeon {{ !empty($revisionesContrato['conductor_adicional']) ? 'revisado' : '' }}"
+                    data-seccion="conductor_adicional"
+                    data-revisado="{{ !empty($revisionesContrato['conductor_adicional']) ? '1' : '0' }}"
+                >
+                    <button type="button" class="documento-encabezado" aria-expanded="false">
+                        <span class="documento-numero">4</span>
+                        <span class="documento-titulo">
+                            <strong>Conductor adicional</strong>
+                            <small>{{ !empty($revisionesContrato['conductor_adicional']) ? 'Revisado' : 'Pendiente de revisión' }}</small>
+                        </span>
+                        <span class="documento-estado">
+                            <i class="fa-solid {{ !empty($revisionesContrato['conductor_adicional']) ? 'fa-circle-check' : 'fa-circle' }}"></i>
+                        </span>
+                        <i class="fa-solid fa-chevron-down documento-flecha"></i>
+                    </button>
+
+                    <div class="documento-contenido">
+                        <div class="documento-frame-container">
+                            <iframe
+                                class="documento-frame"
+                                title="Conductor adicional"
+                                loading="lazy"
+                                src="{{ route('anexo.ver', [
+                                    'id' => $contrato->id_contrato,
+                                    'embed' => 1
+                                ]) }}"
+                            ></iframe>
+                        </div>
+
+                        <div class="confirmacion-revision">
+                            <button
+                                type="button"
+                                class="btn-confirmar-revision"
+                                data-marcar-revision="conductor_adicional"
+                                {{ !empty($revisionesContrato['conductor_adicional']) ? 'disabled' : '' }}
+                            >
+                                <i class="fa-solid fa-check"></i>
+                                <span>{{ !empty($revisionesContrato['conductor_adicional']) ? 'Conductor adicional revisado' : 'Marcar conductor adicional como revisado' }}</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            @endif
+        </div>
     </div>
 
     <!-- MODAL FIRMA ARRENDADOR -->
@@ -596,42 +778,120 @@
     <!-- MODAL AVISO LEGAL -->
     <div id="modalAviso" class="modal-firma" style="display:none;">
         <div class="modal-body" style="max-width:650px;">
+
             <h3>Aviso de responsabilidad</h3>
+
             <p style="font-size:15px; margin-bottom:10px;">
-                Por favor lea el siguiente texto de responsabilidad y firme para confirmar que está de acuerdo:
+                Por favor, lea el siguiente texto de responsabilidad y firme para confirmar que está de acuerdo:
             </p>
+
+            @php
+                $fechaDevolucionAviso = !empty($reservacion->fecha_fin)
+                    ? \Carbon\Carbon::parse($reservacion->fecha_fin)
+                        ->locale('es')
+                        ->translatedFormat('d \d\e F \d\e Y')
+                    : 'la fecha establecida';
+
+                $horaDevolucionAviso = !empty($reservacion->hora_entrega)
+                    ? \Carbon\Carbon::parse($reservacion->hora_entrega)
+                        ->format('H:i')
+                    : 'la hora establecida';
+
+                $nombreArrendatarioAviso = !empty($reservacion->nombre_cliente)
+                    ? trim(
+                        $reservacion->nombre_cliente . ' ' .
+                        ($reservacion->apellidos_cliente ?? '')
+                    )
+                    : '________________';
+            @endphp
+
             <div
-                style="background:#fff3f3; padding:12px 15px; border-left:4px solid #c00; border-radius:8px; margin-bottom:18px;">
-                <p id="textoOriginal" style="margin:0;">
+                style="
+                    background:#fff3f3;
+                    padding:12px 15px;
+                    border-left:4px solid #c00;
+                    border-radius:8px;
+                    margin-bottom:18px;
+                "
+            >
+                <p id="textoOriginal" style="margin:0; line-height:1.6; text-align:justify;">
                     Yo,
-                    {{ $reservacion->nombre_cliente ? trim($reservacion->nombre_cliente . ' ' . ($reservacion->apellidos_cliente ?? '')) : '________________' }},
+                    <strong>{{ $nombreArrendatarioAviso }}</strong>,
                     manifiesto estar plenamente consciente de que cualquier daño, negligencia o mal uso del vehículo
                     que no esté cubierto por mi paquete de seguro o protecciones individuales será responsabilidad mía,
                     y acepto pagar los cargos adicionales que pudieran generarse conforme a las políticas de
-                    Viajero Car Rental.
+                    Viajero Car Rental. Asimismo, me comprometo a regresar el vehículo el día
+                    <strong>{{ $fechaDevolucionAviso }}</strong>
+                    a las
+                    <strong>{{ $horaDevolucionAviso }} horas</strong>,
+                    conforme a la fecha y hora establecidas en el contrato.
                 </p>
             </div>
+
             <div style="margin-top:10px;">
                 <p style="font-size:14px; margin-bottom:8px;">
                     Firma del arrendatario en conformidad con el aviso:
                 </p>
-                <div style="border:1px solid #ccc; border-radius:8px; padding:10px; background:#fafafa;">
-                    <canvas id="padAviso" width="500" height="200"></canvas>
-                    <div class="firma-buttons" style="margin-top:10px; display:flex; gap:10px;">
-                        <button id="clearAviso" class="btn btn-gray" type="button">
+
+                <div
+                    style="
+                        border:1px solid #ccc;
+                        border-radius:8px;
+                        padding:10px;
+                        background:#fafafa;
+                    "
+                >
+                    <canvas
+                        id="padAviso"
+                        width="500"
+                        height="200"
+                    ></canvas>
+
+                    <div
+                        class="firma-buttons"
+                        style="
+                            margin-top:10px;
+                            display:flex;
+                            gap:10px;
+                        "
+                    >
+                        <button
+                            id="clearAviso"
+                            class="btn btn-gray"
+                            type="button"
+                        >
                             Limpiar firma
                         </button>
                     </div>
                 </div>
             </div>
-            <div class="firma-buttons" style="margin-top:15px; display:flex; gap:10px; justify-content:flex-end;">
-                <button id="cancelarAviso" class="btn btn-gray" type="button">
+
+            <div
+                class="firma-buttons"
+                style="
+                    margin-top:15px;
+                    display:flex;
+                    gap:10px;
+                    justify-content:flex-end;
+                "
+            >
+                <button
+                    id="cancelarAviso"
+                    class="btn btn-gray"
+                    type="button"
+                >
                     Cancelar
                 </button>
-                <button id="confirmarAviso" class="btn btn-red" type="button">
+
+                <button
+                    id="confirmarAviso"
+                    class="btn btn-red"
+                    type="button"
+                >
                     Confirmar y Enviar
                 </button>
             </div>
+
         </div>
     </div>
 

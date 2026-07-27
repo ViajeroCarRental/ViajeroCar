@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -14,41 +15,27 @@ class EnviarRecordatoriosReservacion extends Command
     private const TZ = 'America/Mexico_City';
     private const ESTADOS_VIGENTES = ['confirmada', 'prepago', 'pendiente_pago'];
 
-    /**
-     * A QUIÉN llega el recordatorio:
-     *   - Con una dirección aquí  -> llega SIEMPRE a esa dirección (la empresa), NO al cliente.
-     *   - Vacío ('')              -> llega al cliente (email_cliente), como estaba antes.
-     * Para volver a mandárselo al cliente, deja esto en '' (cadena vacía).
-     */
     private const DESTINO = 'reservaciones@viajerocarental.com';
 
-    /**
-     * --horas:   anticipación del recordatorio (por defecto 1 h antes del retiro).
-     * --ventana: ancho de la franja en minutos. DEBE ser >= al intervalo de tu cron.
-     */
-    protected $signature = 'reservaciones:recordatorios {--horas=1} {--ventana=18}';
+    protected $signature = 'reservaciones:recordatorios {--horas=1}';
 
     protected $description = 'Envía recordatorios de reservaciones próximas a su retiro (no escribe nada en la BD)';
 
     public function handle(): int
     {
-        $horas   = max(0, (int) $this->option('horas'));
-        $ventana = max(1, (int) $this->option('ventana'));
+        $horas = max(0, (int) $this->option('horas'));
 
-        $ahora = Carbon::now(self::TZ);
-        $desde = $ahora->copy()->addHours($horas);
-        $hasta = $desde->copy()->addMinutes($ventana);
+        $ahora  = Carbon::now(self::TZ);
+        $limite = $ahora->copy()->addHours($horas);
 
-        Log::info('[RECORDATORIO] Ventana calculada', [
-            'ahora' => $ahora->toDateTimeString(),
-            'desde' => $desde->toDateTimeString(),
-            'hasta' => $hasta->toDateTimeString(),
+        Log::info('[RECORDATORIO] Rango calculado', [
+            'ahora'  => $ahora->toDateTimeString(),
+            'limite' => $limite->toDateTimeString(),
         ]);
 
-        // Acotamos por la fecha del retiro (usa el índice). fecha_inicio es DATE.
         $reservaciones = DB::table('reservaciones')
             ->whereIn('estado', self::ESTADOS_VIGENTES)
-            ->whereBetween('fecha_inicio', [$desde->toDateString(), $hasta->toDateString()])
+            ->whereBetween('fecha_inicio', [$ahora->toDateString(), $limite->toDateString()])
             ->orderBy('fecha_inicio')
             ->get();
 
@@ -60,14 +47,20 @@ class EnviarRecordatoriosReservacion extends Command
                 continue;
             }
 
-            // Solo las que caen dentro de la franja [desde, hasta)
-            if ($retiro->lt($desde) || $retiro->gte($hasta)) {
+            // Rango abierto: todo lo que sale entre ahora y ahora + N horas
+            if ($retiro->lt($ahora) || $retiro->gt($limite)) {
                 continue;
             }
 
-            // Dirección fija (empresa) o, si la constante está vacía, el correo del cliente.
             $destino = self::DESTINO !== '' ? self::DESTINO : (string) $r->email_cliente;
             if (trim($destino) === '') {
+                continue;
+            }
+
+            // Candado en caché: add() solo escribe si la llave NO existe.
+            // Si ya existe, esta reservación ya recibió su recordatorio.
+            $candado = "recordatorio:{$r->id_reservacion}";
+            if (! Cache::add($candado, 1, now()->addHours(48))) {
                 continue;
             }
 
@@ -85,6 +78,8 @@ class EnviarRecordatoriosReservacion extends Command
                     'retiro'         => $retiro->format('Y-m-d H:i'),
                 ]);
             } catch (\Throwable $e) {
+                // Libera el candado para que el siguiente ciclo reintente
+                Cache::forget($candado);
                 Log::error('[RECORDATORIO] Falló el envío', [
                     'id_reservacion' => $r->id_reservacion,
                     'error'          => $e->getMessage(),
@@ -98,8 +93,6 @@ class EnviarRecordatoriosReservacion extends Command
 
     /**
      * Interpreta fecha_inicio (DATE) + hora_retiro (TIME) SIEMPRE en hora de México.
-     * El 3er parámetro de createFromFormat fuerza la zona horaria, de modo que la
-     * hora NO se malinterprete como UTC (que era lo que descartaba las reservas).
      */
     private function parseRetiro(string $fecha, ?string $hora): ?Carbon
     {
