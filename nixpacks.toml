@@ -3,8 +3,12 @@
 UPLOAD_MAX_FILESIZE = "2048M"
 POST_MAX_SIZE       = "2048M"
 MEMORY_LIMIT        = "2048M"
+# Fuerza Node 22 (evita el choque de versiones)
+NIXPACKS_NODE_VERSION = "22"
 
 [phases.setup]
+# El "..." conserva PHP, Composer y Node que Railway detecta solo
+nixPkgs = ['...']
 # Localiza php.ini del runtime de Nix y le agrega un upload.ini con los nuevos límites
 cmds = [
   'UPLOAD_INI_PATH=$(find /nix/store/*-php-*/lib -name php.ini -print0 | head -z -n 1 | rev | cut -c 9- | rev)/upload.ini; echo "upload_max_filesize=${UPLOAD_MAX_FILESIZE};" >> $UPLOAD_INI_PATH; echo "post_max_size=${POST_MAX_SIZE};" >> $UPLOAD_INI_PATH; echo "memory_limit=${MEMORY_LIMIT};" >> $UPLOAD_INI_PATH'
