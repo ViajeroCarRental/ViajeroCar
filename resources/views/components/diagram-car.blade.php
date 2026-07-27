@@ -24,6 +24,26 @@
         display: block;
     }
 
+    .interior-damage {
+        width: 100%;
+        margin-top: 12px;
+        padding: 11px 14px;
+        border: 2px solid #ff4d6a;
+        border-radius: 12px;
+        background: #fff;
+        color: #333;
+        font-weight: 800;
+        cursor: pointer;
+        transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+    }
+
+    .interior-damage:hover,
+    .interior-damage.selected {
+        background: #ff4d6a;
+        color: #fff;
+        box-shadow: 0 5px 14px rgba(255,77,106,.25);
+    }
+
     /* ===== PUNTOS SVG ===== */
     .point-dot {
     fill: rgba(255,255,255,0.95);        /* círculo casi blanco cuando NO hay daño */
@@ -89,20 +109,32 @@
     /* ===== MODAL ===== */
     #modalDaño {
         display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,.5);
-        justify-content: center;
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw;
+        height: 100vh;
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.55);
+        z-index: 999999;
+
         align-items: center;
-        z-index: 9999;
+        justify-content: center;
+
+        box-sizing: border-box;
     }
 
     #modalDaño .box {
-        background: white;
-        width: 320px;
+        position: relative;
+        width: 100%;
+        max-width: 360px;
         padding: 22px;
+        margin: 0;
+
+        background: #ffffff;
         border-radius: 14px;
-        box-shadow: 0 0 15px rgba(0,0,0,.15);
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.25);
+
+        box-sizing: border-box;
     }
 
     #modalDaño h4 {
@@ -149,42 +181,74 @@
 
             {{-- ================== PUNTOS ================== --}}
 
-            {{-- DEFENSA DELANTERA --}}
-            <circle class="point-dot" data-zone="1" cx="400" cy="120" r="26" />
-            <circle class="point-dot" data-zone="2" cx="400" cy="210" r="26" />
+            {{-- FASCIA DELANTERA, COFRE Y PARABRISAS --}}
+            <circle class="point-dot damage-trigger" data-zone="1" cx="400" cy="120" r="26">
+                <title>Fascia delantera</title>
+            </circle>
+            <circle class="point-dot damage-trigger" data-zone="2" cx="400" cy="350" r="26">
+                <title>Cofre</title>
+            </circle>
+            <circle class="point-dot damage-trigger" data-zone="5" cx="400" cy="500" r="26">
+                <title>Parabrisas</title>
+            </circle>
 
-            {{-- COFRE / PARABRISAS --}}
-            <circle class="point-dot" data-zone="5" cx="400" cy="365" r="26" />
-
-            {{-- COSTADOS FRONTALES --}}
-            <circle class="point-dot" data-zone="3" cx="155" cy="385" r="26" />
-            <circle class="point-dot" data-zone="4" cx="645" cy="385" r="26" />
+            {{-- ESTRIBOS --}}
+            <circle class="point-dot damage-trigger" data-zone="3" cx="105" cy="655" r="26">
+                <title>Estribo izquierdo</title>
+            </circle>
+            <circle class="point-dot damage-trigger" data-zone="4" cx="695" cy="655" r="26">
+                <title>Estribo derecho</title>
+            </circle>
 
             {{-- PUERTAS DELANTERAS --}}
-            <circle class="point-dot" data-zone="6" cx="155" cy="525" r="26" />
-            <circle class="point-dot" data-zone="7" cx="645" cy="525" r="26" />
+            <circle class="point-dot damage-trigger" data-zone="6" cx="190" cy="555" r="26">
+                <title>Puerta piloto delantera</title>
+            </circle>
+            <circle class="point-dot damage-trigger" data-zone="7" cx="610" cy="555" r="26">
+                <title>Puerta copiloto delantera</title>
+            </circle>
 
-            {{-- PUERTAS TRASERAS --}}
-            <circle class="point-dot" data-zone="8" cx="155" cy="685" r="26" />
-            <circle class="point-dot" data-zone="9" cx="645" cy="685" r="26" />
+            {{-- PUERTAS DE PASAJEROS --}}
+            <circle class="point-dot damage-trigger" data-zone="8" cx="190" cy="735" r="26">
+                <title>Puerta pasajeros izquierda</title>
+            </circle>
+            <circle class="point-dot damage-trigger" data-zone="9" cx="610" cy="735" r="26">
+                <title>Puerta pasajeros derecha</title>
+            </circle>
 
-            {{-- TECHO --}}
-            <circle class="point-dot" data-zone="10" cx="400" cy="640" r="26" />
+            {{-- TECHO, PUERTA TRASERA Y FASCIA TRASERA --}}
+            <circle class="point-dot damage-trigger" data-zone="10" cx="400" cy="690" r="26">
+                <title>Techo</title>
+            </circle>
+            <circle class="point-dot damage-trigger" data-zone="11" cx="400" cy="930" r="26">
+                <title>Puerta trasera</title>
+            </circle>
+            <circle class="point-dot damage-trigger" data-zone="13" cx="400" cy="1110" r="26">
+                <title>Fascia trasera</title>
+            </circle>
 
-            {{-- COSTADOS TRASEROS --}}
-            <circle class="point-dot" data-zone="11" cx="155" cy="845" r="26" />
-            <circle class="point-dot" data-zone="12" cx="645" cy="845" r="26" />
-
-            {{-- DEFENSA TRASERA --}}
-            <circle class="point-dot" data-zone="13" cx="400" cy="1010" r="26" />
-
-            {{-- LLANTAS EXACTAS --}}
-            <circle class="point-dot" data-zone="15" cx="117"  cy="458" r="26" />
-            <circle class="point-dot" data-zone="16" cx="682"  cy="458" r="26" />
-            <circle class="point-dot" data-zone="17" cx="117"  cy="908" r="26" />
-            <circle class="point-dot" data-zone="18" cx="682"  cy="908" r="26" />
+            {{-- LLANTAS --}}
+            <circle class="point-dot damage-trigger" data-zone="15" cx="65" cy="377" r="26">
+                <title>Llanta delantera izquierda</title>
+            </circle>
+            <circle class="point-dot damage-trigger" data-zone="16" cx="718" cy="377" r="26">
+                <title>Llanta delantera derecha</title>
+            </circle>
+            <circle class="point-dot damage-trigger" data-zone="17" cx="65" cy="850" r="26">
+                <title>Llanta trasera izquierda</title>
+            </circle>
+            <circle class="point-dot damage-trigger" data-zone="18" cx="718" cy="850" r="26">
+                <title>Llanta trasera derecha</title>
+            </circle>
 
         </svg>
+
+        {{-- Interiores queda fuera del auto y puede registrar varios daños --}}
+        <button type="button"
+                class="interior-damage damage-trigger"
+                data-zone="14">
+            + Agregar daño en interiores
+        </button>
     </div>
 
     <div class="tabla-entrega">
@@ -269,239 +333,470 @@
     </div>
 </div>
 
-<<script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    /* =====================================================
+       CONFIGURACIÓN DE ZONAS
+    ===================================================== */
+
     const nombresZonas = {
-        1: "Defensa delantera",
-        2: "Defensa delantera superior",
-        3: "Costado izquierdo frontal",
-        4: "Costado derecho frontal",
-        5: "Cofre / parabrisas",
-        6: "Puerta delantera izquierda",
-        7: "Puerta delantera derecha",
-        8: "Puerta trasera izquierda",
-        9: "Puerta trasera derecha",
+        1: "Fascia delantera",
+        2: "Cofre",
+        3: "Estribo izquierdo",
+        4: "Estribo derecho",
+        5: "Parabrisas",
+        6: "Puerta piloto delantera",
+        7: "Puerta copiloto delantera",
+        8: "Puerta pasajeros izquierda",
+        9: "Puerta pasajeros derecha",
         10: "Techo",
-        11: "Costado trasero izquierdo",
-        12: "Costado trasero derecho",
-        13: "Defensa trasera",
+        11: "Puerta trasera",
+        13: "Fascia trasera",
+        14: "Interiores",
         15: "Llanta delantera izquierda",
         16: "Llanta delantera derecha",
         17: "Llanta trasera izquierda",
-        18: "Llanta trasera derecha",
+        18: "Llanta trasera derecha"
     };
 
+    /* =====================================================
+       ELEMENTOS GENERALES
+    ===================================================== */
+
     const modal = document.getElementById("modalDaño");
-    const idContrato = document.getElementById("idContrato").value;
+    const tituloModal = document.getElementById("tituloModal");
+    const comentarioInput = document.getElementById("comentarioDaño");
+    const fotoInput = document.getElementById("fotoDaño");
+    const previewFoto = document.getElementById("previewFoto");
+    const guardarDañoBtn = document.getElementById("guardarDaño");
+    const cancelarDañoBtn = document.getElementById("cancelarDaño");
+    const guardarInventarioBtn = document.getElementById("guardarInventario");
+    const contratoInput = document.getElementById("idContrato");
+
+    if (!modal || !contratoInput) {
+        console.error("No se encontró el modal de daños o el ID del contrato.");
+        return;
+    }
+
+    const idContrato = contratoInput.value;
 
     let zonaSeleccionada = null;
+    let fotoSeleccionada = null;
+    let urlPreviewActual = null;
+    let posicionScrollModal = 0;
 
-        // 🔹 Al cargar el componente, marcamos TODOS los ítems de inventario
-    document.querySelectorAll(".itemCheck").forEach(chk => {
-        chk.checked = true;
+    /* =====================================================
+       FUNCIONES DEL MODAL
+    ===================================================== */
+
+    function abrirModal(zona) {
+        zonaSeleccionada = zona;
+
+        tituloModal.textContent =
+            nombresZonas[zonaSeleccionada] || "Registrar daño";
+
+        comentarioInput.value = "";
+        fotoInput.value = "";
+        previewFoto.innerHTML = "";
+        fotoSeleccionada = null;
+
+        if (urlPreviewActual) {
+            URL.revokeObjectURL(urlPreviewActual);
+            urlPreviewActual = null;
+        }
+
+        /*
+         * Mueve el modal directamente al body para que
+         * position: fixed tome como referencia la pantalla.
+         */
+        if (modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+        }
+
+        /* Guarda exactamente dónde está viendo el usuario */
+        posicionScrollModal = window.scrollY;
+
+        document.body.style.position = "fixed";
+        document.body.style.top = `-${posicionScrollModal}px`;
+        document.body.style.left = "0";
+        document.body.style.right = "0";
+        document.body.style.width = "100%";
+        document.body.style.overflow = "hidden";
+
+        modal.style.display = "flex";
+
+        setTimeout(() => {
+            comentarioInput.focus({
+                preventScroll: true
+            });
+        }, 100);
+    }
+
+    function cerrarModal() {
+        modal.style.display = "none";
+
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.left = "";
+        document.body.style.right = "";
+        document.body.style.width = "";
+        document.body.style.overflow = "";
+
+        window.scrollTo({
+            top: posicionScrollModal,
+            left: 0,
+            behavior: "instant"
+        });
+
+        comentarioInput.value = "";
+        fotoInput.value = "";
+        previewFoto.innerHTML = "";
+
+        zonaSeleccionada = null;
+        fotoSeleccionada = null;
+
+        if (urlPreviewActual) {
+            URL.revokeObjectURL(urlPreviewActual);
+            urlPreviewActual = null;
+        }
+    }
+
+    /* =====================================================
+       MARCAR INVENTARIO INICIALMENTE
+    ===================================================== */
+
+    document.querySelectorAll(".itemCheck").forEach(check => {
+        check.checked = true;
     });
 
+    /* =====================================================
+       ABRIR MODAL AL PRESIONAR UNA ZONA
+    ===================================================== */
 
-    // ======================================
-    // 1) CUANDO SE PRESIONA UN PUNTO
-    // ======================================
-    document.querySelectorAll(".point-dot").forEach(punto => {
+    document.querySelectorAll(".damage-trigger").forEach(punto => {
         punto.addEventListener("click", () => {
-
-            zonaSeleccionada = punto.dataset.zone;
-
-            // Cambiar título del modal
-            document.getElementById("tituloModal").textContent =
-                nombresZonas[zonaSeleccionada];
-
-            // Limpiar textarea
-            document.getElementById("comentarioDaño").value = "";
-            document.getElementById("fotoDaño").value = "";
-            document.getElementById("previewFoto").innerHTML = "";
-            fotoSeleccionada = null;
-
-            modal.style.display = "flex";
+            abrirModal(punto.dataset.zone);
         });
     });
 
-    // ======================================
-    // 2) GUARDAR DAÑO EN BD y foto
-    // ======================================
+    /* =====================================================
+       COMPRIMIR IMAGEN
+    ===================================================== */
 
-    let fotoSeleccionada = null;
+    function compressImage(file, maxWidth = 1200, quality = 0.7) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            const imageUrl = URL.createObjectURL(file);
 
-    document.getElementById("guardarDaño").onclick = async () => {
+            img.onload = () => {
+                let width = img.naturalWidth;
+                let height = img.naturalHeight;
 
-        const comentario = document.getElementById("comentarioDaño").value.trim();
+                if (width > maxWidth) {
+                    const ratio = maxWidth / width;
 
-        if (!comentario) {
-            alert("Escribe un comentario del daño.");
+                    width = maxWidth;
+                    height = Math.round(height * ratio);
+                }
+
+                const canvas = document.createElement("canvas");
+                canvas.width = width;
+                canvas.height = height;
+
+                const context = canvas.getContext("2d");
+
+                if (!context) {
+                    URL.revokeObjectURL(imageUrl);
+                    reject(new Error("No se pudo procesar la imagen."));
+                    return;
+                }
+
+                context.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob(
+                    blob => {
+                        URL.revokeObjectURL(imageUrl);
+
+                        if (!blob) {
+                            reject(new Error("No se pudo comprimir la imagen."));
+                            return;
+                        }
+
+                        const nombreOriginal =
+                            file.name.replace(/\.[^/.]+$/, "") || "foto";
+
+                        const archivoComprimido = new File(
+                            [blob],
+                            `${nombreOriginal}.jpg`,
+                            {
+                                type: "image/jpeg",
+                                lastModified: Date.now()
+                            }
+                        );
+
+                        resolve(archivoComprimido);
+                    },
+                    "image/jpeg",
+                    quality
+                );
+            };
+
+            img.onerror = () => {
+                URL.revokeObjectURL(imageUrl);
+                reject(new Error("No se pudo leer la imagen."));
+            };
+
+            img.src = imageUrl;
+        });
+    }
+
+    /* =====================================================
+       SELECCIONAR Y MOSTRAR FOTO
+    ===================================================== */
+
+    fotoInput.addEventListener("change", async event => {
+        const file = event.target.files[0];
+
+        if (!file) {
+            fotoSeleccionada = null;
+            previewFoto.innerHTML = "";
+            return;
+        }
+
+        if (!file.type.startsWith("image/")) {
+            alert("Selecciona un archivo de imagen válido.");
+            fotoInput.value = "";
             return;
         }
 
         try {
-              const formData = new FormData();
-        formData.append("id_contrato", idContrato);
-        formData.append("zona", zonaSeleccionada);
-        formData.append("comentario", comentario);
-        formData.append("modo", "{{ $modo }}");
+            fotoInput.disabled = true;
 
-        if (fotoSeleccionada) {
-            formData.append("foto", fotoSeleccionada);
-        }
+            const imagenComprimida = await compressImage(file);
+            fotoSeleccionada = imagenComprimida;
 
-
-            const resp = await fetch("{{ route('contrato.guardarDano', ['id' => $id]) }}", {
-                method: "POST",
-                headers: {
-                    //"Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                },
-                  body: formData
-            });
-
-            const data = await resp.json();
-
-            if (data.ok) {
-                // marcar punto como seleccionado visualmente
-                document.querySelector(`.point-dot[data-zone="${zonaSeleccionada}"]`)
-                    .classList.add("selected");
-
-                modal.style.display = "none";
-            } else {
-                alert("Error al guardar: " + data.msg);
+            if (urlPreviewActual) {
+                URL.revokeObjectURL(urlPreviewActual);
             }
 
-        } catch (e) {
-            alert("Error de conexión.");
-            console.error(e);
+            urlPreviewActual = URL.createObjectURL(imagenComprimida);
+
+            previewFoto.innerHTML = `
+                <img
+                    src="${urlPreviewActual}"
+                    alt="Vista previa del daño"
+                    style="
+                        display:block;
+                        width:100%;
+                        max-height:240px;
+                        object-fit:contain;
+                        border-radius:8px;
+                    "
+                >
+            `;
+        } catch (error) {
+            console.error(error);
+            fotoSeleccionada = null;
+            fotoInput.value = "";
+            previewFoto.innerHTML = "";
+
+            alert("Ocurrió un error al procesar la imagen.");
+        } finally {
+            fotoInput.disabled = false;
         }
-    };
-
-    function compressImage(file, maxWidth = 1200, quality = 0.7) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-
-        img.onload = () => {
-            let width = img.width;
-            let height = img.height;
-
-            if (width > maxWidth) {
-                const ratio = maxWidth / width;
-                width = maxWidth;
-                height = height * ratio;
-            }
-
-            const canvas = document.createElement("canvas");
-            canvas.width = width;
-            canvas.height = height;
-
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0, width, height);
-
-            canvas.toBlob(
-                (blob) => {
-                    if (!blob) return reject("Error al comprimir");
-
-                    const newFile = new File([blob], "foto.jpg", {
-                        type: "image/jpeg"
-                    });
-
-                    resolve(newFile);
-                },
-                "image/jpeg",
-                quality
-            );
-        };
-
-        img.onerror = reject;
-        img.src = URL.createObjectURL(file);
     });
-}
 
-    document.getElementById("fotoDaño").addEventListener("change", async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    /* =====================================================
+       GUARDAR DAÑO
+    ===================================================== */
 
-    try {
-        const compressed = await compressImage(file);
-        fotoSeleccionada = compressed;
+    guardarDañoBtn.addEventListener("click", async () => {
+        const comentario = comentarioInput.value.trim();
 
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            document.getElementById("previewFoto").innerHTML =
-                `<img src="${ev.target.result}" style="width:100%; border-radius:8px;">`;
-        };
-        reader.readAsDataURL(compressed);
+        if (!zonaSeleccionada) {
+            alert("No se seleccionó una zona del vehículo.");
+            return;
+        }
 
-    } catch (err) {
-        alert("Error al procesar imagen");
-    }
-});
+        if (!comentario) {
+            alert("Escribe un comentario del daño.");
+            comentarioInput.focus();
+            return;
+        }
 
+        const textoOriginal = guardarDañoBtn.textContent;
 
-        document.getElementById("guardarInventario").addEventListener("click", async () => {
-        const idContrato = document.getElementById("idContrato").value;
-
-        const items = {};
-
-        // 🔹 Solo agregamos al payload los que SIGUEN marcados
-        document.querySelectorAll(".itemCheck").forEach(chk => {
-            if (chk.checked) {
-                items[chk.dataset.item] = 1;
-            }
-        });
+        guardarDañoBtn.disabled = true;
+        guardarDañoBtn.textContent = "Guardando...";
 
         try {
-            const resp = await fetch("{{ route('contrato.guardarInventario') }}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                },
-                body: JSON.stringify({
-                    id_contrato: idContrato,
-                    inventario: items
-                })
-            });
+            const formData = new FormData();
 
-            const data = await resp.json();
+            formData.append("id_contrato", idContrato);
+            formData.append("zona", zonaSeleccionada);
+            formData.append("comentario", comentario);
+            formData.append("modo", "{{ $modo }}");
 
-            if (!resp.ok || !data.ok) {
-                alert(data.msg || "Error al guardar inventario.");
+            if (fotoSeleccionada) {
+                formData.append("foto", fotoSeleccionada);
+            }
+
+            const respuesta = await fetch(
+                "{{ route('contrato.guardarDano', ['id' => $id]) }}",
+                {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                        "Accept": "application/json"
+                    },
+                    body: formData
+                }
+            );
+
+            const data = await respuesta.json();
+
+            if (!respuesta.ok || !data.ok) {
+                alert(data.msg || "No se pudo guardar el daño.");
                 return;
             }
 
-            alert(data.msg || "Inventario guardado.");
-        } catch (e) {
-            console.error(e);
-            alert("Error de conexión al guardar el inventario.");
+            const puntoSeleccionado = document.querySelector(
+                `.damage-trigger[data-zone="${zonaSeleccionada}"]`
+            );
+
+            puntoSeleccionado?.classList.add("selected");
+
+            cerrarModal();
+
+        } catch (error) {
+            console.error(error);
+            alert("Error de conexión al guardar el daño.");
+
+        } finally {
+            guardarDañoBtn.disabled = false;
+            guardarDañoBtn.textContent = textoOriginal;
         }
     });
 
+    /* =====================================================
+       CERRAR MODAL
+    ===================================================== */
 
+    cancelarDañoBtn.addEventListener("click", cerrarModal);
 
-    // ======================================
-    // 3) CERRAR MODAL
-    // ======================================
-    document.getElementById("cancelarDaño").onclick = () => {
-        modal.style.display = "none";
-    };
+    /*
+     * Cierra al presionar directamente sobre el fondo oscuro.
+     */
+    modal.addEventListener("click", event => {
+        if (event.target === modal) {
+            cerrarModal();
+        }
+    });
 
-    // ======================================
-    // 4) AL CARGAR LA VISTA – MARCAR ZONAS YA GUARDADAS
-    // ======================================
+    /*
+     * Cierra con la tecla Escape.
+     */
+    document.addEventListener("keydown", event => {
+        if (
+            event.key === "Escape" &&
+            modal.style.display === "flex"
+        ) {
+            cerrarModal();
+        }
+    });
+
+    /* =====================================================
+       GUARDAR INVENTARIO
+    ===================================================== */
+
+    guardarInventarioBtn?.addEventListener("click", async () => {
+        const items = {};
+
+        document.querySelectorAll(".itemCheck").forEach(check => {
+            if (check.checked) {
+                items[check.dataset.item] = 1;
+            }
+        });
+
+        const textoOriginal = guardarInventarioBtn.textContent;
+
+        guardarInventarioBtn.disabled = true;
+        guardarInventarioBtn.textContent = "Guardando...";
+
+        try {
+            const respuesta = await fetch(
+                "{{ route('contrato.guardarInventario') }}",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({
+                        id_contrato: idContrato,
+                        inventario: items
+                    })
+                }
+            );
+
+            const data = await respuesta.json();
+
+            if (!respuesta.ok || !data.ok) {
+                alert(data.msg || "Error al guardar el inventario.");
+                return;
+            }
+
+            alert(data.msg || "Inventario guardado correctamente.");
+
+        } catch (error) {
+            console.error(error);
+            alert("Error de conexión al guardar el inventario.");
+
+        } finally {
+            guardarInventarioBtn.disabled = false;
+            guardarInventarioBtn.textContent = textoOriginal;
+        }
+    });
+
+    /* =====================================================
+       CARGAR DAÑOS GUARDADOS
+    ===================================================== */
+
     async function cargarDanos() {
-        const resp = await fetch(`/admin/checklist/${idContrato}/danos`);
-        const data = await resp.json();
+        try {
+            const respuesta = await fetch(
+                `/admin/checklist/${idContrato}/danos`,
+                {
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                }
+            );
 
-        if (data.ok) {
-            data.danos.forEach(d => {
-                document.querySelector(`.point-dot[data-zone="${d.zona}"]`)
-                    ?.classList.add("selected");
+            const data = await respuesta.json();
+
+            if (!respuesta.ok || !data.ok) {
+                console.error(
+                    data.msg || "No se pudieron cargar los daños."
+                );
+                return;
+            }
+
+            data.danos.forEach(dano => {
+                const punto = document.querySelector(
+                    `.damage-trigger[data-zone="${dano.zona}"]`
+                );
+
+                punto?.classList.add("selected");
             });
+
+        } catch (error) {
+            console.error("Error al cargar los daños:", error);
         }
     }
 
     cargarDanos();
+});
 </script>
-

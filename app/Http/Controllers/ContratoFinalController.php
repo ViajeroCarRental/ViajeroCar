@@ -223,7 +223,12 @@ class ContratoFinalController extends Controller
                 })
                 ->values();
 
-            $tieneConductorAdicional = $conductoresAdicionales->isNotEmpty();
+            // El documento 4 depende del servicio contratado en la reservación,
+            // no de que la información del conductor ya haya sido capturada.
+            $tieneConductorAdicional = $this->reservacionTieneConductorAdicional(
+                $reservacion->id_reservacion,
+                $idContrato
+            );
 
             // 9️⃣ Revisiones guardadas de este contrato
             $revisionesContrato = ContratoRevision::where(
@@ -391,31 +396,12 @@ class ContratoFinalController extends Controller
             'checklist',
         ];
 
-        // Detectar si realmente existe un conductor adicional
-        $nombreTitular = trim(mb_strtoupper(
-            ($reservacion->nombre_cliente ?? '') . ' ' .
-            ($reservacion->apellidos_cliente ?? ''),
-            'UTF-8'
-        ));
-
-        $conductoresContrato = DB::table('contrato_conductor_adicional')
-            ->where('id_contrato', $id)
-            ->select(
-                'nombres',
-                'apellidos'
-            )
-            ->get();
-
-        $tieneConductorAdicional = $conductoresContrato
-            ->contains(function ($conductor) use ($nombreTitular) {
-                $nombreConductor = trim(mb_strtoupper(
-                    ($conductor->nombres ?? '') . ' ' .
-                    ($conductor->apellidos ?? ''),
-                    'UTF-8'
-                ));
-
-                return $nombreConductor !== $nombreTitular;
-            });
+        // Usar la misma regla que la vista: revisar el servicio contratado
+        // directamente en la reservación.
+        $tieneConductorAdicional = $this->reservacionTieneConductorAdicional(
+            $reservacion->id_reservacion,
+            $id
+        );
 
         if ($tieneConductorAdicional) {
             $seccionesObligatorias[] = 'conductor_adicional';
@@ -666,5 +652,18 @@ class ContratoFinalController extends Controller
             'ok'  => true,
             'msg' => 'Contrato enviado correctamente'
         ]);
+    }
+
+    /**
+     * Determina si la reservación tiene contratado
+     * el servicio de conductor adicional.
+     */
+    private function reservacionTieneConductorAdicional($idReservacion, $idContrato): bool
+    {
+        return DB::table('reservacion_servicio')
+            ->where('id_reservacion', $idReservacion)
+            ->where('id_servicio', 4)
+            ->where('cantidad', '>', 0)
+            ->exists();
     }
 }

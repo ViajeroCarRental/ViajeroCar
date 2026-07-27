@@ -52,83 +52,87 @@
 
 
 
-    <!-- ============================================ -->
+<!-- ============================================ -->
 <!--                DATOS DEL VEHÍCULO            -->
 <!-- ============================================ -->
-<section class="paper-section">
+<section class="paper-section vehicle-section">
     <h3 class="sec-title">Datos del vehículo</h3>
 
-    <table class="vehicle-table">
-        <tr>
-            <th>TIPO</th>
-            <td>{{ $tipo ?? '—' }}</td>
+    <div class="vehicle-table-wrapper">
+        <table class="vehicle-table">
+            <colgroup>
+                <col style="width: 8%;">
+                <col style="width: 10%;">
 
-            <th>MODELO</th>
-            <td>{{ $modelo ?? '—' }}</td>
+                <col style="width: 8%;">
+                <col style="width: 12%;">
 
-            <th>PLACAS</th>
-            <td>{{ $placas ?? '—' }}</td>
+                <col style="width: 12%;">
+                <col style="width: 10%;">
 
-            <th>COLOR</th>
-            <td>{{ $color ?? '—' }}</td>
+                <col style="width: 11%;">
+                <col style="width: 8%;">
 
-            <th>TRANSMISIÓN</th>
-            <td>{{ $transmision ?? '—' }}</td>
-        </tr>
+                <col style="width: 12%;">
+                <col style="width: 10%;">
+            </colgroup>
 
-        <tr>
-            <th>CD. QUE ENTREGA</th>
-            <td>{{ $ciudadEntrega ?? '—' }}</td>
+            <tbody>
+                <tr>
+                    <th>TIPO</th>
+                    <td>{{ $tipo ?? '—' }}</td>
 
-            <th>CD. QUE RECIBE</th>
-            <td>{{ $ciudadRecibe ?? '—' }}</td>
+                    <th>MODELO</th>
+                    <td>{{ $modelo ?? '—' }}</td>
 
-            <th>KILOMETRAJE SALIDA</th>
-    <td>
-    <span id="kmSalidaText"
-          style="cursor:pointer; text-decoration:underline;">
-        {{ $kmSalida ?? '—' }}
-    </span>
+                    <th>PLACAS</th>
+                    <td>{{ $placas ?? '—' }}</td>
 
-    <input type="number"
-           id="kmSalidaInput"
-           value="{{ $kmSalida ?? '' }}"
-           style="display:none; width:100px;"
-           min="0">
+                    <th>COLOR</th>
+                    <td>{{ $color ?? '—' }}</td>
 
-    <button id="btnGuardarKmSalida"
-            style="display:none;"
-            class="btn btn-sm btn-primary">
-        Guardar
-    </button>
-</td>
+                    <th>TRANSMISIÓN</th>
+                    <td>{{ $transmision ?? '—' }}</td>
+                </tr>
 
-            <td>
-    <span id="kmRegresoText"
-          style="cursor:pointer; text-decoration:underline;">
-        {{ $kmRegreso ?? '—' }}
-    </span>
+                <tr>
+                    <th>CD. QUE<br>ENTREGA</th>
+                    <td>{{ $ciudadEntrega ?? '—' }}</td>
 
-    <input type="number"
-           id="kmRegresoInput"
-           value="{{ $kmRegreso ?? '' }}"
-           style="display:none; width:100px;"
-           min="0">
+                    <th>CD. QUE<br>RECIBE</th>
+                    <td>{{ $ciudadRecibe ?? '—' }}</td>
 
-    <button id="btnGuardarKm"
-            style="display:none;"
-            class="btn btn-sm btn-primary">
-        Guardar
-    </button>
-</td>
+                    <th>KILOMETRAJE<br>SALIDA</th>
+                    <td class="km-cell">
+                        <span id="kmSalidaText">
+                            {{ $kmSalida ?? '—' }}
+                        </span>
 
+                        <input
+                            type="number"
+                            id="kmSalidaInput"
+                            value="{{ $kmSalida ?? '' }}"
+                            min="0"
+                        >
 
-            <th>PROTECCIÓN</th>
-            <td>{{ $proteccion ?? '—' }}</td>
-        </tr>
-    </table>
+                        <button
+                            type="button"
+                            id="btnGuardarKmSalida"
+                            class="btn-guardar-km"
+                        >
+                            Guardar
+                        </button>
+                    </td>
+
+                    <th>PROTECCIÓN</th>
+                    <td colspan="3" class="protection-cell">
+                        {{ $proteccion ?? '—' }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </section>
-
 
 
 
@@ -209,7 +213,8 @@
                 <option value="">—</option>
                 @foreach($niveles as $i => $n)
                     <option value="{{ $n }}"
-                            data-pct="{{ round(($i/(count($niveles)-1))*100) }}">
+                            data-pct="{{ round(($i/(count($niveles)-1))*100) }}"
+                            class="{{ in_array((string) $n, ['0', '1/4', '1/2', '3/4', '1'], true) ? 'fuel-option-bold' : '' }}">
                         {{ $n }}
                     </option>
                 @endforeach
@@ -282,7 +287,8 @@
                 <option value="">—</option>
                 @foreach($niveles as $i => $n)
                     <option value="{{ $n }}"
-                            data-pct="{{ round(($i/(count($niveles)-1))*100) }}">
+                            data-pct="{{ round(($i/(count($niveles)-1))*100) }}"
+                            class="{{ in_array((string) $n, ['0', '1/4', '1/2', '3/4', '1'], true) ? 'fuel-option-bold' : '' }}">
                         {{ $n }}
                     </option>
                 @endforeach
