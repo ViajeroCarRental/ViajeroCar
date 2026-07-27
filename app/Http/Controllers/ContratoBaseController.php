@@ -374,14 +374,15 @@ class ContratoBaseController extends Controller
                 ], 422);
             }
 
-            DB::transaction(function () use ($data, $res, $vehiculo, $categoria) {
-                // Actualizamos vehículo, categoría y tarifa base de la reservación
+            DB::transaction(function () use ($data, $res, $vehiculo) {
+                // Actualizamos vehículo y categoría de la reservación.
+                // 🔒 tarifa_base se deja INTACTA: cambiar de auto (o de categoría por
+                // el auto) NO altera el precio pactado. Solo una tarifa manual lo cambia.
                 DB::table('reservaciones')
                     ->where('id_reservacion', $data['id_reservacion'])
                     ->update([
                         'id_vehiculo'  => $data['id_vehiculo'],
                         'id_categoria' => $vehiculo->id_categoria,
-                        'tarifa_base'  => $categoria->precio_dia,
                         'updated_at'   => now(),
                     ]);
 

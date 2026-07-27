@@ -125,10 +125,14 @@ class ContratoController extends ContratoBaseController
             $diasTotales  = max(1, $fechaInicio->copy()->startOfDay()
                     ->diffInDays($fechaFin->copy()->startOfDay()));
 
-            $precioBase       = $catActual->precio_dia ?? ($catActual->precio ?? 0);
-            $esAjustada       = $reservacion->tarifa_ajustada ?? 0;
-            $tarifaModificada = $reservacion->tarifa_modificada ?? 0;
-            $precioReal       = ($esAjustada == 1 && $tarifaModificada > 0) ? $tarifaModificada : $precioBase;
+            // El catálogo solo se usa como referencia visual / fallback.
+            $precioBase = $catActual->precio_dia ?? ($catActual->precio ?? 0);
+
+            // Precio congelado que trae la reservación (no se lee del catálogo).
+            $precioReal = $this->precioDiaReservacion($reservacion);
+            if ($precioReal <= 0) {
+                $precioReal = $precioBase;
+            }
 
             $subtotal = $diasTotales * $precioReal;
             $iva      = $subtotal * 0.16;
@@ -236,6 +240,20 @@ class ContratoController extends ContratoBaseController
     }
 
     // ─── Helpers privados ───────────────────────────────────────────────────────
+
+    /**
+     * Precio/día CONGELADO de la reservación.
+     * @param  object|array
+     */
+    private function precioDiaReservacion($res): float
+    {
+        $res = (object) $res;
+
+        $modificada = (float) ($res->tarifa_modificada ?? 0);
+        $base       = (float) ($res->tarifa_base ?? 0);
+
+        return $modificada > 0 ? $modificada : $base;
+    }
 
     private function crearContrato(object $reservacion, object $catActual, ?int $asesorId): object
     {
@@ -517,26 +535,17 @@ class ContratoController extends ContratoBaseController
             $res = DB::table('reservaciones')->where('id_reservacion', $idReservacion)->first();
             if (!$res) return response()->json(['error' => 'No encontrada'], 404);
 
-            $categoria           = DB::table('categorias_carros')->where('id_categoria', $data['id_categoria'])->first();
-            $cambioDeCategoria   = ($res->id_categoria != $data['id_categoria']);
-            $tarifaModificada    = $res->tarifa_modificada;
-            $nuevaTarifaAjustada = 0;
+            $categoria         = DB::table('categorias_carros')->where('id_categoria', $data['id_categoria'])->first();
+            $cambioDeCategoria = ($res->id_categoria != $data['id_categoria']);
 
             if (!empty($data['tarifa_manual']) && $data['tarifa_manual'] > 0) {
-                $precioReal          = $data['tarifa_manual'];
-                $nuevaTarifaAjustada = 1;
+                $precioReal          = (float) $data['tarifa_manual'];
                 $tarifaModificada    = $precioReal;
-            } elseif ($cambioDeCategoria) {
-                $precioReal       = $categoria->precio_dia;
-                $tarifaModificada = 0;
+                $nuevaTarifaAjustada = 1;
             } else {
-                if ($res->tarifa_ajustada == 1 && $res->tarifa_modificada > 0) {
-                    $precioReal          = $res->tarifa_modificada;
-                    $nuevaTarifaAjustada = 1;
-                } else {
-                    $precioReal       = $categoria->precio_dia;
-                    $tarifaModificada = 0;
-                }
+                $precioReal          = $this->precioDiaReservacion($res);
+                $tarifaModificada    = $res->tarifa_modificada;
+                $nuevaTarifaAjustada = $res->tarifa_ajustada;
             }
 
             $dias     = $this->calcularDiasRenta($data['fecha_inicio'], $data['fecha_fin']);
@@ -546,7 +555,6 @@ class ContratoController extends ContratoBaseController
 
             $horasCortesiaFinal = $data['horas_cortesia'] ?? $res->horas_cortesia;
 
-            // Si hay cambio de categoría, eliminamos el vehículo asignado
             $idVehiculoFinal = $res->id_vehiculo;
             if ($cambioDeCategoria) {
                 $idVehiculoFinal = null;
@@ -555,7 +563,6 @@ class ContratoController extends ContratoBaseController
             DB::table('reservaciones')->where('id_reservacion', $idReservacion)->update([
                 'id_categoria'      => $data['id_categoria'],
                 'id_vehiculo'       => $idVehiculoFinal,
-                'tarifa_base'       => $precioReal,
                 'tarifa_modificada' => $tarifaModificada,
                 'tarifa_ajustada'   => $nuevaTarifaAjustada,
                 'horas_cortesia'    => $horasCortesiaFinal,

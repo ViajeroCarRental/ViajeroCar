@@ -625,6 +625,14 @@ const ContratoPaso5 = {
         if (payload.fecha_emision) setEstado(inputEmi, 'ok');
         if (payload.fecha_vencimiento) setEstado(inputVen, 'ok');
 
+        // INE: unicamente Clave de elector, la CURP no es aceptada
+        if (!esContextoLicencia && (selectTipoID?.value || '') === 'ine' && payload.numero) {
+            if (!GuiasPaso4.RX_CLAVE.test(payload.numero)) {
+                setEstado(inputNum, 'error');
+                return;
+            }
+        }
+
         if (!payload.numero && !payload.fecha_nacimiento && !payload.fecha_emision && !payload.fecha_vencimiento) return;
 
         try {
@@ -1036,6 +1044,17 @@ const ContratoPaso6 = {
         }
     },
 
+    MESES_CORTOS: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+        'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+
+    formatoFechaCorta: function (valor) {
+        if (!valor) return '—';
+        const m = String(valor).match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (!m) return '—';
+        const [, anio, mes, dia] = m;
+        return `${dia}-${this.MESES_CORTOS[parseInt(mes, 10) - 1] || mes}-${anio}`;
+    },
+
     renderizarPagos: function (pagos) {
         const body = ContratoUI.DOM.payBody;
         if (!body) return;
@@ -1050,7 +1069,7 @@ const ContratoPaso6 = {
 
         body.innerHTML = pagos.map((p, index) => {
             const id = p.id_pago || p.id;
-            const fecha = p.created_at ? p.created_at.substring(0, 10) : '—';
+            const fecha = this.formatoFechaCorta(p.created_at);
             const metodo = p.metodo || '—';
             const tipo = p.tipo_pago || '';
             const origen = p.origen_pago || 'Mostrador';
@@ -2721,30 +2740,34 @@ const GuiasPaso4 = {
 
         this.REGLAS = {
             ine: {
-                etiqueta: 'CURP o Clave de elector (18 caracteres)',
-                placeholder: 'XXXXXXXXXXXXXXXXXX',
+                etiqueta: 'Clave de elector (18 caracteres)',
+                placeholder: 'AAAAAA00000000H000',
                 max: 18,
-                limpiar: v => v.toUpperCase().replace(/[^A-Z0-9]/g, ''),
-                valido: v => self.RX_CURP.test(v) || self.RX_CLAVE.test(v),
+                limpiar: v => {
+                    const s = v.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                    let out = '';
+                    for (const c of s) {
+                        const p = out.length;
+                        if (p >= 18) break;
+                        if (p < 6) { if (/[A-Z]/.test(c)) out += c; }
+                        else if (p < 14) { if (/\d/.test(c)) out += c; }
+                        else if (p === 14) { if (/[HM]/.test(c)) out += c; }
+                        else { if (/\d/.test(c)) out += c; }
+                    }
+                    return out;
+                },
+                valido: v => self.RX_CLAVE.test(v),
                 pista: function (v) {
                     const n = v.length;
                     if (n === 18) {
-                        if (self.RX_CURP.test(v)) return 'CURP válida';
-                        if (self.RX_CLAVE.test(v)) return 'Clave de elector válida';
-                        return 'No coincide con CURP ni Clave de elector';
+                        return self.RX_CLAVE.test(v)
+                            ? 'Clave de elector válida'
+                            : 'No coincide con el formato de Clave de elector';
                     }
-                    if (/^[A-Z]{5}/.test(v)) {
-                        if (n < 6) return 'Clave de elector: 6 letras iniciales';
-                        if (n < 14) return 'Clave de elector: 8 dígitos';
-                        if (n < 15) return 'Clave de elector: sexo (H o M)';
-                        return 'Clave de elector: 3 dígitos finales';
-                    }
-                    if (n < 4) return 'CURP: iniciales de apellido y nombre';
-                    if (n < 10) return 'CURP: fecha de nacimiento AAMMDD';
-                    if (n < 11) return 'CURP: sexo (H o M)';
-                    if (n < 13) return 'CURP: clave del estado (ej. QT, DF, JC)';
-                    if (n < 16) return 'CURP: consonantes internas';
-                    return 'CURP: homoclave y dígito verificador';
+                    if (n < 6) return 'Clave de elector: 6 letras iniciales';
+                    if (n < 14) return 'Clave de elector: 8 dígitos';
+                    if (n < 15) return 'Clave de elector: sexo (H o M)';
+                    return 'Clave de elector: 3 dígitos finales';
                 }
             },
             pasaporte: {
