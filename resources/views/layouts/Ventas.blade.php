@@ -29,6 +29,7 @@
     @yield('css-vistaAltaCliente')
     @yield('css-vistaFacturar')
     @yield('css-vistaContratoFinal')
+    @yield('css-vistaSelecionarFactura')
 
     @yield('css')
 

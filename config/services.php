@@ -40,4 +40,9 @@ return [
         'viajero_place_id'  => env('GOOGLE_VIAJERO_PLACE_ID'),
     ],
 
+    'facturapi' => [
+        'key' => env('FACTURAPI_KEY'),
+        'url' => env('FACTURAPI_URL', 'https://www.facturapi.io/v2'),
+    ],
+
 ];

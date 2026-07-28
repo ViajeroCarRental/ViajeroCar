@@ -96,7 +96,6 @@ class controladorVistasAdmin extends Controller
         return view('Admin.Contrato');
     }
 
-
     public function licencia()
     {
         return view('Admin.Licencia');
@@ -110,5 +109,10 @@ class controladorVistasAdmin extends Controller
     public function Facturar()
     {
         return view('Admin.facturar');
+    }
+
+    public function seleccionarParaFacturar()
+    {
+        return view('Admin.seleccionarFactura');
     }
 }
