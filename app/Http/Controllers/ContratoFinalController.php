@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use Spatie\Browsershot\Browsershot;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
 use PhpOffice\PhpWord\TemplateProcessor;
 use App\Mail\ContratoFinalMail;
 use App\Models\ContratoRevision;
@@ -108,51 +110,11 @@ class ContratoFinalController extends Controller
             ->where('rs.id_reservacion', $reservacion->id_reservacion)
             ->get();
 
-        // 1. DELIVERY - Desde la tabla reservaciones (columnas delivery_*)
-        $deliveryInfo = null;
-        if ($reservacion->delivery_activo && ($reservacion->delivery_total ?? 0) > 0) {
-            $deliveryInfo = (object) [
-                'nombre' => 'Delivery',
-                'precio_unitario' => $reservacion->delivery_total ?? 0,
-                'cantidad' => 1,
-                'activo' => $reservacion->delivery_activo,
-                'direccion' => $reservacion->delivery_direccion ?? '',
-                'kms' => $reservacion->delivery_km ?? 0,
-            ];
-        }
-
-        // 2. DROPOFF - Desde la tabla cargo_adicional (id_concepto = 6)
-        $dropoffInfo = null;
-        $dropoffCargo = DB::table('cargo_adicional')
-            ->where('id_contrato', $idContrato)
-            ->where('id_concepto', 6)
-            ->first();
-
-        if ($dropoffCargo && ($dropoffCargo->monto ?? 0) > 0) {
-            $dropoffInfo = (object) [
-                'nombre' => 'Drop Off',
-                'precio_unitario' => $dropoffCargo->monto ?? 0,
-                'cantidad' => 1,
-                'destino' => $dropoffCargo->destino ?? '',
-                'km' => $dropoffCargo->km ?? 0,
-            ];
-        }
-
-        // 3. GASOLINA - Desde la tabla cargo_adicional (id_concepto = 5)
-        $gasolinaInfo = null;
-        $gasolinaCargo = DB::table('cargo_adicional')
-            ->where('id_contrato', $idContrato)
-            ->where('id_concepto', 5)
-            ->first();
-
-        if ($gasolinaCargo && ($gasolinaCargo->monto ?? 0) > 0) {
-            $gasolinaInfo = (object) [
-                'nombre' => 'Gasolina (faltante)',
-                'precio_unitario' => $gasolinaCargo->monto ?? 0,
-                'cantidad' => $gasolinaCargo->litros ?? 1,
-                'litros' => $gasolinaCargo->litros ?? 0,
-            ];
-        }
+        // Cargos especiales (delivery / dropoff / gasolina)
+        $cargosEspeciales = $this->obtenerCargosEspeciales($reservacion, $idContrato);
+        $deliveryInfo = $cargosEspeciales['delivery'];
+        $dropoffInfo  = $cargosEspeciales['dropoff'];
+        $gasolinaInfo = $cargosEspeciales['gasolina'];
 
         $todosLosServicios = DB::table('servicios')
             ->select('id_servicio', 'nombre', 'precio', 'tipo_cobro')
@@ -160,21 +122,16 @@ class ContratoFinalController extends Controller
             ->get();
 
         // 6️⃣ Totales
-        $subtotal =
-            ($tarifaBase * $dias) +
-            $paquetes->sum(fn($p) => $p->precio_por_dia * $dias) +
-            $individuales->sum(fn($i) => $i->precio_por_dia * $dias) +
-            $extras->sum(fn($e) => ($e->precio_unitario ?? 0) * ($e->cantidad ?? 1) * $dias);
-
-        if ($deliveryInfo && ($deliveryInfo->precio_unitario ?? 0) > 0) {
-            $subtotal += $deliveryInfo->precio_unitario;
-        }
-        if ($dropoffInfo && ($dropoffInfo->precio_unitario ?? 0) > 0) {
-            $subtotal += $dropoffInfo->precio_unitario;
-        }
-        if ($gasolinaInfo && ($gasolinaInfo->precio_unitario ?? 0) > 0) {
-            $subtotal += $gasolinaInfo->precio_unitario;
-        }
+        $subtotal = $this->calcularSubtotal(
+            $tarifaBase,
+            $dias,
+            $paquetes,
+            $individuales,
+            $extras,
+            $deliveryInfo,
+            $dropoffInfo,
+            $gasolinaInfo
+        );
 
         $totalFinal = $subtotal * 1.16;
 
@@ -195,50 +152,50 @@ class ContratoFinalController extends Controller
             ->where('v.id_vehiculo', $reservacion->id_vehiculo)
             ->first();
 
-            // 8️⃣ Detectar conductores adicionales reales
-            $nombreTitular = trim(mb_strtoupper(
-                ($reservacion->nombre_cliente ?? '') . ' ' .
-                ($reservacion->apellidos_cliente ?? ''),
-                'UTF-8'
-            ));
+        // 8️⃣ Detectar conductores adicionales reales
+        $nombreTitular = trim(mb_strtoupper(
+            ($reservacion->nombre_cliente ?? '') . ' ' .
+            ($reservacion->apellidos_cliente ?? ''),
+            'UTF-8'
+        ));
 
-            $conductoresContrato = DB::table('contrato_conductor_adicional')
-                ->where('id_contrato', $idContrato)
-                ->select(
-                    'id_conductor',
-                    'nombres',
-                    'apellidos'
-                )
-                ->get();
+        $conductoresContrato = DB::table('contrato_conductor_adicional')
+            ->where('id_contrato', $idContrato)
+            ->select(
+                'id_conductor',
+                'nombres',
+                'apellidos'
+            )
+            ->get();
 
-            $conductoresAdicionales = $conductoresContrato
-                ->filter(function ($conductor) use ($nombreTitular) {
-                    $nombreConductor = trim(mb_strtoupper(
-                        ($conductor->nombres ?? '') . ' ' .
-                        ($conductor->apellidos ?? ''),
-                        'UTF-8'
-                    ));
+        $conductoresAdicionales = $conductoresContrato
+            ->filter(function ($conductor) use ($nombreTitular) {
+                $nombreConductor = trim(mb_strtoupper(
+                    ($conductor->nombres ?? '') . ' ' .
+                    ($conductor->apellidos ?? ''),
+                    'UTF-8'
+                ));
 
-                    return $nombreConductor !== $nombreTitular;
-                })
-                ->values();
+                return $nombreConductor !== $nombreTitular;
+            })
+            ->values();
 
-            // El documento 4 depende del servicio contratado en la reservación,
-            // no de que la información del conductor ya haya sido capturada.
-            $tieneConductorAdicional = $this->reservacionTieneConductorAdicional(
-                $reservacion->id_reservacion,
+        // El documento 4 depende del servicio contratado en la reservación,
+        // no de que la información del conductor ya haya sido capturada.
+        $tieneConductorAdicional = $this->reservacionTieneConductorAdicional(
+            $reservacion->id_reservacion,
+            $idContrato
+        );
+
+        // 9️⃣ Revisiones guardadas de este contrato
+        $revisionesContrato = ContratoRevision::where(
+                'id_contrato',
                 $idContrato
-            );
-
-            // 9️⃣ Revisiones guardadas de este contrato
-            $revisionesContrato = ContratoRevision::where(
-                    'id_contrato',
-                    $idContrato
-                )
-                ->where('revisado', true)
-                ->pluck('revisado', 'seccion')
-                ->map(fn ($revisado) => (bool) $revisado)
-                ->toArray();
+            )
+            ->where('revisado', true)
+            ->pluck('revisado', 'seccion')
+            ->map(fn ($revisado) => (bool) $revisado)
+            ->toArray();
 
         return view('Admin.ContratoFinal', compact(
             'contrato',
@@ -362,6 +319,9 @@ class ContratoFinalController extends Controller
     ========================================================= */
     public function enviarContratoCorreo(Request $request, $id)
     {
+        // Se fija el locale al inicio: la vista usa translatedFormat()
+        \Carbon\Carbon::setLocale('es');
+
         // 1️⃣ CONTRATO
         $contrato = DB::table('contratos')->where('id_contrato', $id)->first();
         if (!$contrato) {
@@ -504,22 +464,38 @@ class ContratoFinalController extends Controller
             ->where('rsi.id_reservacion', $reservacion->id_reservacion)
             ->get();
 
+        // ⬅ CAMBIO: faltaba rs.cantidad, por eso el PDF siempre mostraba ×1
         $extras = DB::table('reservacion_servicio as rs')
             ->leftJoin('servicios as s', 'rs.id_servicio', '=', 's.id_servicio')
-            ->select('s.nombre', 'rs.precio_unitario')
+            ->select('s.nombre', 'rs.precio_unitario', 'rs.cantidad')
             ->where('rs.id_reservacion', $reservacion->id_reservacion)
             ->get();
 
-        // 7️⃣ SUBTOTAL Y TOTAL (IGUAL QUE EN LA VISTA)
-        $subtotal =
-            ($tarifaBase * $dias) +
-            $paquetes->sum(fn($p) => $p->precio_por_dia * $dias) +
-            $individuales->sum(fn($i) => $i->precio_por_dia * $dias) +
-            $extras->sum(fn($e) => $e->precio_unitario * $dias);
+        // ⬅ CAMBIO: estos tres nunca se calculaban aquí. Por eso Delivery,
+        // Drop Off y Gasolina salían como "(No seleccionado)" en el PDF del correo.
+        $cargosEspeciales = $this->obtenerCargosEspeciales($reservacion, $id);
+        $deliveryInfo = $cargosEspeciales['delivery'];
+        $dropoffInfo  = $cargosEspeciales['dropoff'];
+        $gasolinaInfo = $cargosEspeciales['gasolina'];
+
+        // 7️⃣ SUBTOTAL Y TOTAL
+        // ⬅ CAMBIO: misma fórmula que la pantalla. Antes el PDF omitía cantidad
+        // y los cargos especiales, así que el total del correo no coincidía.
+        $subtotal = $this->calcularSubtotal(
+            $tarifaBase,
+            $dias,
+            $paquetes,
+            $individuales,
+            $extras,
+            $deliveryInfo,
+            $dropoffInfo,
+            $gasolinaInfo
+        );
 
         $totalFinal = $subtotal * 1.16;
 
         // 8️⃣ VEHÍCULO (MISMO JOIN)
+        // ⬅ CAMBIO: faltaba v.capacidad_tanque, siempre salía "—"
         $vehiculo = DB::table('vehiculos as v')
             ->leftJoin('categorias_carros as c', 'v.id_categoria', '=', 'c.id_categoria')
             ->select(
@@ -530,6 +506,7 @@ class ContratoFinalController extends Controller
                 'v.gasolina_actual',
                 'v.placa',
                 'v.firma_propietario',
+                'v.capacidad_tanque',
                 DB::raw('COALESCE(c.nombre, v.categoria) as categoria')
             )
             ->where('v.id_vehiculo', $reservacion->id_vehiculo)
@@ -546,18 +523,17 @@ class ContratoFinalController extends Controller
             DB::table('contratos')
                 ->where('id_contrato', $id)
                 ->update(['firma_aviso' => $firmaAviso]);
-
-            $contrato->firma_aviso = $firmaAviso;
         }
+
+        // Se relee para traer la firma recién guardada
         $contrato = DB::table('contratos')->where('id_contrato', $id)->first();
+
         // ======================================================
         // DATOS HOJA 2: lugar/fecha + arrendador/arrendatario
         // ======================================================
-        \Carbon\Carbon::setLocale('es');
 
         // Lugar (sucursal retiro)
-        $lugarFirma = $reservacion->sucursal_retiro_nombre
-            ?? '—';
+        $lugarFirma = $reservacion->sucursal_retiro_nombre ?? '—';
 
         // Fecha inicio reserva -> día/mes/año
         $fechaInicio = !empty($reservacion->fecha_inicio)
@@ -578,13 +554,15 @@ class ContratoFinalController extends Controller
         $arrendadorNombre = '—';
         if (!empty($idArrendador)) {
             $arr = DB::table('usuarios')
-                ->select('nombres', 'apellidos')
+                ->select('nombres', 'apellidos', 'firma')
                 ->where('id_usuario', $idArrendador)
                 ->first();
 
             if ($arr) {
                 $arrendadorNombre = trim(($arr->nombres ?? '') . ' ' . ($arr->apellidos ?? ''));
-                if ($arrendadorNombre === '') $arrendadorNombre = '—';
+                if ($arrendadorNombre === '') {
+                    $arrendadorNombre = '—';
+                }
             }
         }
 
@@ -594,8 +572,7 @@ class ContratoFinalController extends Controller
             $arrendatarioNombre = $reservacion->nombre_cliente ?? '—';
         }
 
-
-        // 1️⃣1️⃣ GENERAR PDF (CHROMIUM) CON TODOS LOS DATOS
+        // 1️⃣1️⃣ GENERAR PDF (DOMPDF) CON TODOS LOS DATOS
         $html = view('Admin.contrato-final-pdf', [
             'contrato'     => $contrato,
             'reservacion'  => $reservacion,
@@ -609,7 +586,13 @@ class ContratoFinalController extends Controller
             'subtotal'     => $subtotal,
             'totalFinal'   => $totalFinal,
             'fechaNacimiento' => $fechaNacimiento,
-            'edad'             => $edad,
+            'edad'            => $edad,
+
+            // ⬅ CAMBIO: cargos especiales que la vista esperaba y no recibía
+            'deliveryInfo' => $deliveryInfo,
+            'dropoffInfo'  => $dropoffInfo,
+            'gasolinaInfo' => $gasolinaInfo,
+
             // ✅ HOJA 2: fecha/lugar
             'lugarFirma'   => $lugarFirma,
             'diaFirma'     => $diaFirma,
@@ -619,15 +602,30 @@ class ContratoFinalController extends Controller
             // ✅ HOJA 2: nombres firmas
             'arrendadorNombre'   => $arrendadorNombre,
             'arrendatarioNombre' => $arrendatarioNombre,
+            'firmaAsesor'        => $arr->firma ?? null,
         ])->render();
 
+        // ⬅ CAMBIO: todo el bloque de Browsershot se sustituye por dompdf
+        try {
+            $pdfBinario = $this->generarPdf($html);
+        } catch (\Throwable $e) {
+            Log::error('Error al generar el PDF del contrato ' . $id . ': ' . $e->getMessage());
+
+            return response()->json([
+                'ok'  => false,
+                'msg' => 'No se pudo generar el PDF del contrato. Revisa el log del sistema.',
+            ], 500);
+        }
+
+        // Se guarda una copia en disco, pero si falla el correo igual se envía
         $filePath = storage_path("app/public/Contrato_{$contrato->numero_contrato}.pdf");
 
-        Browsershot::html($html)
-            ->format('A4')
-            ->margins(6, 6, 6, 6)
-            ->showBackground()
-            ->save($filePath);
+        try {
+            File::ensureDirectoryExists(dirname($filePath));
+            file_put_contents($filePath, $pdfBinario);
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo guardar el PDF en disco: ' . $e->getMessage());
+        }
 
         // 1️⃣2️⃣ ENVIAR CORREO
         $correoReservaciones = config('mail.from.address');
@@ -642,16 +640,137 @@ class ContratoFinalController extends Controller
                     $vehiculo,
                     $dias,
                     $totalFinal,
-                    $filePath,
+                    $pdfBinario,   // ⬅ CAMBIO: antes era $filePath
                     $aviso
                 )
             );
-
 
         return response()->json([
             'ok'  => true,
             'msg' => 'Contrato enviado correctamente'
         ]);
+    }
+
+    /* =========================================================
+       GENERACIÓN DEL PDF CON DOMPDF
+    ========================================================= */
+
+    /**
+     * Convierte el HTML del contrato en el binario del PDF.
+     */
+    private function generarPdf(string $html): string
+    {
+        @ini_set('memory_limit', '512M');
+        @set_time_limit(180);
+
+        $tempDir = storage_path('app/dompdf');
+        File::ensureDirectoryExists($tempDir);
+        File::ensureDirectoryExists(storage_path('fonts'));
+
+        return Pdf::loadHTML($html)
+            ->setPaper('a4', 'portrait')
+            ->setOptions([
+                // Las imágenes van embebidas en base64 desde la vista,
+                // así que dompdf no necesita salir a la red.
+                'isRemoteEnabled'      => false,
+                'isHtml5ParserEnabled' => true,
+                'defaultFont'          => 'DejaVu Sans',
+                'defaultMediaType'     => 'print',
+                'dpi'                  => 96,
+                'tempDir'              => $tempDir,
+            ])
+            ->output();
+    }
+
+    /* =========================================================
+       AYUDANTES COMPARTIDOS ENTRE PANTALLA Y PDF
+    ========================================================= */
+
+    /**
+     * Delivery, Drop Off y Gasolina faltante.
+     * Vive en un solo lugar para que pantalla y PDF no se desincronicen.
+     */
+    private function obtenerCargosEspeciales($reservacion, $idContrato): array
+    {
+        // 1. DELIVERY - Desde la tabla reservaciones (columnas delivery_*)
+        $deliveryInfo = null;
+        if (($reservacion->delivery_activo ?? false) && ($reservacion->delivery_total ?? 0) > 0) {
+            $deliveryInfo = (object) [
+                'nombre'          => 'Delivery',
+                'precio_unitario' => $reservacion->delivery_total ?? 0,
+                'cantidad'        => 1,
+                'activo'          => $reservacion->delivery_activo,
+                'direccion'       => $reservacion->delivery_direccion ?? '',
+                'kms'             => $reservacion->delivery_km ?? 0,
+            ];
+        }
+
+        // 2. DROPOFF - Desde la tabla cargo_adicional (id_concepto = 6)
+        $dropoffInfo = null;
+        $dropoffCargo = DB::table('cargo_adicional')
+            ->where('id_contrato', $idContrato)
+            ->where('id_concepto', 6)
+            ->first();
+
+        if ($dropoffCargo && ($dropoffCargo->monto ?? 0) > 0) {
+            $dropoffInfo = (object) [
+                'nombre'          => 'Drop Off',
+                'precio_unitario' => $dropoffCargo->monto ?? 0,
+                'cantidad'        => 1,
+                'destino'         => $dropoffCargo->destino ?? '',
+                'km'              => $dropoffCargo->km ?? 0,
+            ];
+        }
+
+        // 3. GASOLINA - Desde la tabla cargo_adicional (id_concepto = 5)
+        $gasolinaInfo = null;
+        $gasolinaCargo = DB::table('cargo_adicional')
+            ->where('id_contrato', $idContrato)
+            ->where('id_concepto', 5)
+            ->first();
+
+        if ($gasolinaCargo && ($gasolinaCargo->monto ?? 0) > 0) {
+            $gasolinaInfo = (object) [
+                'nombre'          => 'Gasolina (faltante)',
+                'precio_unitario' => $gasolinaCargo->monto ?? 0,
+                'cantidad'        => $gasolinaCargo->litros ?? 1,
+                'litros'          => $gasolinaCargo->litros ?? 0,
+            ];
+        }
+
+        return [
+            'delivery' => $deliveryInfo,
+            'dropoff'  => $dropoffInfo,
+            'gasolina' => $gasolinaInfo,
+        ];
+    }
+
+    /**
+     * Subtotal antes de IVA. Una sola fórmula para pantalla y PDF.
+     */
+    private function calcularSubtotal(
+        $tarifaBase,
+        int $dias,
+        $paquetes,
+        $individuales,
+        $extras,
+        $deliveryInfo,
+        $dropoffInfo,
+        $gasolinaInfo
+    ): float {
+        $subtotal =
+            ($tarifaBase * $dias) +
+            $paquetes->sum(fn($p) => $p->precio_por_dia * $dias) +
+            $individuales->sum(fn($i) => $i->precio_por_dia * $dias) +
+            $extras->sum(fn($e) => ($e->precio_unitario ?? 0) * ($e->cantidad ?? 1) * $dias);
+
+        foreach ([$deliveryInfo, $dropoffInfo, $gasolinaInfo] as $cargo) {
+            if ($cargo && ($cargo->precio_unitario ?? 0) > 0) {
+                $subtotal += $cargo->precio_unitario;
+            }
+        }
+
+        return (float) $subtotal;
     }
 
     /**
