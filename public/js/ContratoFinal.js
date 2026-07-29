@@ -49,19 +49,120 @@ document.addEventListener("DOMContentLoaded", () => {
     return data;
   }
 
-  function notificar(tipo, mensaje) {
-    if (
-      window.alertify &&
-      typeof alertify[tipo] === "function"
-    ) {
-      alertify[tipo](mensaje);
+  let temporizadorNotificacion = null;
+
+  function notificar(tipo = "info", mensaje = "") {
+    const overlay = document.getElementById(
+      "notificacionOverlay"
+    );
+
+    const card = document.getElementById(
+      "notificacionCard"
+    );
+
+    const icono = document.getElementById(
+      "notificacionIcono"
+    );
+
+    const titulo = document.getElementById(
+      "notificacionTitulo"
+    );
+
+    const texto = document.getElementById(
+      "notificacionMensaje"
+    );
+
+    if (!overlay || !card || !icono || !titulo || !texto) {
+      console.warn(mensaje);
       return;
     }
 
-    if (tipo === "error" || tipo === "warning") {
-      alert(mensaje);
-    }
+    const configuraciones = {
+      success: {
+        clase: "exito",
+        icono: "✓",
+        titulo: "¡Proceso completado!",
+      },
+
+      exito: {
+        clase: "exito",
+        icono: "✓",
+        titulo: "¡Proceso completado!",
+      },
+
+      error: {
+        clase: "error",
+        icono: "×",
+        titulo: "No se pudo completar",
+      },
+
+      warning: {
+        clase: "advertencia",
+        icono: "!",
+        titulo: "Revisa la información",
+      },
+
+      advertencia: {
+        clase: "advertencia",
+        icono: "!",
+        titulo: "Revisa la información",
+      },
+
+      info: {
+        clase: "info",
+        icono: "i",
+        titulo: "Información",
+      },
+    };
+
+    const tipoNormalizado = String(tipo).toLowerCase();
+
+    const configuracion =
+      configuraciones[tipoNormalizado] ||
+      configuraciones.info;
+
+    card.className =
+      `notificacion-card ${configuracion.clase}`;
+
+    icono.textContent = configuracion.icono;
+    titulo.textContent = configuracion.titulo;
+    texto.textContent = mensaje;
+
+    overlay.classList.remove("mostrar");
+
+    // Reiniciar la animación.
+    void overlay.offsetWidth;
+
+    overlay.classList.add("mostrar");
+
+    clearTimeout(temporizadorNotificacion);
+
+    temporizadorNotificacion = setTimeout(() => {
+      cerrarNotificacion();
+    }, 5000);
   }
+
+  function cerrarNotificacion() {
+    const overlay = document.getElementById(
+      "notificacionOverlay"
+    );
+
+    overlay?.classList.remove("mostrar");
+
+    clearTimeout(temporizadorNotificacion);
+  }
+
+  document
+    .getElementById("cerrarNotificacion")
+    ?.addEventListener("click", cerrarNotificacion);
+
+  document
+    .getElementById("notificacionOverlay")
+    ?.addEventListener("click", function (event) {
+      if (event.target === this) {
+        cerrarNotificacion();
+      }
+    });
 
   /* =======================================
      1) ACORDEÓN DE DOCUMENTOS
@@ -413,12 +514,18 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!padArr) return;
 
       if (!id) {
-        alert("No se detectó el ID del contrato.");
+        notificar(
+          "error",
+          "No se detectó el ID del contrato."
+        );
         return;
       }
 
       if (padArr.isEmpty()) {
-        alert("Realiza la firma.");
+        notificar(
+          "warning",
+          "Primero debes realizar la firma."
+        );
         return;
       }
 
@@ -555,13 +662,21 @@ document.addEventListener("DOMContentLoaded", () => {
           );
         }
 
+        modalAviso.style.display = "none";
+
         notificar(
           "success",
           data.msg ||
           "Contrato enviado correctamente."
         );
 
-        modalAviso.style.display = "none";
+        setTimeout(() => {
+          cerrarNotificacion();
+
+          window.location.href =
+            window.RUTA_MENU_VENTAS;
+        }, 5000);
+        
       } catch (error) {
         console.error(error);
 

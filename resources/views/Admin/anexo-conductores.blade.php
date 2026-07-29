@@ -31,7 +31,9 @@
                 <div class="meta-grid">
                     <div class="meta-item">
                         <span class="meta-label">No. Rental Agreement</span>
-                        <span class="meta-value">{{ $reservacion->id_reservacion ?? '---' }}</span>
+                        <span class="meta-value">
+                            {{ $contrato->numero_contrato ?? $contrato->id_contrato ?? '---' }}
+                        </span>
                     </div>
                     <div class="meta-item">
                         <span class="meta-label">Fecha</span>

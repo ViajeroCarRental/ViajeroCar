@@ -894,10 +894,48 @@
 
         </div>
     </div>
+    <!-- MODAL DE NOTIFICACIONES -->
+    <div
+        id="notificacionOverlay"
+        class="notificacion-overlay"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="notificacionTitulo"
+    >
+        <div id="notificacionCard" class="notificacion-card exito">
+            <button
+                type="button"
+                id="cerrarNotificacion"
+                class="notificacion-cerrar"
+                aria-label="Cerrar"
+            >
+                &times;
+            </button>
+
+            <div id="notificacionIcono" class="notificacion-icono">
+                ✓
+            </div>
+
+            <h3 id="notificacionTitulo" class="notificacion-titulo">
+                ¡Proceso completado!
+            </h3>
+
+            <p id="notificacionMensaje" class="notificacion-mensaje"></p>
+
+            <div class="notificacion-progreso">
+                <span></span>
+            </div>
+        </div>
+    </div>
 
 @endsection
 
 @section('js-vistaContratoFinal')
-   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
-<script src="{{ asset('js/ContratoFinal.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+
+    <script>
+        window.RUTA_MENU_VENTAS = @json(route('rutaMenuVentas'));
+    </script>
+
+    <script src="{{ asset('js/ContratoFinal.js') }}"></script>
 @endsection

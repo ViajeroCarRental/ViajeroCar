@@ -11,74 +11,81 @@ use App\Mail\AnexoConductorAdicionalMail;
 
 class ConductorAdicionalController extends Controller
 {
-    /* ============================================================
-       📄 MOSTRAR ANEXO (por CONTRATO)
-       $id = id_contrato
-    ============================================================ */
-    public function verAnexo($id) // $id = id_contrato
+    public function verAnexo($id)
     {
-        // 1) Contrato (aquí vive la firma del arrendador)
+        /*
+        * El ID recibido corresponde a contratos.id_contrato.
+        * Traemos todas las columnas porque el Blade del anexo
+        * utiliza más información que número de contrato y firmas.
+        */
         $contrato = DB::table('contratos')
             ->where('id_contrato', $id)
-            ->select('id_contrato', 'id_reservacion', 'numero_contrato', 'firma_arrendador')
             ->first();
 
         if (!$contrato) {
             abort(404, 'Contrato no encontrado para el anexo.');
         }
 
-        // 2) Reservación (titular)
+        /*
+        * Recuperar toda la reservación relacionada con el contrato.
+        */
         $reservacion = DB::table('reservaciones')
             ->where('id_reservacion', $contrato->id_reservacion)
-            ->select(
-                'id_reservacion',
-                'nombre_cliente',
-                'apellidos_cliente',
-                'email_cliente',
-                'telefono_cliente'
-            )
             ->first();
 
-        // 3) Todos los conductores ligados al contrato
+        if (!$reservacion) {
+            abort(404, 'Reservación no encontrada para el anexo.');
+        }
+
+        /*
+        * Obtener todos los conductores ligados al contrato.
+        * También recuperamos la vigencia de su licencia.
+        */
         $conductores = DB::table('contrato_conductor_adicional as cca')
             ->leftJoin('contrato_documento as cd', function ($join) {
                 $join->on('cd.id_conductor', '=', 'cca.id_conductor')
-                     ->where('cd.tipo', '=', 'licencia');
+                    ->where('cd.tipo', '=', 'licencia');
             })
-            ->where('cca.id_contrato', $id)
+            ->where('cca.id_contrato', $contrato->id_contrato)
             ->select(
-                'cca.id_conductor',
-                'cca.nombres',
-                'cca.apellidos',
-                'cca.numero_licencia',
-                'cca.fecha_nacimiento',
-                'cd.fecha_vencimiento as vence',
-                'cca.firma_conductor',
-                'cca.firmado',
-                'cca.firmado_en'
+                'cca.*',
+                'cd.fecha_vencimiento as vence'
             )
             ->get();
 
-        // 4) Filtrar al titular (mismo nombre + apellidos que la reservación)
-        if ($reservacion) {
-            // Nombre completo del titular normalizado
-            $nombreTitular = trim(mb_strtoupper(
-                ($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? ''),
-                'UTF-8'
-            ));
+        /*
+        * Quitar al titular de la lista de conductores adicionales.
+        */
+        $nombreTitular = trim(mb_strtoupper(
+            ($reservacion->nombre_cliente ?? '') . ' ' .
+            ($reservacion->apellidos_cliente ?? ''),
+            'UTF-8'
+        ));
 
-            $conductores = $conductores->filter(function ($c) use ($nombreTitular) {
+        $conductores = $conductores
+            ->filter(function ($conductor) use ($nombreTitular) {
                 $nombreConductor = trim(mb_strtoupper(
-                    ($c->nombres ?? '') . ' ' . ($c->apellidos ?? ''),
+                    ($conductor->nombres ?? '') . ' ' .
+                    ($conductor->apellidos ?? ''),
                     'UTF-8'
                 ));
 
-                // Solo dejamos pasar a los que NO son el titular
-                return $nombreConductor !== $nombreTitular;
-            })->values(); // reindexar la colección
-        }
+                // No mostrar registros completamente vacíos.
+                if ($nombreConductor === '') {
+                    return false;
+                }
 
-        return view('Admin.anexo-conductores', compact('contrato', 'reservacion', 'conductores'));
+                // No mostrar al titular como conductor adicional.
+                return $nombreConductor !== $nombreTitular;
+            })
+            ->unique('id_conductor')
+            ->values();
+
+        return view('Admin.anexo-conductores', compact(
+            'contrato',
+            'reservacion',
+            'conductores'
+        ));
     }
 
     /* ============================================================
