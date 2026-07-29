@@ -675,7 +675,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           window.location.href =
             window.RUTA_MENU_VENTAS;
-        }, 5000);
+        }, 8000);
         
       } catch (error) {
         console.error(error);
