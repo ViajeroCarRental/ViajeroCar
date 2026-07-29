@@ -3,13 +3,7 @@
 @section('Titulo', 'Home')
 
 @section('css-vistaHome')
-    {{-- ✅ Swiper CSS (específico del home) --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-
-    {{--
-        NOTA: Select2 CSS, Font Awesome y Flatpickr CSS se eliminaron
-        de aquí porque YA están cargados en el layout.
-    --}}
 
     <style>
         :root {
@@ -28,7 +22,7 @@
             pointer-events: none;
         }
 
-        /* ===== Banner Reservas (limpio, sin rayas) ===== */
+        /* ===== BANNER RESERVAS ===== */
         .rv-banner-wrap {
             position: fixed;
             top: 10px;
@@ -373,7 +367,7 @@
         }
 
         /* =========================
-           ✅ BURBUJA RADIAL
+           BURBUJA RADIAL
         ========================= */
         .social-fab {
             position: fixed;
@@ -455,7 +449,7 @@
             font-size: 20px;
         }
 
-        /* ===== Select2 ===== */
+        /* ===== SELECT2 ===== */
         .select2-container--default .select2-selection--single {
             display: flex;
             align-items: center;
@@ -495,7 +489,6 @@
             pointer-events: auto !important;
         }
 
-        /* Estado DESACTIVADO  */
         .fleet-btn.is-disabled {
             background-color: #f1f5f9 !important;
             color: #cbd5e1 !important;
@@ -815,6 +808,181 @@
                 padding-top: 45px;
             }
         }
+
+        /* =============================================================
+           OVERLAY DE ACTUALIZACIÓN
+           ============================================================= */
+
+        .vr-update-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 1000000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(17, 24, 39, .45);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+          opacity: 0;
+          visibility: hidden;
+          pointer-events: none;
+          transition: opacity .25s ease, visibility .25s ease;
+        }
+
+        .vr-update-overlay.show {
+          opacity: 1;
+          visibility: visible;
+          pointer-events: auto;
+        }
+
+        .vr-update-card {
+          background: linear-gradient(180deg, #fffdf8, #fff);
+          border-radius: 22px;
+          padding: 34px 42px;
+          min-width: 340px;
+          max-width: 90vw;
+          text-align: center;
+          box-shadow: 0 30px 80px rgba(15, 23, 42, .28);
+          border-top: 4px solid var(--vr-brand, #b22222);
+          transform: translateY(12px) scale(.96);
+          transition: transform .3s cubic-bezier(.2, .8, .2, 1);
+        }
+
+        .vr-update-overlay.show .vr-update-card {
+          transform: translateY(0) scale(1);
+        }
+
+        #vrUpdateLoader,
+        #vrUpdateSuccess {
+          display: none;
+        }
+
+        .vr-update-overlay.is-loading #vrUpdateLoader {
+          display: block;
+        }
+
+        .vr-update-overlay.is-success #vrUpdateSuccess {
+          display: block;
+        }
+
+        .vr-emoji-stage {
+          position: relative;
+          width: 240px;
+          height: 70px;
+          margin: 0 auto 14px;
+          overflow: hidden;
+        }
+
+        .vr-icon-car {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 58px;
+          height: 58px;
+          color: var(--vr-brand, #b22222);
+          animation: vrDrive 2.2s ease-in-out infinite;
+        }
+
+        .vr-icon-car svg {
+          width: 100%;
+          height: 100%;
+          filter: drop-shadow(0 6px 6px rgba(0, 0, 0, .12));
+        }
+
+        @keyframes vrDrive {
+          0% {
+            left: -70px;
+            transform: translateY(0) rotate(0deg);
+          }
+          8% {
+            transform: translateY(0) rotate(-2deg);
+          }
+          50% {
+            left: 46%;
+            transform: translateY(-4px) rotate(1deg);
+          }
+          70% {
+            transform: translateY(0) rotate(-1deg);
+          }
+          100% {
+            left: 240px;
+            transform: translateY(0) rotate(0deg);
+          }
+        }
+
+        .vr-update-msg {
+          margin: 6px 0 0;
+          font-weight: 700;
+          font-size: 1rem;
+          color: var(--vr-ink, #1f2937);
+          min-height: 1.4em;
+          letter-spacing: -.2px;
+          animation: vrMsgFade .5s ease;
+        }
+
+        @keyframes vrMsgFade {
+          from {
+            opacity: 0;
+            transform: translateY(6px);
+          }
+          to {
+            opacity: 1;
+            transform: none;
+          }
+        }
+
+        .vr-icon-thumb {
+          width: 74px;
+          height: 74px;
+          margin: 4px auto 14px;
+          color: #16a34a;
+          animation: vrThumbPop .6s cubic-bezier(.18, 1.3, .4, 1) both;
+          transform-origin: 60% 80%;
+        }
+
+        .vr-icon-thumb svg {
+          width: 100%;
+          height: 100%;
+        }
+
+        @keyframes vrThumbPop {
+          0% {
+            transform: scale(0) rotate(-25deg);
+            opacity: 0;
+          }
+          55% {
+            transform: scale(1.2) rotate(8deg);
+            opacity: 1;
+          }
+          75% {
+            transform: scale(1) rotate(-6deg);
+          }
+          100% {
+            transform: scale(1) rotate(0);
+          }
+        }
+
+        .vr-update-title {
+          margin: 0 0 4px;
+          font-size: 1.15rem;
+          font-weight: 800;
+          color: var(--vr-ink, #1f2937);
+          letter-spacing: -.2px;
+        }
+
+        .vr-update-sub {
+          margin: 0;
+          font-size: .9rem;
+          font-weight: 600;
+          color: #6b7280;
+        }
+
+        @media (max-width: 560px) {
+          .vr-update-card { min-width: 0; width: 100%; padding: 26px 20px; border-radius: 18px; }
+          .vr-emoji-stage { width: 100%; max-width: 240px; }
+          .vr-update-msg { font-size: .95rem; }
+          .vr-icon-thumb { width: 64px; height: 64px; }
+        }
     </style>
 @endsection
 
@@ -824,11 +992,7 @@
         <link rel="preload" as="image" href="{{ asset('img/inicio1.webp') }}" fetchpriority="high">
     @endpush
 
-    {{-- ============================================================
-         ARRAY DE COCHES (PHP centralizado)
-         Datos exactos de las 12 tarjetas originales.
-         Si quieres cambiar precios/descuentos, edítalos aquí UNA vez.
-    ============================================================ --}}
+    {{-- COCHES --}}
     @php
         $coches = [
             [
@@ -990,10 +1154,7 @@
         ];
     @endphp
 
-    {{-- ============================================================
-         SÍMBOLOS SVG REUTILIZABLES (CarPlay y Android Auto)
-         Se definen UNA vez aquí y se usan 12 veces en cada card.
-    ============================================================ --}}
+    {{-- SIMBOLOS SVG --}}
     <svg width="0" height="0" style="position:absolute" aria-hidden="true">
         <symbol id="ico-carplay" viewBox="0 0 24 24">
             <rect x="2" y="2" width="20" height="20" rx="5"></rect>
@@ -1007,7 +1168,7 @@
     <!-- ===== VISTA INICIO ===== -->
     <section class="v-inicio" data-title="Inicio">
 
-        <!-- ===== Banner Reservas ===== -->
+        <!-- ===== BANNER RESERVAS ===== -->
         <div class="rv-banner-wrap" id="rvWrap" aria-live="polite">
             <div class="rv-banner" id="rvBanner" role="status" aria-label="Reservas en vivo">
                 <div class="rv-bar-container">
@@ -1029,7 +1190,6 @@
                         </div>
                     </div>
 
-                    <!-- Contador de personas -->
                     <div class="rv-count-wrapper">
                         <span id="rvCount">5</span>
                         <span class="rv-unit">{{ __('people') }}</span>
@@ -1041,14 +1201,11 @@
                 </div>
             </div>
         </div>
-        <!-- ===== /Banner Reservas ===== -->
 
         <!-- HERO -->
         <section class="hero" id="heroTop">
             <div class="carousel">
-                {{-- Slide 1: carga inmediata (LCP) --}}
                 <div class="slide active" style="background-image:url('{{ asset('img/inicio1.webp') }}');"></div>
-                {{-- Slides 2 y 3: carga diferida con data-bg-src (después de window.load) --}}
                 <div class="slide" data-bg-src="{{ asset('img/inicio2.webp') }}"></div>
                 <div class="slide" data-bg-src="{{ asset('img/inicio3.webp') }}"></div>
                 <div class="overlay"></div>
@@ -1124,7 +1281,6 @@
 
                         <div class="search-grid">
 
-                            {{-- COLUMNA 1: LUGAR DE RENTA --}}
                             <div class="sg-col sg-col-location">
                                 <div class="location-head">
                                     <span class="field-title"
@@ -1137,7 +1293,6 @@
                                 </div>
 
                                 <div class="location-inputs-wrapper" id="locationInputsWrapper">
-                                    {{-- SELECT PICKUP --}}
                                     <div class="field icon-field">
                                         <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
                                         <select id="pickupPlace" name="pickup_sucursal_id">
@@ -1159,7 +1314,6 @@
                                         </select>
                                     </div>
 
-                                    {{-- SELECT DROPOFF --}}
                                     <div class="field icon-field" id="dropoffWrapper">
                                         <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
                                         <select id="dropoffPlace" name="dropoff_sucursal_id" class="no-scroll-trap">
@@ -1183,9 +1337,7 @@
                                 </div>
                             </div>
 
-                            {{-- COLUMNA 2: FECHAS Y HORAS --}}
                             <div class="sg-col sg-col-datetime">
-                                {{-- PICKUP --}}
                                 <div class="field">
                                     <span class="field-title solo-responsivo-izq">{{ __('Pick-up') }}</span>
                                     <div class="datetime-row">
@@ -1203,7 +1355,6 @@
                                     </div>
                                 </div>
 
-                                {{-- DROPOFF --}}
                                 <div class="field">
                                     <span class="field-title solo-responsivo-izq">{{ __('Return') }}</span>
                                     <div class="datetime-row">
@@ -1222,7 +1373,6 @@
                                 </div>
                             </div>
 
-                            {{-- COLUMNA 3: BOTÓN BUSCAR --}}
                             <div class="sg-col sg-col-submit">
                                 <div class="actions">
                                     <button type="submit">
@@ -1244,13 +1394,9 @@
             </div>
         </section>
 
-        {{-- Sentinel para detectar "salí del hero" --}}
         <span id="heroEndSentinel" style="position:relative; display:block; width:1px; height:1px;"></span>
 
-        {{-- ============================================================
-             FLEET / CARRUSEL DE COCHES
-             12 tarjetas generadas desde el array $coches (PHP)
-        ============================================================ --}}
+        {{-- FLEET / CARRUSEL DE COCHES --}}
         <section id="fleet-carousel" class="fleet">
             <div class="fleet-viewport" id="fleetViewport">
                 <button class="fleet-btn prev" aria-label="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
@@ -1499,7 +1645,6 @@
                 <div class="swiper-pagination"></div>
             </div>
         </section>
-        <!-- /TARJETAS (Swiper) -->
 
         <!-- CTA FINAL -->
         <section class="cta-hero">
@@ -1562,18 +1707,45 @@
         </a>
     </div>
 
-    {{-- Modal de Bienvenida ELIMINADO (zombie - el JS asociado ya se quitó en home.js) --}}
+{{-- OVERLAY DE ACTUALIZACION --}}
+<div class="vr-update-overlay" id="vrUpdateOverlay" aria-hidden="true">
+    <div class="vr-update-card" role="status" aria-live="polite">
+
+        <div id="vrUpdateLoader">
+            <div class="vr-emoji-stage">
+                <span class="vr-icon-car">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M5 17H3v-5l2-5h11l3 5h1a1 1 0 0 1 1 1v4h-2" />
+                        <path d="M9 17h6" />
+                        <circle cx="7" cy="17" r="2" />
+                        <circle cx="17" cy="17" r="2" />
+                        <path d="M5 12h14" />
+                    </svg>
+                </span>
+            </div>
+            <p class="vr-update-msg" id="vrUpdateMsg">Procesando tu información…</p>
+        </div>
+
+        <div id="vrUpdateSuccess">
+            <div class="vr-icon-thumb">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M7 10v12" />
+                    <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
+                </svg>
+            </div>
+            <h4 class="vr-update-title" id="vrUpdateTitle">¡Información actualizada!</h4>
+            <p class="vr-update-sub" id="vrUpdateSub">Los cambios se guardaron correctamente</p>
+        </div>
+
+    </div>
+</div>
 
 @endsection
 
 @section('js-vistaHome')
-    {{-- ✅ Swiper JS (específico del home) --}}
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-
-    {{--
-        NOTA: jQuery, Flatpickr (core + locale ES + rangePlugin) y Select2
-        se eliminaron de aquí porque YA están cargados en el layout.
-    --}}
 
    <script>
         window.iconosPorId = {
@@ -1601,10 +1773,8 @@
 
     <script src="{{ asset('js/home.js') }}" defer></script>
 
-    {{-- ===== LAZY LOAD SLIDES 2 Y 3 DEL HERO ===== --}}
+    {{-- LAZY LOAD SLIDES --}}
     <script>
-        // Carga las imágenes de fondo de los slides 2 y 3 DESPUÉS del load completo
-        // para no bloquear el LCP (largest contentful paint)
         window.addEventListener('load', function () {
             document.querySelectorAll('.slide[data-bg-src]').forEach(function (el) {
                 el.style.backgroundImage = "url('" + el.dataset.bgSrc + "')";
@@ -1613,7 +1783,7 @@
         }, { once: true });
     </script>
 
-    {{-- ===== TOAST DE RESERVAS BILINGÜE ===== --}}
+    {{-- TOAST DE RESERVAS --}}
     <script>
         (function () {
             const SEQ = {
@@ -1767,9 +1937,7 @@
         })();
     </script>
 
-    {{-- ============================================================
-         CONVERSIÓN DE MONEDA MXN/USD (sin console.log)
-    ============================================================ --}}
+    {{-- CONVERSIÓN DE MONEDA MXN/USD --}}
     <script>
         (function () {
             "use strict";
@@ -1881,9 +2049,7 @@
         })();
     </script>
 
-    {{-- ============================================================
-         MODAL MEMBRESÍA
-    ============================================================ --}}
+    {{-- MODAL MEMBRESÍA --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const modal = document.getElementById('membershipModal');

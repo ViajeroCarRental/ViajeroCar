@@ -3,21 +3,13 @@
   --ink:#0f172a; --muted:#6b7280; --soft:#f6f7fb; --paper:#fff;
   --shadow:0 25px 60px rgba(0,0,0,.35);
   --topbar-h:78px;
-
-  /* ✅ tokens del form para alinear iconos perfecto */
   --ctl-h:48px;
   --lab-h:14px;
   --lab-gap:6px;
-
-  /* ✅ SUBIR ICONOS DEL FORM (nudge) */
   --ico-nudge:-20px;
-
-  /* ✅ HERO FIX: espacio y tamaños fluidos */
   --hero-form-gap: clamp(100px, 5vh, 200px);
   --hero-icon-size: clamp(46px, 5vw, 70px);
   --hero-icon-gap: clamp(12px, 2vw, 18px);
-
-  /* NAV */
   --nav-break: 940px;
 }
 
@@ -31,7 +23,7 @@ body{
 }
 
 /* =========================
-   NAVBAR (LIMPIO + RESPONSIVE)
+   NAVBAR
 ========================= */
 .topbar{
   position:fixed;
@@ -102,7 +94,6 @@ body{
   background:#ffffff26;color:#fff;font-weight:900;font-size:14px;letter-spacing:.5px;
 }
 
-/* Hamburger (solo mobile) */
 .hamburger{
   display:none;
   width:44px; height:44px;
@@ -116,7 +107,6 @@ body{
 }
 .hamburger:active{ transform:scale(.98); }
 
-/* iOS safe-area (notch) */
 @supports (padding: max(0px)){
   .topbar{
     padding-left: max(12px, env(safe-area-inset-left));
@@ -154,28 +144,22 @@ body{
     display:flex;
     flex-direction:column;
     gap:12px;
-
     position:fixed;
     top: calc(env(safe-area-inset-top, 0px) + 12px);
     right: 12px;
     width: min(86vw, 360px);
     max-height: calc(100vh - env(safe-area-inset-top, 0px) - 24px);
     overflow:auto;
-
     padding: 14px;
-
     background: #ffffff !important;
     opacity: 1 !important;
-
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     filter: none !important;
-
     border: 1px solid rgba(15,23,42,.12);
     border-radius: 18px;
     box-shadow: 0 18px 50px rgba(0,0,0,.22);
     z-index: 9999;
-
     -webkit-overflow-scrolling: touch;
     transform: translateZ(0);
   }
@@ -226,35 +210,27 @@ select {
 }
 
 @media (max-width: 768px) {
-
   .hero{
     min-height: auto !important;
     height: auto !important;
   }
-
 }
 @media (max-width: 768px) {
-
   html, body {
     overflow-y: auto !important;
     height: auto !important;
   }
-
 }
 @media (max-width: 768px) {
-
   body {
     -webkit-overflow-scrolling: touch !important;
     touch-action: pan-y !important;
   }
-
 }
 @media (max-width: 768px) {
-
   .v-inicio {
     overflow: visible !important;
   }
-
 }
 .carousel,
 .slide,
@@ -272,7 +248,7 @@ select {
 .carousel{ position:absolute; inset:0; overflow:hidden; z-index:0; }
 .slide{
   position:absolute; inset:0;
-  background-size:cover; background-position:center 75%; /*tamaño de la imagen*/
+  background-size:cover; background-position:center 75%;
   opacity:0; transform:scale(1.04);
   transition:opacity .9s, transform 1.5s;
 }
@@ -324,14 +300,14 @@ select {
 @keyframes kickerIn{ to{ opacity:1; transform: translateY(0); } }
 
 /* =========================
-   HERO ICONOS (NO SE ENSIMAN)
+   HERO ICONOS
 ========================= */
 .hero-icons{
   display:grid;
   grid-template-columns: repeat(3, minmax(0,1fr));
   gap: var(--hero-icon-gap);
   margin-top: clamp(28px, 6vh, 65px);
-  margin-bottom: 40px; /* ✅ separa del form */
+  margin-bottom: 40px;
   width: min(980px, 100%);
   margin-left:auto;
   margin-right:auto;
@@ -378,10 +354,8 @@ select {
 }
 
 /* =========================
-   HERO ICONOS - RESPONSIVE CORREGIDO
+   HERO ICONOS - RESPONSIVE
 ========================= */
-
-/* Tablet (451px a 900px) - 2 columnas */
 @media (min-width: 451px) and (max-width: 900px) {
     .hero-icons {
         grid-template-columns: repeat(2, 1fr) !important;
@@ -399,16 +373,14 @@ select {
     }
 }
 
-/* Móvil (hasta 450px) - 1 columna */
 @media (max-width: 450px) {
     .hero-icons {
-        grid-template-columns: 1fr !important;  /* 1 SOLA COLUMNA */
+        grid-template-columns: 1fr !important;
         gap: 15px;
         margin-top: 18px;
         margin-bottom: 26px;
         padding: 0 20px;
     }
-
     .hero-icons .icon-item {
         transform: none !important;
         width: 100%;
@@ -416,44 +388,36 @@ select {
         margin: 0 auto;
         padding: 12px;
     }
-
     .hero-icons .icon-item i {
         font-size: 42px;
     }
-
     .hero-icons .icon-item span {
         font-size: 16px;
     }
-
     .hero-icons .icon-item:nth-child(5) {
         grid-column: auto !important;
         grid-row: auto !important;
     }
 }
 
-/* Móvil muy pequeño (menor a 380px) - ajustes finos */
 @media (max-width: 380px) {
     .hero-icons {
-        grid-template-columns: 1fr !important;  /* También 1 columna */
+        grid-template-columns: 1fr !important;
         gap: 12px;
         padding: 0 15px;
     }
-
     .hero-icons .icon-item i {
         font-size: 38px;
     }
-
     .hero-icons .icon-item span {
         font-size: 15px;
     }
 }
 
-/* =========================================================
+/* =========================
    FORMULARIO HERO
-========================================================= */
-
+========================= */
 .search-form{ display:block; }
-/* La fila donde van los inputs (caja principal) que crezca parejo */
 .sg-col-location > .field,
 .sg-col-datetime > .field{
   height: 100%;
@@ -536,7 +500,7 @@ input:focus, select:focus{
 }
 
 /* =========================
-   ICONOS EN INPUTS (NO QUITAR)
+   ICONOS EN INPUTS
 ========================= */
 .icon-field{ position:relative; }
 .field-icon{
@@ -608,7 +572,6 @@ input.flatpickr-input{ padding-right:44px; }
   overflow: visible !important;
 }
 
-/* B) Wrapper oficial del timepicker */
 .timepicker-ui{
   position: relative;
   display:block;
@@ -640,7 +603,6 @@ input.flatpickr-input{ padding-right:44px; }
   pointer-events:auto;
 }
 
-/* flatpickr */
 .flatpickr-calendar{
   z-index: 999990 !important;
   border-radius:14px;
@@ -697,7 +659,6 @@ input.flatpickr-input{ padding-right:44px; }
   padding:0 16px;
 }
 
-
 /* =========================
    RESPONSIVOS
 ========================= */
@@ -706,7 +667,7 @@ input.flatpickr-input{ padding-right:44px; }
   aspect-ratio:16/9;
   border-radius:18px;
   overflow:hidden;
-  position:relative; /* */
+  position:relative;
   box-shadow:var(--shadow);
   background:#000;
 }
@@ -714,11 +675,9 @@ input.flatpickr-input{ padding-right:44px; }
 .media-carousel .media-slide{
   position:absolute;
   inset:0;
-
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-
   opacity:0;
   transition:opacity .8s;
 }
@@ -875,7 +834,7 @@ input.flatpickr-input{ padding-right:44px; }
 .fleet{
   position:relative;
   width:min(1200px,94%);
-  margin:80px auto 80px; /*espacio entre hero y carrusel*/
+  margin:80px auto 80px;
   background:transparent !important;
   border:none;
   border-radius:0;
@@ -962,23 +921,18 @@ input.flatpickr-input{ padding-right:44px; }
   width:52px !important;
   height:52px !important;
   border-radius:50% !important;
-
-  /* ACTIVO */
   background:var(--brand) !important;
   border:2px solid var(--brand) !important;
   color:#fff !important;
-
   display:grid !important;
   place-items:center !important;
   cursor:pointer !important;
-
   box-shadow:0 10px 24px rgba(178,34,34,.45) !important;
   transition:
     background .2s ease,
     color .2s ease,
     transform .2s ease,
     box-shadow .2s ease !important;
-
   z-index:200 !important;
   pointer-events:auto !important;
 }
@@ -995,7 +949,6 @@ input.flatpickr-input{ padding-right:44px; }
   background:#e5e7eb !important;
   border-color:#d1d5db !important;
   color:#9ca3af !important;
-
   box-shadow:none !important;
   pointer-events:none !important;
   cursor:default !important;
@@ -1034,10 +987,9 @@ input.flatpickr-input{ padding-right:44px; }
   .fleet{ margin:90px auto 50px !important; }
 }
 
-/* ============================================================
-   AJUSTE RESPONSIVO: SEPARACIÓN CARRUSEL - TEXTO
-============================================================ */
-
+/* =========================
+   AJUSTE RESPONSIVO: CARRUSEL - TEXTO
+========================= */
 @media (max-width: 720px) {
     .fleet {
         margin-bottom: 70px !important;
@@ -1161,7 +1113,7 @@ input.flatpickr-input{ padding-right:44px; }
 }
 
 /* =========================
-   Banner reservas en vivo (toast)
+   Banner reservas en vivo
 ========================= */
 .rv-banner-wrap{
   position:fixed;
@@ -1249,7 +1201,7 @@ input.flatpickr-input{ padding-right:44px; }
 }
 
 /* =========================
-   SWIPER TARJETAS (tiles)
+   SWIPER TARJETAS
 ========================= */
 .vj-tiles-swiper{
   padding: 6px 10px 42px;
@@ -1438,7 +1390,7 @@ input.flatpickr-input{ padding-right:44px; }
 }
 
 /* =========================
-   RESPONSIVO GENERAL + FIX ENSIMADO REAL
+   RESPONSIVO GENERAL
 ========================= */
 @media (max-width:1100px){
   .headline{ font-size:54px; }
@@ -1510,7 +1462,7 @@ input::-moz-focus-inner{ border:0; }
 .btn, .car-cta, .fleet-btn, a.btn{ -webkit-tap-highlight-color:transparent; }
 
 /* =========================
-   TIMEPICKER UI — VIAJERO THEME
+   TIMEPICKER UI
 ========================= */
 .timepicker-ui-modal,
 .timepicker-ui-clock,
@@ -1562,10 +1514,10 @@ input#dropoffTime{
   caret-color: transparent;
   cursor: pointer;
 }
-/* =====================================================================
-   TIME SELECTS
-===================================================================== */
 
+/* =========================
+   TIME SELECTS
+========================= */
 .tp-selects{
   margin-top: 10px;
   display: grid;
@@ -1586,7 +1538,6 @@ input#dropoffTime{
   box-sizing: border-box;
 }
 
-
 .tp-selects select:focus{
   border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(178,34,34,.15);
@@ -1601,10 +1552,10 @@ input#dropoffTime{
     grid-template-columns: 1fr;
   }
 }
-/* =========================================================
-   FIX
-========================================================= */
 
+/* =========================
+   FIX
+========================= */
 .time-field{ position: relative; }
 
 .time-field .tp-selects select:first-child{
@@ -1614,10 +1565,10 @@ input#dropoffTime{
 .time-field .tp-selects select:nth-child(2){
   padding-left: 12px !important;
 }
-/* =====================================================================
-   PARCHE — Ajuste fino de icono reloj y selects de hora/minuto
-===================================================================== */
 
+/* =========================
+   PARCHE
+========================= */
 :root{
   --clock-nudge: 0px;
 }
@@ -1668,7 +1619,7 @@ input#dropoffTime{
 
 .search-card .time-field.icon-field input#pickupTime,
 .search-card .time-field.icon-field input#dropoffTime{
-  padding-left: 44px !important; /* espacio del icono */
+  padding-left: 44px !important;
   padding-right: 12px !important;
 }
 
@@ -1763,14 +1714,11 @@ input#dropoffTime{
 .search-card .sg-col-location .field[style*="display: none"]{
   display: flex !important;
 }
-/* =========================================
-   FIX SOLO MÓVIL
-========================================= */
-/* =========================================
-   FIX SOLO MÓVIL
-========================================= */
-@media (max-width:560px){
 
+/* =========================
+   FIX SOLO MÓVIL
+========================= */
+@media (max-width:560px){
   .search-card .sg-col-submit{
     margin-top: 18px !important;
     align-items: flex-start !important;
@@ -1822,10 +1770,10 @@ input#dropoffTime{
     margin-top: 10px !important;
   }
 }
-/* =========================================================
-   FIX
-========================================================= */
 
+/* =========================
+   FIX
+========================= */
 input.flatpickr-input:focus{
   outline: none !important;
   box-shadow: none !important;
@@ -1841,11 +1789,11 @@ input.flatpickr-input{
     box-shadow: none !important;
   }
 }
-/* =========================================================
-   iOS FIX
-========================================================= */
-@supports (-webkit-touch-callout: none){
 
+/* =========================
+   iOS FIX
+========================= */
+@supports (-webkit-touch-callout: none){
   .search-card input,
   .search-card select,
   .search-card textarea{
@@ -1862,10 +1810,9 @@ input.flatpickr-input{
   }
 }
 
-
-
-/* ===== MÉTODOS DE PAGO FOOTER ===== */
-
+/* =========================
+   METODOS DE PAGO FOOTER
+========================= */
 .payments-logos{
   display:flex;
   justify-content:center;
@@ -1887,7 +1834,6 @@ input.flatpickr-input{
   transform:scale(1.08);
 }
 
-/* tamaños específicos */
 .payments-logos img.oxxo{
   height:38px;
 }
@@ -1895,8 +1841,6 @@ input.flatpickr-input{
 .payments-logos img.mp{
   height:30px;
 }
-
-/* CENTRAR MÉTODOS DE PAGO */
 
 .footer-row.pay-row{
   display:flex;
@@ -1912,7 +1856,6 @@ input.flatpickr-input{
   flex-wrap:wrap;
 }
 
-/* tamaño parejito */
 .payments-logos img{
   height:34px;
   object-fit:contain;
@@ -1932,7 +1875,6 @@ input.flatpickr-input{
   height:30px;
 }
 
-/* Contenedor */
 .payments-logos{
   display:flex;
   justify-content:center;
@@ -1940,26 +1882,23 @@ input.flatpickr-input{
   gap:22px;
 }
 
-/* Todos */
 .payments-logos img{
   height:30px;
   object-fit:contain;
 }
 
-/* SOLO Mastercard */
 .payments-logos img[src*="master"]{
   height:42px;
 }
 
-/* SOLO PayPal */
 .payments-logos img[src*="paypal"]{
   height:42px;
 }
-/* ============================================================
-    ESCRITORIO (>= 1125px) - CORREGIDO (espacios)
-============================================================ */
-@media (min-width: 1125px) {
 
+/* =========================
+   ESCRITORIO
+========================= */
+@media (min-width: 1125px) {
     :root {
         --title-height: 30px;
         --title-margin: 8px;
@@ -1984,7 +1923,7 @@ input.flatpickr-input{
         margin-bottom: 20px !important;
         box-sizing: border-box !important;
     }
-    /* ===== GRID PRINCIPAL ===== */
+
     #miBuscador .search-grid {
         display: flex !important;
         flex-direction: row !important;
@@ -1993,7 +1932,6 @@ input.flatpickr-input{
         width: 100% !important;
     }
 
-    /* ===== COLUMNA 1: LUGAR DE RENTA ===== */
     .sg-col-location {
         flex: 1.5 !important;
         min-width: 280px !important;
@@ -2036,7 +1974,6 @@ input.flatpickr-input{
         margin: 0 !important;
     }
 
-    /* ===== WRAPER DE SELECTS ===== */
     .location-inputs-wrapper {
         display: flex !important;
         flex-direction: row !important;
@@ -2051,7 +1988,6 @@ input.flatpickr-input{
         height: var(--input-height) !important;
     }
 
-    /* ESTILOS UNIFICADOS PARA TODOS LOS INPUTS Y SELECTS */
     .location-inputs-wrapper select,
     .dt-field input,
     .dt-field select,
@@ -2067,14 +2003,12 @@ input.flatpickr-input{
         transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
     }
 
-    /* Placeholders con color unificado */
     .dt-field input::placeholder {
         color: var(--placeholder-color) !important;
         opacity: 1 !important;
         font-weight: 400 !important;
     }
 
-    /* Focus styles para todos */
     .location-inputs-wrapper select:focus,
     .dt-field input:focus,
     .dt-field select:focus,
@@ -2084,7 +2018,6 @@ input.flatpickr-input{
         outline: none !important;
     }
 
-    /* Estilos específicos para selects */
     .location-inputs-wrapper select {
         padding: 0 8px 0 12px !important;
         appearance: none !important;
@@ -2106,7 +2039,6 @@ input.flatpickr-input{
         display: none !important;
     }
 
-    /* ===== CONTROL DEL CHECKBOX ===== */
     #dropoffWrapper {
         flex: 1 !important;
         transition: all 0.3s ease !important;
@@ -2122,7 +2054,6 @@ input.flatpickr-input{
         display: none !important;
     }
 
-    /* ===== COLUMNA DE FECHAS (PICK-UP Y DEVOLUCIÓN) ===== */
     .sg-col-datetime {
         flex: 2.2 !important;
         display: flex !important;
@@ -2185,7 +2116,6 @@ input.flatpickr-input{
         line-height: normal !important;
     }
 
-    /* ===== ICONOS ===== */
     .dt-field .field-icon {
         position: absolute !important;
         left: 12px !important;
@@ -2215,7 +2145,6 @@ input.flatpickr-input{
         flex-direction: column !important;
     }
 
-    /* ===== BOTÓN BUSCAR ===== */
     .sg-col-submit {
         flex: 0.35 !important;
         min-width: 90px !important;
@@ -2257,7 +2186,6 @@ input.flatpickr-input{
         box-sizing: border-box !important;
     }
 
-    /* ===== ALINEACIÓN CONSISTENTE ===== */
     .location-inputs-wrapper,
     .datetime-row,
     .actions {
@@ -2277,12 +2205,11 @@ input.flatpickr-input{
         box-sizing: border-box !important;
     }
 }
-/* ============================================================
-    TABLET Y MÓVIL (max-width: 1124px)
-============================================================ */
-@media (max-width: 1124px) {
 
-    /* ===== CONTENEDOR PRINCIPAL ===== */
+/* =========================
+   TABLET Y MÓVIL
+========================= */
+@media (max-width: 1124px) {
     #miBuscador.search-card {
         display: none;
         position: fixed !important;
@@ -2303,7 +2230,6 @@ input.flatpickr-input{
         padding-top: 60px !important;
     }
 
-    /* ===== BOTÓN DE CERRAR ===== */
     .btn-close {
         display: flex !important;
         align-items: center !important;
@@ -2329,6 +2255,7 @@ input.flatpickr-input{
         line-height: 1 !important;
         transform: translateY(-1px) !important;
     }
+
 body:has(#miBuscador.search-card.active) header,
 body:has(#miBuscador.search-card.active) .navbar,
 body:has(#miBuscador.search-card.active) .header-rojo,
@@ -2351,7 +2278,6 @@ body:has(#miBuscador.search-card.active) .car-connect {
     }
 }
 
-    /* ===== GRID ===== */
     .search-grid {
         display: flex !important;
         flex-direction: column !important;
@@ -2389,7 +2315,6 @@ body:has(#miBuscador.search-card.active) .car-connect {
         text-align: left !important;
     }
 
-    /* Checkbox */
     .sg-col-location .inline-check {
         margin: 0 !important;
         white-space: nowrap !important;
@@ -2407,7 +2332,6 @@ body:has(#miBuscador.search-card.active) .car-connect {
         margin: 0 !important;
     }
 
-    /* ===== ESTILOS UNIFICADOS PARA TODOS LOS INPUTS ===== */
     .field select,
     .field input[type="text"],
     .dt-field input,
@@ -2427,7 +2351,6 @@ body:has(#miBuscador.search-card.active) .car-connect {
         transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
     }
 
-    /* Placeholders  */
     .dt-field input::placeholder,
     .field input::placeholder {
         color: #666 !important;
@@ -2435,7 +2358,6 @@ body:has(#miBuscador.search-card.active) .car-connect {
         font-weight: 400 !important;
     }
 
-    /* Focus para todos */
     .field select:focus,
     .field input[type="text"]:focus,
     .dt-field input:focus,
@@ -2465,7 +2387,6 @@ body:has(#miBuscador.search-card.active) .car-connect {
         justify-content: center !important;
     }
 
-    /* Wrapper de selects de ubicación */
     .location-inputs-wrapper {
         display: flex !important;
         flex-direction: column !important;
@@ -2546,7 +2467,6 @@ body:has(#miBuscador.search-card.active) .car-connect {
         display: none !important;
     }
 
-    /* Icono de reloj  */
     .time-field::before {
         content: "\f017" !important;
         font-family: "Font Awesome 6 Free" !important;
@@ -2589,7 +2509,6 @@ body:has(#miBuscador.search-card.active) .car-connect {
         color: #333 !important;
     }
 
-    /* ===== BOTÓN BUSCAR ===== */
     .sg-col-submit .actions {
         margin-top: 10px !important;
     }
@@ -2612,11 +2531,10 @@ body:has(#miBuscador.search-card.active) .car-connect {
     }
 }
 
-/* ============================================================
-    FIX ESPECÍFICO PARA MÓVIL (menor a 560px)
-============================================================ */
+/* =========================
+   FIX MÓVIL
+========================= */
 @media (max-width: 560px) {
-
     #miBuscador.search-card.active {
         padding: 80px 15px 30px !important;
     }
@@ -2647,7 +2565,6 @@ body:has(#miBuscador.search-card.active) .car-connect {
         padding-left: 40px !important;
     }
 
-    /* Placeholders en móvil */
     .dt-field input::placeholder,
     .field input::placeholder {
         color: #666 !important;
@@ -2683,11 +2600,10 @@ body:has(#miBuscador.search-card.active) .car-connect {
     }
 }
 
-/* ============================================================
-    FIX PARA MÓVIL MUY PEQUEÑO
-============================================================ */
+/* =========================
+   FIX MÓVIL MUY PEQUEÑO
+========================= */
 @media (max-width: 380px) {
-
     .datetime-row {
         gap: 5px !important;
     }
@@ -2711,7 +2627,6 @@ body:has(#miBuscador.search-card.active) .car-connect {
         color: #333 !important;
     }
 
-    /* Placeholders en móvil muy pequeño */
     .dt-field input::placeholder,
     .field input::placeholder {
         color: #666 !important;
@@ -2719,9 +2634,9 @@ body:has(#miBuscador.search-card.active) .car-connect {
     }
 }
 
-/* ============================================================
-    ESTILOS GLOBALES
-============================================================ */
+/* =========================
+   ESTILOS GLOBALES
+========================= */
 .location-inputs-wrapper .field .field-icon {
     display: none !important;
 }
@@ -2765,7 +2680,6 @@ body:has(#miBuscador.search-card.active) .car-connect {
     z-index: 99999 !important;
 }
 
-/* Placeholders global */
 .dt-field input::placeholder {
     color: #666 !important;
     opacity: 1 !important;
@@ -2793,10 +2707,10 @@ body:has(#miBuscador.search-card.active) .car-connect {
 #dropoffWrapper[style*="display: none"] {
     display: none !important;
 }
-/* ============================================================
-    ALERTAS -
-============================================================ */
 
+/* =========================
+   ALERTAS
+========================= */
 .field-error,
 input.field-error,
 select.field-error,
@@ -2827,7 +2741,6 @@ select.field-success,
     border: 2px solid #43a047 !important;
 }
 
-/* Mensajes de error */
 .error-msg {
     color: #e53935 !important;
     font-size: 10px !important;
@@ -2845,9 +2758,9 @@ select.field-success,
     position: relative !important;
 }
 
-/* ============================================================
-    SELECT2
-============================================================ */
+/* =========================
+   SELECT2
+========================= */
 select.field-error + .select2-container .select2-selection {
     border: 2px solid #e53935 !important;
 }
@@ -2856,9 +2769,9 @@ select.field-success + .select2-container .select2-selection {
     border: 2px solid #43a047 !important;
 }
 
-/* ============================================================
-    FLATPICKR - FIX PARA ALTINPUT
-============================================================ */
+/* =========================
+   FLATPICKR
+========================= */
 .dt-field .flatpickr-input {
     width: 100% !important;
     height: 48px !important;
@@ -2870,11 +2783,9 @@ select.field-success + .select2-container .select2-selection {
     border: 1px solid #ccc;
 }
 
-/* ============================================================
-    AJUSTES POR DISPOSITIVO
-============================================================ */
-
-/* MÓVIL (<= 560px) */
+/* =========================
+   AJUSTES POR DISPOSITIVO
+========================= */
 @media (max-width: 560px) {
     .field, .dt-field, .time-field {
         margin-bottom: 25px !important;
@@ -2887,23 +2798,21 @@ select.field-success + .select2-container .select2-selection {
     }
 }
 
-/* TABLET (561px - 1124px) */
 @media (min-width: 561px) and (max-width: 1124px) {
     .field, .dt-field, .time-field {
         margin-bottom: 20px !important;
     }
 }
 
-/* ESCRITORIO (>= 1125px) */
 @media (min-width: 1125px) {
     .field, .dt-field, .time-field {
         margin-bottom: 0 !important;
     }
 }
 
-/* ============================================================
-    OCULTAR ELEMENTOS SOLO MÓVIL
-============================================================ */
+/* =========================
+   OCULTAR ELEMENTOS
+========================= */
 .solo-responsivo,
 .field .solo-responsivo,
 .dt-field .solo-responsivo,
@@ -2917,13 +2826,12 @@ select.field-success + .select2-container .select2-selection {
     opacity: 1 !important;
 }
 
-/* ============================================================
-    HERO ICONS - MÓVIL MUY PEQUEÑO (<= 380px)
-============================================================ */
-
+/* =========================
+   HERO ICONS - MÓVIL
+========================= */
 @media (max-width: 560px) {
     .hero-icons {
-        grid-template-columns: 1fr !important;  /* UNA SOLA COLUMNA */
+        grid-template-columns: 1fr !important;
         gap: 20px !important;
         padding: 25px 15px !important;
         width: 100% !important;
@@ -2933,7 +2841,7 @@ select.field-success + .select2-container .select2-selection {
     }
 
     .hero-icons .icon-item {
-        transform: none !important;  /* Quita cualquier desplazamiento */
+        transform: none !important;
         width: 100% !important;
         margin: 0 auto !important;
     }
@@ -2962,11 +2870,10 @@ select.field-success + .select2-container .select2-selection {
     }
 }
 
-/* ==========================================
-   FIX ALERTAS SOLO EN MÓVIL
-========================================== */
+/* =========================
+   FIX ALERTAS SOLO MÓVIL
+========================= */
 @media (max-width: 560px) {
-
     .error-msg {
         position: static !important;
         display: block !important;
@@ -2986,9 +2893,9 @@ select.field-success + .select2-container .select2-selection {
     }
 }
 
-/* ============================================================
-    GARANTIZAR BORDES DE ERROR - TODOS LOS DISPOSITIVOS
-============================================================ */
+/* =========================
+   GARANTIZAR BORDES DE ERROR
+========================= */
 .dt-field .flatpickr-input.field-error,
 .dt-field input.field-error,
 input#pickupDate.field-error,
@@ -3005,7 +2912,6 @@ input#dropoffDate.field-success,
     border: 2px solid #43a047 !important;
 }
 
-/* Para móvil (max-width: 1124px) */
 @media (max-width: 1124px) {
     .dt-field .flatpickr-input.field-error,
     .dt-field input.field-error,
@@ -3026,7 +2932,6 @@ input#dropoffDate.field-success,
     }
 }
 
-/* Para móvil muy pequeño */
 @media (max-width: 560px) {
     .dt-field .flatpickr-input.field-error,
     .dt-field input.field-error,
@@ -3044,9 +2949,10 @@ input#dropoffDate.field-success,
         border: 2px solid #43a047 !important;
     }
 }
-/* ==========================================================
-   FLATPICKR - ESTILO DE CALENDARIO
-========================================================== */
+
+/* =========================
+   FLATPICKR - CALENDARIO
+========================= */
 .flatpickr-calendar {
     z-index: 999999 !important;
     border: 0 !important;
@@ -3205,10 +3111,9 @@ span.flatpickr-weekday {
     border-radius: 18px 18px 0 0 !important;
 }
 
-/* ==========================================================
+/* =========================
    DIAS DESHABILITADOS
-========================================================== */
-
+========================= */
 .flatpickr-day.prevMonthDay {
     opacity: 0.4 !important;
     color: #999 !important;
@@ -3253,11 +3158,10 @@ span.flatpickr-weekday {
     color: white !important;
     opacity: 1 !important;
 }
-/* ============================================================
-   POSICIÓN PARA TABLET Y MÓVI
-============================================================ */
 
-/* TABLET (561px - 1124px) */
+/* =========================
+   POSICIÓN TABLET Y MÓVIL
+========================= */
 @media (min-width: 561px) and (max-width: 1124px) {
     .flatpickr-calendar {
         position: fixed !important;
@@ -3302,7 +3206,6 @@ span.flatpickr-weekday {
     }
 }
 
-/* Movil (560px) */
 @media (max-width: 560px) {
     .flatpickr-calendar {
         position: fixed !important;
@@ -3345,10 +3248,8 @@ span.flatpickr-weekday {
     .flatpickr-weekday {
         font-size: 13px !important;
     }
-
 }
 
-/* MÓVIL MUY PEQUEÑO (hasta 380px) */
 @media (max-width: 380px) {
     .flatpickr-calendar.open {
         width: min(400px, 92vw) !important;
@@ -3370,7 +3271,6 @@ span.flatpickr-weekday {
     }
 }
 
-/* Overlay para el fondo */
 .fp-view-overlay-3 {
     position: fixed;
     top: 0;
@@ -3386,25 +3286,21 @@ span.flatpickr-weekday {
 .fp-view-overlay-3.active {
     display: block;
 }
-/* ==========================================================
-   FIX SAFARI / MAC — WELCOME
-   Agregar al FINAL del archivo
-========================================================== */
 
-/* Renderizado más estable en Mac */
+/* =========================
+   FIX SAFARI / MAC
+========================= */
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Mantener checkbox nativo */
 .search-card input[type="checkbox"],
 #miBuscador input[type="checkbox"] {
   -webkit-appearance: checkbox;
   appearance: auto;
 }
 
-/* Inputs/selects más estables */
 .search-card input,
 .search-card select,
 #miBuscador input,
@@ -3416,7 +3312,6 @@ body {
   min-height: 48px !important;
 }
 
-/* Safari centra mejor con font-size 16 */
 .search-card input,
 .search-card select,
 #miBuscador input,
@@ -3427,25 +3322,22 @@ body {
   font-size: 16px !important;
 }
 
-/* ==========================================================
-   FIX INPUTS DE HORA PARA MAC / SAFARI
-   ========================================================== */
-
-/* Fix base para inputs tipo time en Safari/Mac */
+/* =========================
+   FIX INPUTS DE HORA
+========================= */
 input[type="time"] {
   -webkit-appearance: none;
   appearance: none;
-  font-size: 16px !important; /* Previene zoom automático en Safari */
+  font-size: 16px !important;
   line-height: 1.4 !important;
   min-height: 48px !important;
   background-color: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 12px 12px 12px 42px; /* Ajusta según tu diseño */
+  padding: 12px 12px 12px 42px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* Fix para los campos específicos de pickupTime y dropoffTime */
 .search-card .time-field.icon-field input#pickupTime,
 .search-card .time-field.icon-field input#dropoffTime {
   padding-left: 42px !important;
@@ -3455,7 +3347,6 @@ input[type="time"] {
   min-height: 48px !important;
 }
 
-/* Fix para el placeholder en inputs de hora de Safari */
 input[type="time"]:before {
   color: #9ca3af;
   content: attr(placeholder);
@@ -3467,7 +3358,6 @@ input[type="time"]:focus:before {
   content: '';
 }
 
-/* Ajuste interno de los campos de hora en Safari */
 input[type="time"]::-webkit-datetime-edit-fields-wrapper {
   padding: 0;
 }
@@ -3482,13 +3372,13 @@ input[type="time"]::-webkit-datetime-edit-ampm-field {
   padding: 0.2em 0;
 }
 
-/* Fix para cuando el input está vacío en Safari */
 input[type="time"]:invalid {
   color: #9ca3af;
 }
-/* ==========================================================
+
+/* =========================
    ICONOS
-========================================================== */
+========================= */
 .field-icon,
 .dt-field .field-icon,
 .search-card .time-field.icon-field::before,
@@ -3506,7 +3396,6 @@ input[type="time"]:invalid {
   pointer-events: none !important;
 }
 
-/* Iconos dentro de campos */
 .icon-field,
 .dt-field,
 .time-field,
@@ -3514,9 +3403,9 @@ input[type="time"]:invalid {
   position: relative !important;
 }
 
-/* ==========================================================
+/* =========================
    FECHAS Y HORAS
-========================================================== */
+========================= */
 .dt-field input,
 .dt-field select,
 .tp-selects select,
@@ -3526,10 +3415,9 @@ input[type="time"]:invalid {
   padding-right: 12px !important;
 }
 
-
-/* ==========================================================
+/* =========================
    BOTONES
-========================================================== */
+========================= */
 .actions button,
 .btn-close,
 button {
@@ -3537,9 +3425,9 @@ button {
   appearance: none;
 }
 
-/* ==========================================================
+/* =========================
    FLATPICKR
-========================================================== */
+========================= */
 .flatpickr-input {
   line-height: normal !important;
   box-sizing: border-box !important;
@@ -3550,16 +3438,16 @@ button {
   transform: translateZ(0);
 }
 
-/* ==========================================================
+/* =========================
    SELECTS
-========================================================== */
+========================= */
 select {
   background-clip: padding-box;
 }
 
-/* ==========================================================
+/* =========================
    FONT AWESOME
-========================================================== */
+========================= */
 i.fa-solid,
 i.fa-regular,
 i.fa,
@@ -3584,11 +3472,11 @@ i.fa,
     padding-left: 12px !important;
   }
 }
-
 }
-/* ============================================================
-   BOTÓN INTERROGACIÓN EN ESQUINA SUPERIOR DERECHA
-============================================================ */
+
+/* =========================
+   BOTÓN INTERROGACIÓN
+========================= */
 .btn-icon-question-corner {
     position: absolute;
     top: 20px;
@@ -3618,13 +3506,11 @@ i.fa,
     box-shadow: 0 6px 16px rgba(178, 34, 34, 0.25);
 }
 
-/* Asegurar que el contenido no quede oculto detrás del botón */
 .info-content {
     position: relative;
-    padding-top: 30px; /* Espacio para el botón en la esquina */
+    padding-top: 30px;
 }
 
-/* Ajuste responsive para móvil */
 @media (max-width: 560px) {
     .btn-icon-question-corner {
         width: 32px;
@@ -3635,13 +3521,13 @@ i.fa,
     }
 
     .info-content {
-        padding-top: 45px; /* Más espacio en móvil para no tapar el título */
+        padding-top: 45px;
     }
 }
 
-/* ============================================================
+/* =========================
    MODAL MEMBRESÍA
-============================================================ */
+========================= */
 .modal-membership {
     position: fixed;
     inset: 0;
@@ -3686,7 +3572,6 @@ i.fa,
     transform: scale(1);
 }
 
-/* Botón cerrar */
 .modal-membership-close {
     position: absolute;
     top: 14px;
@@ -3703,7 +3588,6 @@ i.fa,
     color: var(--brand, #b22222);
 }
 
-/* Ícono superior */
 .modal-membership-icon {
     width: 60px;
     height: 60px;
@@ -3720,7 +3604,6 @@ i.fa,
     color: var(--brand, #b22222);
 }
 
-/* Título */
 .modal-membership-card h3 {
     font-family: 'Playfair Display', serif;
     font-size: 26px;
@@ -3728,7 +3611,6 @@ i.fa,
     margin-bottom: 12px;
 }
 
-/* Texto JUSTIFICADO BIEN */
 .modal-membership-card p {
     color: #4b5563;
     font-size: 15px;
@@ -3740,7 +3622,6 @@ i.fa,
     margin-right: auto;
 }
 
-/* Botones */
 .modal-membership-actions {
     display: flex;
     gap: 14px;
@@ -3760,7 +3641,6 @@ i.fa,
     transition: all 0.25s ease;
 }
 
-/* Teléfono */
 .btn-call {
     background: #0f172a;
     color: #fff;
@@ -3771,7 +3651,6 @@ i.fa,
     transform: translateY(-2px);
 }
 
-/* WhatsApp */
 .btn-whatsapp {
     background: #b22222;
     color: #fff;
@@ -3786,7 +3665,6 @@ i.fa,
     font-size: 16px;
 }
 
-/* Footer */
 .modal-membership-phone {
     font-size: 12px;
     color: #6b7280;
@@ -3800,7 +3678,6 @@ i.fa,
     text-align: center;
 }
 
-/* Responsive */
 @media (max-width: 560px) {
     .modal-membership-card {
         padding: 22px 18px 26px;
@@ -3810,11 +3687,10 @@ i.fa,
         font-size: 22px;
     }
 }
-/* ========================
-   ESTILOS PARA PRECIOS
-=========================== */
 
-/* Contenedor principal de precios */
+/* =========================
+   ESTILOS PARA PRECIOS
+========================= */
 .price-line {
     display: flex;
     align-items: baseline;
@@ -3823,7 +3699,6 @@ i.fa,
     margin: 12px 0;
 }
 
-/* Wrappers para mantener $ pegado al número */
 .price-now-wrapper,
 .price-old-wrapper {
     display: inline-flex;
@@ -3831,7 +3706,6 @@ i.fa,
     gap: 0;
 }
 
-/* Símbolo de $ - ROJO */
 .currency-symbol {
     font-size: 1.5rem;
     font-weight: 800;
@@ -3839,7 +3713,6 @@ i.fa,
     display: inline-block;
 }
 
-/* Precio actual - ROJO */
 .price-now {
     font-size: 1.5rem;
     font-weight: 800;
@@ -3847,27 +3720,24 @@ i.fa,
     display: inline-block;
 }
 
-/* Código de moneda (MXN o USD) - ROJO Y MÁS PEGADO */
 .currency-code {
     font-size: 0.85rem;
     font-weight: 500;
     color: var(--brand) !important;
     display: inline-block;
-    margin-left: 0px; /* Cambiado de 3px a 0px */
-    padding-left: 0px; /* Sin padding */
+    margin-left: 0px;
+    padding-left: 0px;
 }
 
-/* Texto "/día" - GRIS con separación */
 .per {
     font-size: 0.85rem;
     font-weight: 500;
     color: #6b7280 !important;
     display: inline-block;
-    margin-left: 4px; /* Separación antes de /día */
+    margin-left: 4px;
     margin-right: 2px;
 }
 
-/* Precio anterior (tachado) - TODO EN GRIS */
 .price-old-wrapper {
     display: inline-flex;
     align-items: baseline;
@@ -3890,17 +3760,15 @@ i.fa,
     display: inline-block;
 }
 
-/* Código de moneda anterior - MÁS PEGADO TAMBIÉN */
 .currency-code-old {
     font-size: 0.75rem;
     font-weight: 500;
     color: #9ca3af !important;
     display: inline-block;
-    margin-left: 0px; /* Cambiado de 2px a 0px */
+    margin-left: 0px;
     padding-left: 0px;
 }
 
-/* Versión móvil */
 @media (max-width: 768px) {
     .currency-symbol,
     .price-now {
@@ -3926,9 +3794,10 @@ i.fa,
         margin-left: 0px;
     }
 }
-/* ============================================================
-   FIX: ESPECIFICACIONES EN UNA LÍNEA 431px
-   ============================================================ */
+
+/* =========================
+   FIX: ESPECIFICACIONES
+========================= */
 @media (max-width: 431px) {
     .car-specs {
         flex-wrap: nowrap !important;
@@ -3946,48 +3815,37 @@ i.fa,
         margin-right: 0.15rem !important;
     }
 }
-/* =========================================================
-   FIX INPUTS HORA — iPhone / iPad / Safari / Mac
-========================================================= */
 
+/* =========================
+   FIX INPUTS HORA — iPhone / iPad / Safari / Mac
+========================= */
 .search-card input#pickupTime,
 .search-card input#dropoffTime,
 .search-card .tp-selects select{
-
     -webkit-appearance: none !important;
     appearance: none !important;
-
     height: 48px !important;
     min-height: 48px !important;
-
     font-size: 16px !important;
     line-height: normal !important;
-
     border-radius: 8px !important;
-
     background: #fff !important;
     color: #111827 !important;
-
     box-sizing: border-box !important;
-
     padding-left: 44px !important;
     padding-right: 12px !important;
 }
 
-/* ICONO RELOJ */
 .search-card .time-field.icon-field::before{
     top: 50% !important;
     transform: translateY(-50%) !important;
     left: 14px !important;
 }
 
-/* Evita zoom raro en iOS */
 @supports (-webkit-touch-callout: none){
-
     .search-card input#pickupTime,
     .search-card input#dropoffTime,
     .search-card .tp-selects select{
         font-size: 16px !important;
     }
-
 }
