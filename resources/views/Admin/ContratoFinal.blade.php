@@ -250,212 +250,191 @@
                 <!-- ==========================================
                     TARIFAS + ADICIONALES - Dos columnas (Títulos ROJOS)
                         ========================================== -->
-                <div class="row-dos-columnas">
+                       @php
+    $extrasSeleccionados = [];
+    foreach ($extras as $extra) {
+        $extrasSeleccionados[$extra->nombre] = [
+            'precio'   => $extra->precio_unitario ?? 0,
+            'cantidad' => $extra->cantidad ?? 1,
+        ];
+    }
 
-                    <!-- Columna Izquierda: TARIFAS -->
-                    <div class="col">
-                        <h3 class="titulo-seccion">TARIFAS</h3>
-                        <div class="bloque-tarifas">
-                            <table class="tarifas-table">
-                                <thead>
-                                    <tr>
-                                        <th>Concepto</th>
-                                        <th>Días</th>
-                                        <th>Precio por día</th>
-                                        <th>Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Tarifa base</td>
-                                        <td>{{ $dias }}</td>
-                                        <td>$ {{ number_format($tarifaBase, 2) }}</td>
-                                        <td>$ {{ number_format($tarifaBase * $dias, 2) }}</td>
-                                    </tr>
+    $deliveryActivo = $deliveryInfo && ($deliveryInfo->precio_unitario ?? 0) > 0;
+    $dropoffActivo  = $dropoffInfo  && ($dropoffInfo->precio_unitario  ?? 0) > 0;
+    $gasolinaActiva = $gasolinaInfo && ($gasolinaInfo->precio_unitario ?? 0) > 0;
 
-                                    {{-- Paquetes de seguro --}}
-                                    @foreach ($paquetes as $p)
-                                        <tr>
-                                            <td>{{ $p->nombre }}</td>
-                                            <td>{{ $dias }}</td>
-                                            <td>$ {{ number_format($p->precio_por_dia, 2) }}</td>
-                                            <td>$ {{ number_format($p->precio_por_dia * $dias, 2) }}</td>
-                                        </tr>
-                                    @endforeach
+    $serviciosMostrar = [
+        'Additional driver'   => ['icono' => 'fa-user-plus',      'es_especial' => false],
+        'Conductor menor'     => ['icono' => 'fa-user-minus',     'es_especial' => false],
+        'Baby seat'           => ['icono' => 'fa-child',          'es_especial' => false],
+        'GPS'                 => ['icono' => 'fa-location-dot',   'es_especial' => false],
+        'Delivery'            => ['icono' => 'fa-truck',          'es_especial' => true],
+        'Drop Off'            => ['icono' => 'fa-flag-checkered', 'es_especial' => true],
+        'Gasolina (faltante)' => ['icono' => 'fa-fire',           'es_especial' => true],
+    ];
 
-                                    {{-- Seguros individuales --}}
-                                    @foreach ($individuales as $i)
-                                        <tr>
-                                            <td>{{ $i->nombre }}</td>
-                                            <td>{{ $dias }}</td>
-                                            <td>$ {{ number_format($i->precio_por_dia, 2) }}</td>
-                                            <td>$ {{ number_format($i->precio_por_dia * $dias, 2) }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+    $adicionales        = [];
+    $totalAdicionales   = 0;
+    $adicionalesActivos = 0;
 
-                            <div class="totales">
-                                <p><strong>Subtotal:</strong> $ {{ number_format($subtotal, 2) }}</p>
-                                <p><strong>IVA.</strong> $ {{ number_format($subtotal * 0.16, 2) }}</p>
-                                <p><strong>Cuotas locales e impuestos federales</strong> $
-                                    {{ number_format($subtotal * 0.16, 2) }}</p>
-                                <p class="total-final"><strong>TOTAL:</strong> $ {{ number_format($totalFinal, 2) }}</p>
-                            </div>
-                        </div>
-                    </div>
+    foreach ($serviciosMostrar as $nombre => $config) {
+        $esEspecial   = $config['es_especial'];
+        $seleccionado = isset($extrasSeleccionados[$nombre]);
 
-                    <!-- Columna Derecha: ADICIONALES -->
-                    <div class="col">
-                        <h3 class="titulo-seccion">ADICIONALES</h3>
-                        <div class="bloque-adicionales">
-                            <table class="adicionales-table">
-                                <thead>
-                                    <tr>
-                                        <th>Producto</th>
-                                        <th>Días</th>
-                                        <th>Precio por día</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php
-                                        $totalAdicionales = 0;
+        $precio   = 0;
+        $cantidad = 0;
+        $detalles = '';
 
-                                        $iconosServicios = [
-                                            'Gasolina (faltante)' => 'fa-gas-pump',
-                                            'Servicio de Litro Faltante' => 'fa-gas-pump',
-                                            'Additional driver' => 'fa-user-plus',
-                                            'Baby seat' => 'fa-child',
-                                            'GPS' => 'fa-location-dot',
-                                            'Drop Off' => 'fa-flag-checkered',
-                                            'Delivery' => 'fa-truck',
-                                        ];
+        if ($nombre === 'Delivery' && $deliveryActivo) {
+            $seleccionado = true;
+            $precio   = $deliveryInfo->precio_unitario ?? 0;
+            $cantidad = 1;
+            $detalles = $deliveryInfo->direccion ?? '';
+        } elseif ($nombre === 'Drop Off' && $dropoffActivo) {
+            $seleccionado = true;
+            $precio   = $dropoffInfo->precio_unitario ?? 0;
+            $cantidad = 1;
+            $detalles = $dropoffInfo->destino ?? '';
+        } elseif ($nombre === 'Gasolina (faltante)' && $gasolinaActiva) {
+            $seleccionado = true;
+            $precio   = $gasolinaInfo->precio_unitario ?? 0;
+            $cantidad = $gasolinaInfo->cantidad ?? 1;
+            $detalles = ($gasolinaInfo->litros ?? 0) > 0 ? $gasolinaInfo->litros . ' L' : '';
+        } elseif ($seleccionado) {
+            $precio   = $extrasSeleccionados[$nombre]['precio'];
+            $cantidad = $extrasSeleccionados[$nombre]['cantidad'];
+        }
 
-                                        $extrasSeleccionados = [];
-                                        foreach ($extras as $extra) {
-                                            $extrasSeleccionados[$extra->nombre] = [
-                                                'precio' => $extra->precio_unitario ?? 0,
-                                                'cantidad' => $extra->cantidad ?? 1,
-                                            ];
-                                        }
+        $activo = $seleccionado && $precio > 0;
 
-                                        $deliveryActivo = $deliveryInfo && ($deliveryInfo->precio_unitario ?? 0) > 0;
-                                        $dropoffActivo = $dropoffInfo && ($dropoffInfo->precio_unitario ?? 0) > 0;
-                                        $gasolinaActiva = $gasolinaInfo && ($gasolinaInfo->precio_unitario ?? 0) > 0;
-                                        $serviciosMostrar = [
-                                            'Additional driver' => ['icono' => 'fa-user-plus', 'es_especial' => false],
-                                            'Conductor menor' => ['icono' => 'fa-user-minus', 'es_especial' => false],
-                                            'Baby seat' => ['icono' => 'fa-child', 'es_especial' => false],
-                                            'GPS' => ['icono' => 'fa-location-dot', 'es_especial' => false],
-                                            'Delivery' => ['icono' => 'fa-truck', 'es_especial' => true],
-                                            'Drop Off' => ['icono' => 'fa-flag-checkered', 'es_especial' => true],
-                                            'Gasolina (faltante)' => ['icono' => 'fa-fire', 'es_especial' => true],
-                                        ];
-                                    @endphp
+        if ($activo) {
+            $adicionalesActivos++;
+            $totalAdicionales += $esEspecial ? $precio : $precio * $cantidad * $dias;
+        }
 
-                                    @foreach ($serviciosMostrar as $nombre => $config)
-                                        @php
-                                            $icono = $config['icono'];
-                                            $esEspecial = $config['es_especial'];
+        // Se agregan TODOS, activos e inactivos
+        $adicionales[] = [
+            'nombre'      => $nombre,
+            'icono'       => $config['icono'],
+            'es_especial' => $esEspecial,
+            'precio'      => $activo ? $precio : 0,
+            'cantidad'    => $activo ? $cantidad : 0,
+            'detalles'    => $activo ? $detalles : '',
+            'activo'      => $activo,
+        ];
+    }
 
-                                            $seleccionado = isset($extrasSeleccionados[$nombre]);
+    $hayAdicionales = $adicionalesActivos > 0;
+@endphp
 
-                                            if ($nombre === 'Delivery' && $deliveryActivo) {
-                                                $seleccionado = true;
-                                                $precio = $deliveryInfo->precio_unitario ?? 0;
-                                                $cantidad = 1;
-                                                $detalles = $deliveryInfo->direccion ?? '';
-                                            } elseif ($nombre === 'Drop Off' && $dropoffActivo) {
-                                                $seleccionado = true;
-                                                $precio = $dropoffInfo->precio_unitario ?? 0;
-                                                $cantidad = 1;
-                                                $detalles = $dropoffInfo->destino ?? '';
-                                            } elseif ($nombre === 'Gasolina (faltante)' && $gasolinaActiva) {
-                                                $seleccionado = true;
-                                                $precio = $gasolinaInfo->precio_unitario ?? 0;
-                                                $cantidad = $gasolinaInfo->cantidad ?? 1;
-                                                $detalles =
-                                                    ($gasolinaInfo->litros ?? 0) > 0
-                                                        ? $gasolinaInfo->litros . ' L'
-                                                        : '';
-                                            } elseif ($seleccionado) {
-                                                $precio = $extrasSeleccionados[$nombre]['precio'];
-                                                $cantidad = $extrasSeleccionados[$nombre]['cantidad'];
-                                                $detalles = '';
-                                            } else {
-                                                $precio = 0;
-                                                $cantidad = 0;
-                                                $detalles = '';
-                                            }
+                <div class="row-dos-columnas {{ $hayAdicionales ? '' : 'sin-adicionales' }}">
 
-                                            // Calcular subtotal
-                                            if ($seleccionado && $precio > 0) {
-                                                if (!$esEspecial) {
-                                                    $totalAdicionales += $precio * $cantidad * $dias;
-                                                } else {
-                                                    $totalAdicionales += $precio;
-                                                }
-                                            }
+    <!-- Columna Izquierda: TARIFAS (sin cambios) -->
+    <div class="col">
+        <h3 class="titulo-seccion">TARIFAS</h3>
+        <div class="bloque-tarifas">
+            <table class="tarifas-table">
+                <thead>
+                    <tr>
+                        <th>Concepto</th>
+                        <th>Días</th>
+                        <th>Precio por día</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Tarifa base</td>
+                        <td>{{ $dias }}</td>
+                        <td>$ {{ number_format($tarifaBase, 2) }}</td>
+                        <td>$ {{ number_format($tarifaBase * $dias, 2) }}</td>
+                    </tr>
 
-                                            $estadoClase =
-                                                $seleccionado && $precio > 0 ? 'seleccionado' : 'no-seleccionado';
-                                            $estadoTexto =
-                                                $seleccionado && $precio > 0 ? number_format($precio, 2) : '0.00';
-                                            $cantidadMostrar = $seleccionado && $cantidad > 0 ? $cantidad : 0;
-                                            $diasMostrar = !$esEspecial ? $dias : '—';
+                    @foreach ($paquetes as $p)
+                        <tr>
+                            <td>{{ $p->nombre }}</td>
+                            <td>{{ $dias }}</td>
+                            <td>$ {{ number_format($p->precio_por_dia, 2) }}</td>
+                            <td>$ {{ number_format($p->precio_por_dia * $dias, 2) }}</td>
+                        </tr>
+                    @endforeach
 
-                                            if ($esEspecial) {
-                                                $diasMostrar = '—';
-                                            }
-                                        @endphp
-                                        <tr class="adicional-item {{ $estadoClase }}">
-                                            <td>
-                                                <i class="fa-solid {{ $icono }}"></i>
-                                                {{ $nombre }}
-                                                @if ($seleccionado && $cantidadMostrar > 1)
-                                                    <span class="badge-cantidad">×{{ $cantidadMostrar }}</span>
-                                                @endif
-                                                @if ($seleccionado && !empty($detalles))
-                                                    <span class="badge-ubicacion">{{ $detalles }}</span>
-                                                @endif
-                                                @if (!$seleccionado || $precio == 0)
-                                                    <span class="badge-inactivo">(No seleccionado)</span>
-                                                @endif
-                                            </td>
-                                            <td class="{{ !$seleccionado || $precio == 0 ? 'texto-inactivo' : '' }}">
-                                                {{ $diasMostrar }}
-                                            </td>
-                                            <td class="{{ !$seleccionado || $precio == 0 ? 'texto-inactivo' : '' }}">
-                                                $ {{ $estadoTexto }}
-                                            </td>
-                                        </tr>
-                                    @endforeach
+                    @foreach ($individuales as $i)
+                        <tr>
+                            <td>{{ $i->nombre }}</td>
+                            <td>{{ $dias }}</td>
+                            <td>$ {{ number_format($i->precio_por_dia, 2) }}</td>
+                            <td>$ {{ number_format($i->precio_por_dia * $dias, 2) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
 
-                                    {{-- FILA DE TOTAL --}}
-                                    @if ($totalAdicionales > 0)
-                                        <tr class="adicional-total-row">
-                                            <td colspan="2"
-                                                style="text-align: right; font-weight: bold; font-size:16px; color: #ffffff;">
-                                                TOTAL ADICIONALES
-                                            </td>
-                                            <td style="font-weight: bold; font-size:18px; color: #ffffff;">
-                                                $ {{ number_format($totalAdicionales, 2) }}
-                                            </td>
-                                        </tr>
-                                    @else
-                                        <tr class="adicional-total-row">
-                                            <td colspan="3"
-                                                style="text-align: center; font-weight: bold; color: #94a3b8;">
-                                                Ningún adicional seleccionado
-                                            </td>
-                                        </tr>
-                                    @endif
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+            <div class="totales">
+                <p><strong>Subtotal:</strong> $ {{ number_format($subtotal, 2) }}</p>
+                <p><strong>IVA.</strong> $ {{ number_format($subtotal * 0.16, 2) }}</p>
+                <p><strong>Cuotas locales e impuestos federales</strong> $ {{ number_format($subtotal * 0.16, 2) }}</p>
+                <p class="total-final"><strong>TOTAL:</strong> $ {{ number_format($totalFinal, 2) }}</p>
+            </div>
+        </div>
+    </div>
 
-                </div>
+    <!-- Columna Derecha: ADICIONALES (solo si hay alguno) -->
+    @if ($hayAdicionales)
+    <div class="col">
+        <h3 class="titulo-seccion">ADICIONALES</h3>
+        <div class="bloque-adicionales">
+            <table class="adicionales-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Días</th>
+                        <th>Precio/día</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($adicionales as $adicional)
+                        <tr class="adicional-item {{ $adicional['activo'] ? 'seleccionado' : 'no-seleccionado' }}">
+                            <td>
+                                <i class="fa-solid {{ $adicional['icono'] }}"></i>
+                                {{ $adicional['nombre'] }}
+
+                                @if ($adicional['activo'] && $adicional['cantidad'] > 1)
+                                    <span class="badge-cantidad">×{{ $adicional['cantidad'] }}</span>
+                                @endif
+
+                                @if ($adicional['activo'] && !empty($adicional['detalles']))
+                                    <span class="badge-ubicacion">{{ $adicional['detalles'] }}</span>
+                                @endif
+
+                                @unless ($adicional['activo'])
+                                    <span class="badge-inactivo">(No seleccionado)</span>
+                                @endunless
+                            </td>
+                            <td class="{{ $adicional['activo'] ? '' : 'texto-inactivo' }}">
+                                {{ $adicional['es_especial'] ? '—' : $dias }}
+                            </td>
+                            <td class="{{ $adicional['activo'] ? '' : 'texto-inactivo' }}">
+                                $ {{ number_format($adicional['precio'], 2) }}
+                            </td>
+                        </tr>
+                    @endforeach
+
+                    <tr class="adicional-total-row">
+                        <td colspan="2" style="text-align:right; font-weight:bold; font-size:16px; color:#ffffff;">
+                            TOTAL ADICIONALES
+                        </td>
+                        <td style="font-weight:bold; font-size:18px; color:#ffffff;">
+                            $ {{ number_format($totalAdicionales, 2) }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+@endif
+
+</div>
 
                 <!-- ==========================================
                         ACEPTACIÓN + FIRMAS - Una columna (BLANCO)
@@ -894,6 +873,46 @@
 
         </div>
     </div>
+
+{{-- =============================================================
+     OVERLAY DE ACTUALIZACIÓN
+     ============================================================= --}}
+
+<div class="vr-update-overlay" id="vrUpdateOverlay" aria-hidden="true">
+    <div class="vr-update-card" role="status" aria-live="polite">
+
+        {{-- Estado: cargando --}}
+        <div id="vrUpdateLoader">
+            <div class="vr-emoji-stage">
+                <span class="vr-icon-car">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M5 17H3v-5l2-5h11l3 5h1a1 1 0 0 1 1 1v4h-2" />
+                        <path d="M9 17h6" />
+                        <circle cx="7" cy="17" r="2" />
+                        <circle cx="17" cy="17" r="2" />
+                        <path d="M5 12h14" />
+                    </svg>
+                </span>
+            </div>
+            <p class="vr-update-msg" id="vrUpdateMsg">Procesando tu información…</p>
+        </div>
+
+        {{-- Estado: listo --}}
+        <div id="vrUpdateSuccess">
+            <div class="vr-icon-thumb">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M7 10v12" />
+                    <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
+                </svg>
+            </div>
+            <h4 class="vr-update-title" id="vrUpdateTitle">¡Información actualizada!</h4>
+            <p class="vr-update-sub" id="vrUpdateSub">Los cambios se guardaron correctamente</p>
+        </div>
+
+    </div>
+</div>
 
 @endsection
 

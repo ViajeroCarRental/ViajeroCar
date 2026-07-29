@@ -1,3 +1,126 @@
+(function (global) {
+    'use strict';
+
+    const CONFIG = {
+        mensajes: [
+            'Procesando tu información…',
+            'Preparando los cambios…',
+            'Generando tu actualización…'
+        ],
+        intervaloMensajes: 1500,
+        retrasoEnvio: 800,
+        tiempoMaximo: 12000,
+        duracionExito: 1200,
+        selectorExito: '.visor-alert.alert-success, .alert-success',
+        claveSesion: 'vrUpdated'
+    };
+
+    const $ = (id) => document.getElementById(id);
+    let temporizadorMsg = null;
+
+    function rotarMensajes(lista) {
+        const el = $('vrUpdateMsg');
+        const mensajes = (lista && lista.length) ? lista : CONFIG.mensajes;
+        let i = 0;
+        if (el) el.textContent = mensajes[0];
+        clearInterval(temporizadorMsg);
+        temporizadorMsg = setInterval(() => {
+            i = (i + 1) % mensajes.length;
+            if (!el) return;
+            el.textContent = mensajes[i];
+            el.style.animation = 'none';
+            void el.offsetWidth;
+            el.style.animation = '';
+        }, CONFIG.intervaloMensajes);
+    }
+
+    function mostrar(estado, opciones) {
+        const overlay = $('vrUpdateOverlay');
+        if (!overlay) return;
+
+        opciones = opciones || {};
+
+        overlay.classList.remove('is-loading', 'is-success');
+        overlay.classList.add('show', estado === 'success' ? 'is-success' : 'is-loading');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+
+        if (estado === 'success') {
+            clearInterval(temporizadorMsg);
+            const t = $('vrUpdateTitle'), sub = $('vrUpdateSub');
+            if (t && opciones.titulo) t.textContent = opciones.titulo;
+            if (sub && opciones.subtitulo) sub.textContent = opciones.subtitulo;
+        } else {
+            rotarMensajes(opciones.mensajes);
+        }
+    }
+
+    function ocultar() {
+        const overlay = $('vrUpdateOverlay');
+        if (!overlay) return;
+        clearInterval(temporizadorMsg);
+        overlay.classList.remove('show');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    }
+
+    function conectar() {
+        const overlay = $('vrUpdateOverlay');
+        if (!overlay) return;
+
+
+        overlay.addEventListener('click', () => {
+            if (overlay.classList.contains('is-success')) ocultar();
+        });
+
+
+        document.querySelectorAll('form[data-overlay-actualizacion]').forEach((form) => {
+            form.addEventListener('submit', function (e) {
+                if (e.defaultPrevented) return;
+                if (form.dataset.enviando) return;
+
+                e.preventDefault();
+                form.dataset.enviando = '1';
+
+                try { sessionStorage.setItem(CONFIG.claveSesion, '1'); } catch (_) {}
+
+                mostrar('loading');
+                setTimeout(() => form.submit(), CONFIG.retrasoEnvio);
+                setTimeout(() => {
+                    if (overlay.classList.contains('is-loading')) ocultar();
+                }, CONFIG.tiempoMaximo);
+            });
+        });
+
+        let veniaGuardando = false;
+        try {
+            veniaGuardando = sessionStorage.getItem(CONFIG.claveSesion) === '1';
+            sessionStorage.removeItem(CONFIG.claveSesion);
+        } catch (_) {}
+
+        const hayExito = !!document.querySelector(CONFIG.selectorExito);
+
+        if (hayExito && veniaGuardando) {
+            mostrar('success');
+            setTimeout(ocultar, CONFIG.duracionExito);
+        }
+    }
+
+    global.OverlayActualizacion = {
+        cargando: (o) => mostrar('loading', o),
+        exito:    (o) => mostrar('success', o),
+        ocultar:  ocultar,
+        config:   CONFIG
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', conectar);
+    } else {
+        conectar();
+    }
+
+})(window);
+
 /* =======================================
    CONTRATO FINAL
    Acordeón + revisiones + firmas + correo
@@ -346,7 +469,7 @@ document.addEventListener("DOMContentLoaded", () => {
           } else {
             abrirSiguienteSeccion(seccion);
           }
-              
+
         } catch (error) {
           console.error(error);
 
@@ -397,10 +520,30 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function ajustarCanvas(canvas, pad) {
+  if (!canvas || !pad) return;
+
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+  const datos = pad.isEmpty() ? null : pad.toData();
+
+  canvas.width  = canvas.offsetWidth  * ratio;
+  canvas.height = canvas.offsetHeight * ratio;
+  canvas.getContext("2d").scale(ratio, ratio);
+
+  pad.clear();
+  if (datos) pad.fromData(datos);
+}
+
+window.addEventListener("resize", () => {
+  ajustarCanvas(canvasA, padArr);
+  ajustarCanvas(canvasAviso, padAviso);
+});
+
   btnArr?.addEventListener("click", () => {
     if (!modalArr || !padArr) return;
 
     modalArr.style.display = "flex";
+    ajustarCanvas(canvasA, padArr);
     padArr.clear();
   });
 
@@ -491,6 +634,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     modalAviso.style.display = "flex";
+    ajustarCanvas(canvasAviso, padAviso);
     padAviso?.clear();
   });
 
@@ -534,10 +678,14 @@ document.addEventListener("DOMContentLoaded", () => {
         confirmarAviso.disabled = true;
         confirmarAviso.textContent = "Enviando...";
 
-        notificar(
-          "message",
-          "Guardando firma del aviso y enviando contrato..."
-        );
+        // El coche acompaña la generación del PDF y el envío
+        OverlayActualizacion.cargando({
+          mensajes: [
+            "Generando el contrato…",
+            "Preparando el PDF…",
+            "Enviando el correo…"
+          ]
+        });
 
         const data = await postJSON(
           `/contrato/${id}/enviar-correo`,
@@ -555,15 +703,25 @@ document.addEventListener("DOMContentLoaded", () => {
           );
         }
 
+        OverlayActualizacion.exito({
+          titulo: "¡Contrato enviado!",
+          subtitulo: "El correo salió con el PDF adjunto"
+        });
+
+        setTimeout(() => {
+          OverlayActualizacion.ocultar();
+          modalAviso.style.display = "none";
+        }, 1400);
+
         notificar(
           "success",
           data.msg ||
           "Contrato enviado correctamente."
         );
-
-        modalAviso.style.display = "none";
       } catch (error) {
         console.error(error);
+
+        OverlayActualizacion.ocultar();
 
         notificar(
           "error",
