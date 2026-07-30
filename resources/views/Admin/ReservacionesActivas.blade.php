@@ -37,8 +37,13 @@
         : '—';
     };
 
-    $nombreCategoria = function ($categoria) {
+    $nombreCategoria = function ($categoria, $nombre = null) {
       $codigo = strtoupper(trim((string) $categoria));
+      $nombreCategoria = trim((string) $nombre);
+
+      if ($nombreCategoria !== '' && strtoupper($nombreCategoria) !== $codigo) {
+        return $nombreCategoria;
+      }
 
       return [
         'C' => 'Compacto',
@@ -47,7 +52,7 @@
 
     $vehiculoSimilar = function ($categoria, $nombre = null, $descripcion = null) {
       $codigo = strtoupper(trim((string) $categoria));
-      $detalle = trim((string) ($nombre ?: $descripcion));
+      $detalle = trim((string) $descripcion);
 
       return [
         'C' => 'Chevrolet Aveo o similar',
@@ -376,13 +381,16 @@
                 </svg>
                 <div class="summary-vehicle-copy">
                   <div class="summary-vehicle-name">
-                    {{ $nombreCategoria($r->categoria ?? null) }}
-                  </div>
-                  <div class="summary-vehicle-meta">
                     {{ $vehiculoSimilar(
                       $r->categoria ?? null,
                       $r->categoria_nombre ?? null,
                       $r->categoria_descripcion ?? null
+                    ) }}
+                  </div>
+                  <div class="summary-vehicle-meta">
+                    {{ $nombreCategoria(
+                      $r->categoria ?? null,
+                      $r->categoria_nombre ?? null
                     ) }}
                   </div>
                 </div>
@@ -492,7 +500,7 @@
                   data-id="{{ $r->id_reservacion }}"
                 >
                   <i class="fa-solid fa-lock"></i>
-                  Apartar Vehículo
+                  Apartar Auto
                 </button>
 
               </div>

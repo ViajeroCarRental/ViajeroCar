@@ -942,11 +942,16 @@ window.addEventListener("DOMContentLoaded", () => {
         C: "Compacto"
       };
       const codigoCategoria = String(r.categoria || "").trim().toUpperCase();
-      const categoriaCompleta = categoriasCompletas[codigoCategoria] || r.categoria || "Sin asignar";
+      const nombreCategoria = String(r.categoria_nombre || "").trim();
+      const categoriaCompleta = (
+        nombreCategoria && nombreCategoria.toUpperCase() !== codigoCategoria
+          ? nombreCategoria
+          : categoriasCompletas[codigoCategoria] || r.categoria || "Sin asignar"
+      );
       const vehiculosSimilares = {
         C: "Chevrolet Aveo o similar"
       };
-      const detalleVehiculo = String(r.categoria_nombre || r.categoria_descripcion || "").trim();
+      const detalleVehiculo = String(r.categoria_descripcion || "").trim();
       const vehiculoSimilar = vehiculosSimilares[codigoCategoria]
         || (detalleVehiculo && detalleVehiculo.toUpperCase() !== codigoCategoria
           ? detalleVehiculo
@@ -1021,8 +1026,8 @@ window.addEventListener("DOMContentLoaded", () => {
                   <path d="M27 39h22"/>
                 </svg>
                 <div class="summary-vehicle-copy">
-                  <div class="summary-vehicle-name">${escapeHtml(categoriaCompleta)}</div>
-                  <div class="summary-vehicle-meta">${escapeHtml(vehiculoSimilar)}</div>
+                  <div class="summary-vehicle-name">${escapeHtml(vehiculoSimilar)}</div>
+                  <div class="summary-vehicle-meta">${escapeHtml(categoriaCompleta)}</div>
                 </div>
               </div>
               <div class="summary-rates"><span>Online <strong>${costoOnline}</strong></span><span>Oficina <strong>${costoOficina}</strong></span></div>
