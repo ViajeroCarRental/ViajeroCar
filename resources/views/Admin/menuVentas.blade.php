@@ -240,7 +240,7 @@
                 <span>Alta Cliente</span>
             </a>
 
-            <a href="{{ route('rutaFacturar') }}" class="ventas-home-card">
+            <a href="{{ route('seleccionarFactura') }}" class="ventas-home-card">
                 <i class="fas fa-file-invoice-dollar"></i>
                 <span>Facturar</span>
             </a>

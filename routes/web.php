@@ -45,6 +45,8 @@ use App\Http\Controllers\OficinaController;
 use App\Http\Controllers\FlotillaStatusController;
 use App\Http\Controllers\RespaldoReservacionesController;
 use App\Http\Controllers\AltaClienteController;
+use App\Http\Controllers\FacturaController;
+use App\Http\Controllers\AutofacturaController;
 
 //rutas vistas Usuario
 
@@ -116,7 +118,14 @@ Route::get('/reservaciones-usuario', [ReservacionesController::class, 'desdeNavb
 
     Route::post('/visor-reservacion/{id}/reenviar-correo', [VisorReservacionController::class, 'reenviarCorreo'])->name('visor.reenviarCorreo');
 
-
+// Portal público de autofacturación (por folio)
+Route::get('/facturacion', [AutofacturaController::class, 'buscar'])->name('autofactura.buscar');
+Route::post('/facturacion/validar', [AutofacturaController::class, 'validar'])->name('autofactura.validar');
+Route::get('/facturacion/formulario', [AutofacturaController::class, 'formulario'])->name('autofactura.formulario');
+Route::post('/facturacion/timbrar', [AutofacturaController::class, 'timbrar'])->name('autofactura.timbrar');
+Route::get('/facturacion/exito/{id}', [AutofacturaController::class, 'exito'])->name('autofactura.exito');
+Route::get('/facturacion/{id}/pdf', [AutofacturaController::class, 'pdf'])->name('autofactura.pdf');
+Route::get('/facturacion/{id}/xml', [AutofacturaController::class, 'xml'])->name('autofactura.xml');
 
 // ======================
 // RUTAS PROTEGIDAS (requieren sesión)
@@ -382,9 +391,25 @@ Route::get('/admin/historial-completo', [App\Http\Controllers\controladorVistasA
 Route::get('/admin/licencia', [App\Http\Controllers\controladorVistasAdmin::class, 'licencia'])->name('rutaLicencia');
 //RFC
 Route::get('/admin/rfc', [App\Http\Controllers\controladorVistasAdmin::class, 'RFC_Fiscal'])->name('rutaRFC');
-//facturar
-Route::get('/admin/facturar', [App\Http\Controllers\controladorVistasAdmin::class, 'Facturar'])->name('rutaFacturar');
 
+
+//facturar como shakira xd
+
+// Formulario y generación
+Route::get('/admin/seleccionar-factura', [App\Http\Controllers\controladorVistasAdmin::class, 'seleccionarParaFacturar'])->name('seleccionarFactura');
+Route::post('/admin/facturar', [FacturaController::class, 'store'])->name('facturar.store');
+
+// Acciones sobre facturas
+Route::get('/admin/facturas/{id}/pdf', [FacturaController::class, 'descargarPdf'])->name('facturas.pdf');
+Route::get('/admin/facturas/{id}/xml', [FacturaController::class, 'descargarXml'])->name('facturas.xml');
+Route::post('/admin/facturas/{id}/enviar', [FacturaController::class, 'enviarCorreo'])->name('facturas.enviar');
+Route::post('/admin/facturas/{id}/cancelar', [FacturaController::class, 'cancelar'])->name('facturas.cancelar');
+
+// APIs (JSON) para las 4 pestañas
+Route::get('/api/facturar/reservaciones', [FacturaController::class, 'apiReservaciones']);
+Route::get('/api/facturar/folios-facturados', [FacturaController::class, 'apiFoliosFacturados']);
+Route::get('/api/facturar/facturadas', [FacturaController::class, 'apiFacturadas']);
+Route::get('/api/facturar/canceladas', [FacturaController::class, 'apiCanceladas']);
 
 //Status del vehiculo
 Route::prefix('ventas')->group(function () {

@@ -1,0 +1,241 @@
+ /* =========================================
+       Variables y Contenedor Principal (Tema Rojo)
+       ========================================= */
+    :root {
+        --primary-red: #dc2626;       /* Rojo principal */
+        --primary-red-hover: #b91c1c; /* Rojo oscuro para hover */
+        --text-main: #333333;
+        --text-muted: #6b7280;
+        --border-color: #e5e7eb;
+        --bg-light: #f9fafb;
+        --radius: 8px;
+        --transition: all 0.3s ease;
+    }
+
+    .facturacion-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 1rem;
+        font-family: system-ui, -apple-system, sans-serif;
+        color: var(--text-main);
+    }
+
+    .page-title {
+        margin-bottom: 1.5rem;
+        color: var(--primary-red);
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+
+    /* =========================================
+       Alertas
+       ========================================= */
+    .alert {
+        padding: 1rem;
+        border-radius: var(--radius);
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+    }
+    .alert-success { background: #fef2f2; color: var(--primary-red); border: 1px solid #fca5a5; }
+    .alert-error { background: #fdecea; color: #b71c1c; border: 1px solid #ffcdd2; }
+    .alert-warning { background: #fffbeb; color: #92400e; border: 1px solid #fef3c7; }
+    .alert-error ul { margin: 0; padding-left: 1.5rem; }
+
+    /* =========================================
+       Pestañas (Tabs)
+       ========================================= */
+    .tabs-container {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid var(--border-color);
+        flex-wrap: wrap;
+    }
+
+    .tab-btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: var(--radius) var(--radius) 0 0;
+        cursor: pointer;
+        font-weight: 600;
+        transition: var(--transition);
+        background: #e5e7eb;
+        color: var(--text-muted);
+    }
+
+    .tab-btn:hover { background: #d1d5db; color: var(--text-main); }
+    
+    .tab-btn.active, 
+    #tab-reservaciones { /* Reservaciones activa por defecto */
+        background: var(--primary-red);
+        color: #ffffff;
+    }
+
+    /* =========================================
+       Tablas
+       ========================================= */
+    .table-wrapper {
+        overflow-x: auto;
+        background: #ffffff;
+        border-radius: var(--radius);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border-color);
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .data-table th {
+        padding: 1rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        background: var(--primary-red);
+        color: #ffffff;
+    }
+
+    .data-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.95rem;
+    }
+
+    .data-table tbody tr:hover { background-color: var(--bg-light); }
+
+    /* =========================================
+       Modales
+       ========================================= */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(3px);
+        z-index: 9999;
+        overflow-y: auto;
+        padding: 2rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 2.5rem;
+        position: relative;
+        width: 100%;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        margin: auto;
+    }
+
+    .modal-md { max-width: 680px; }
+    .modal-sm { max-width: 520px; }
+
+    .btn-close {
+        position: absolute;
+        top: 1.2rem;
+        right: 1.2rem;
+        background: none;
+        border: none;
+        font-size: 1.8rem;
+        cursor: pointer;
+        color: #9ca3af;
+        transition: var(--transition);
+        line-height: 1;
+    }
+
+    .btn-close:hover { color: var(--primary-red); }
+
+    .modal-title { 
+        color: var(--primary-red); 
+        margin-bottom: 0.5rem; 
+        font-size: 1.4rem; 
+        font-weight: 700; 
+    }
+    
+    .modal-desc { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; }
+
+    .section-title {
+        color: var(--text-main);
+        margin: 1.5rem 0 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--bg-light);
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    /* =========================================
+       Formularios
+       ========================================= */
+    .form-group { margin-bottom: 1.2rem; }
+    
+    .form-label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+        font-size: 0.9rem;
+        color: #374151;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        transition: var(--transition);
+        box-sizing: border-box;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-red);
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+    }
+
+    .form-control[readonly] {
+        background: #f3f4f6;
+        cursor: not-allowed;
+        color: var(--text-muted);
+    }
+
+    .form-hint { color: var(--text-muted); font-size: 0.8rem; margin-top: 0.3rem; display: block; }
+    .text-uppercase { text-transform: uppercase; }
+
+    /* =========================================
+       Botones (Tema Rojo)
+       ========================================= */
+    .btn {
+        padding: 0.85rem 1.5rem;
+        border: none;
+        border-radius: var(--radius);
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    .btn-primary { background: var(--primary-red); color: #fff; }
+    .btn-primary:hover { background: var(--primary-red-hover); }
+    
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    .btn-secondary:hover { background: #d1d5db; }
+
+    .btn-group { display: flex; gap: 1rem; margin-top: 1.5rem; }
+    .btn-group .btn { flex: 1; }
+
+    /* =========================================
+       Utilidades y Detalles
+       ========================================= */
+    .detail-row { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color); font-size: 0.95rem; }
+    .detail-row:last-child { border-bottom: none; }
+    .text-break { word-break: break-all; text-align: right; max-width: 60%; }
