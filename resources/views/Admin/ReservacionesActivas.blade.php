@@ -2,7 +2,10 @@
 @section('Titulo', 'Reservaciones Activas')
 
 @section('css-vistaReservacionesActivas')
-  <link rel="stylesheet" href="{{ asset('css/reservacionesActivas.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ asset('css/reservacionesActivas.css') }}?v={{ @filemtime(public_path('css/reservacionesActivas.css')) ?: time() }}">
 @endsection
 
 @section('contenidoReservacionesActivas')
@@ -30,8 +33,29 @@
 
     $fmtHora = function ($hora) {
       return $hora
-        ? \Carbon\Carbon::parse($hora)->format('H:i')
+        ? \Carbon\Carbon::parse($hora)->format('H:i') . ' hrs'
         : '—';
+    };
+
+    $nombreCategoria = function ($categoria) {
+      $codigo = strtoupper(trim((string) $categoria));
+
+      return [
+        'C' => 'Compacto',
+      ][$codigo] ?? ($categoria ?: 'Sin asignar');
+    };
+
+    $vehiculoSimilar = function ($categoria, $nombre = null, $descripcion = null) {
+      $codigo = strtoupper(trim((string) $categoria));
+      $detalle = trim((string) ($nombre ?: $descripcion));
+
+      return [
+        'C' => 'Chevrolet Aveo o similar',
+      ][$codigo] ?? (
+        $detalle !== '' && strtoupper($detalle) !== $codigo
+          ? $detalle
+          : 'Sin asignar'
+      );
     };
   @endphp
 
@@ -309,90 +333,118 @@
         </div>
 
         <div class="row-detail" style="display:none;">
-          <div class="reserva-summary">
+          <div class="reserva-summary reserva-summary-v2">
 
-            <div class="summary-title">
-              Reservación Confirmada el: {{ $r->created_at ? \Carbon\Carbon::parse($r->created_at)->format('d-M-Y H:i:s') : '—' }}
+            <div class="summary-route-card summary-route-pickup">
+              <div class="summary-section-title">Entrega</div>
+              <svg class="summary-main-icon summary-location-icon" viewBox="0 0 64 76" aria-hidden="true">
+                <path d="M32 4C18.2 4 7 15.2 7 29c0 18.2 25 37 25 37s25-18.8 25-37C57 15.2 45.8 4 32 4Z"/>
+                <circle cx="32" cy="29" r="8"/>
+                <path d="M21.5 59.2C11.2 60.4 5 63.2 5 66.5 5 71.2 17.1 75 32 75s27-3.8 27-8.5c0-3.3-6.2-6.1-16.5-7.3"/>
+              </svg>
+              <div class="summary-route-content">
+                <div class="summary-office">{{ $oficinaRetiro ?? '—' }}</div>
+                <div class="summary-date">{{ strtoupper($fmtFecha($r->fecha_inicio)) }}</div>
+                <div class="summary-time">{{ $fmtHora($r->hora_retiro) }}</div>
+              </div>
             </div>
 
-           <div class="reserva-summary-line summary-full summary-contact">
-             <b>Datos de Contacto:</b>
-             <b style="font-weight: 900; font-size: 14px; color: #000000; background: #FFF9FA; padding: 4px 10px; border-radius: 6px; display: inline-block; border: 1px solid #FFD1D6;">
-              {{ $r->pais_cliente ?? $r->pais ?? 'MEXICO (MX)' }}
-               | {{ $r->telefono_cliente ?? '—' }}
-               | {{ $nombreCompleto }}
-               | {{ $r->email_cliente ?? '—' }}
-            </b>
-           </div>
-
-            <div class="reserva-summary-line">
-              <b>Entrega:</b>
-              {{ $fmtFecha($r->fecha_inicio) }}
-              a las {{ $fmtHora($r->hora_retiro) }} HRS
+            <div class="summary-route-card summary-route-return">
+              <div class="summary-section-title">Devolución</div>
+              <svg class="summary-main-icon summary-location-icon" viewBox="0 0 64 76" aria-hidden="true">
+                <path d="M32 4C18.2 4 7 15.2 7 29c0 18.2 25 37 25 37s25-18.8 25-37C57 15.2 45.8 4 32 4Z"/>
+                <circle cx="32" cy="29" r="8"/>
+                <path d="M21.5 59.2C11.2 60.4 5 63.2 5 66.5 5 71.2 17.1 75 32 75s27-3.8 27-8.5c0-3.3-6.2-6.1-16.5-7.3"/>
+              </svg>
+              <div class="summary-route-content">
+                <div class="summary-office">{{ $oficinaDevolucion ?? $oficinaRetiro ?? '—' }}</div>
+                <div class="summary-date">{{ strtoupper($fmtFecha($r->fecha_fin)) }}</div>
+                <div class="summary-time">{{ $fmtHora($r->hora_entrega) }}</div>
+              </div>
             </div>
 
-            <div class="reserva-summary-line">
-              <b>Devolución:</b>
-              {{ $fmtFecha($r->fecha_fin) }}
-              a las {{ $fmtHora($r->hora_entrega) }} HRS
+            <div class="summary-vehicle summary-full">
+              <div class="summary-vehicle-data">
+                <div class="summary-section-title">Vehículo requerido</div>
+                <svg class="summary-main-icon summary-car-icon" viewBox="0 0 76 58" aria-hidden="true">
+                  <path d="M13 23 18.5 9.8A7 7 0 0 1 25 5.5h26a7 7 0 0 1 6.5 4.3L63 23"/>
+                  <path d="M10 23h56a6 6 0 0 1 6 6v18H4V29a6 6 0 0 1 6-6Z"/>
+                  <path d="M9 47v6.5h11V47M56 47v6.5h11V47"/>
+                  <rect x="10" y="30" width="12" height="8" rx="1"/>
+                  <rect x="54" y="30" width="12" height="8" rx="1"/>
+                  <path d="M27 39h22"/>
+                </svg>
+                <div class="summary-vehicle-copy">
+                  <div class="summary-vehicle-name">
+                    {{ $nombreCategoria($r->categoria ?? null) }}
+                  </div>
+                  <div class="summary-vehicle-meta">
+                    {{ $vehiculoSimilar(
+                      $r->categoria ?? null,
+                      $r->categoria_nombre ?? null,
+                      $r->categoria_descripcion ?? null
+                    ) }}
+                  </div>
+                </div>
+              </div>
+              @php
+                $tarifaBaseResumen = (float)($r->precio_dia ?? 0) * $diasReserva;
+                $cargosResumen = max(0, (float)($r->total ?? 0) - $tarifaBaseResumen);
+              @endphp
+              <div class="summary-rates">
+                <span><em>Tarifa base ({{ $diasReserva }} {{ $diasReserva == 1 ? 'día' : 'días' }})</em><strong>${{ number_format($tarifaBaseResumen, 2) }} MXN</strong></span>
+                <span><em>Impuestos y cargos</em><strong>${{ number_format($cargosResumen, 2) }} MXN</strong></span>
+                <span><em>Subtotal</em><strong>${{ number_format($r->total ?? 0, 2) }} MXN</strong></span>
+              </div>
             </div>
 
-            <div class="reserva-summary-line">
-              <b>Oficina de entrega:</b>
-              {{ $oficinaRetiro ?? '—' }}
+            <div class="summary-info-card summary-contact">
+              <div class="summary-section-title">Datos de contacto</div>
+              <div class="summary-detail-line">
+                <i class="fa-regular fa-user"></i>
+                <strong>{{ $nombreCompleto }}</strong>
+              </div>
+              <div class="summary-detail-line">
+                <i class="fa-solid fa-phone"></i>
+                <span>{{ $r->telefono_cliente ?? '—' }}</span>
+              </div>
+              <div class="summary-detail-line">
+                <i class="fa-regular fa-envelope"></i>
+                <span>{{ $r->email_cliente ?? '—' }}</span>
+              </div>
             </div>
 
-            <div class="reserva-summary-line">
-              <b>Oficina de devolución:</b>
-              {{ $oficinaDevolucion ?? $oficinaRetiro ?? '—' }}
+            <div class="summary-info-card summary-trip">
+              <div class="summary-section-title">Detalles del viaje</div>
+              <div class="summary-detail-line">
+                <i class="fa-solid fa-plane"></i>
+                <span>No. de vuelo:<strong>{{ $r->no_vuelo ?? '—' }}</strong></span>
+              </div>
+              <div class="summary-detail-line">
+                <i class="fa-regular fa-credit-card"></i>
+                <span>Forma de pago:<strong>{{ ucfirst($r->metodo_pago ?? 'Tarjeta') }}</strong></span>
+              </div>
             </div>
 
-            <div class="reserva-summary-line summary-full">
-              <b>Vehículo Requerido:</b>
-              {{ $r->categoria }}
-              | {{ $r->categoria_nombre ?? 'Sin asignar' }}
-              {{ $r->transmision ?? 'Sin transmisión' }}
-              {{ $r->categoria_descripcion ?? '' }}
-              | Costo online: ${{ number_format($r->precio_dia ?? 0, 2) }}
-              | Costo oficina: ${{ number_format(($r->precio_dia ?? 0) * 1.15, 2) }}
+            <div class="summary-info-card summary-services">
+              <div class="summary-section-title">Servicios</div>
+              <div class="summary-detail-line">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Seguro:
+                  <strong>{{ count($listaSeguros) ? collect($listaSeguros)->pluck('nombre')->implode(', ') : 'Sin seguro adicional' }}</strong>
+                </span>
+              </div>
+              <div class="summary-detail-line">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>Adicional:
+                  <strong>{{ count($extras) ? $extras->pluck('nombre')->implode(', ') : 'Ninguno' }}</strong>
+                </span>
+              </div>
             </div>
 
-            <div class="reserva-summary-line">
-              <b>Número de vuelo:</b>
-              {{ $r->no_vuelo ?? '—' }}
-            </div>
-
-         <div class="reserva-summary-line">
-              <b>Adicionales Requeridos:</b>
-              @if(count($extras))
-                @foreach($extras as $e)
-                  @php
-                    $precioBaseAd = ($e->precio ?? 0) * ($e->cantidad ?? 1);
-                    $totalAd = ($e->tipo_cobro ?? 'por_dia') === 'por_dia'
-                        ? $precioBaseAd * $diasReserva
-                        : $precioBaseAd;
-                  @endphp
-                  <div>- {{ $e->nombre }} (x{{ $e->cantidad }}) — ${{ number_format($totalAd, 2) }} MXN</div>
-                @endforeach
-              @else
-                <span style="color:#999;">Ninguno</span>
-              @endif
-            </div>
-
-            <div class="reserva-summary-line">
-              <b>Seguros:</b>
-              @if(count($listaSeguros))
-                @foreach($listaSeguros as $sg)
-                  <div>- {{ $sg['nombre'] }} — ${{ number_format($sg['total'], 2) }} MXN</div>
-                @endforeach
-              @else
-                <span style="color:#999;">—</span>
-              @endif
-            </div>
-            <div class="reserva-summary-line summary-total"
-                style="grid-column: 2 / 3 !important;">
-                <b>Total(MXN):</b>
-                ${{ number_format($r->total, 2) }} - Forma de pago: ({{ $r->metodo_pago ?? 'mostrador' }})
+            <div class="summary-payment summary-full">
+              <b>Total de la reservación</b>
+              <strong>${{ number_format($r->total, 2) }} MXN</strong>
             </div>
 
             <div class="summary-actions">
@@ -430,8 +482,8 @@
                   class="btn btn-mail"
                   onclick="reenviarCorreo({{ $r->id_reservacion }}, this)"
                 >
-                  <i class="fa-solid fa-envelope"></i>
-                  Reenviar correo
+                  <i class="fa-regular fa-paper-plane"></i>
+                  Reenviar Correo
                 </button>
 
                 <button
@@ -439,8 +491,8 @@
                   class="btn btn-car btn-apartar-auto"
                   data-id="{{ $r->id_reservacion }}"
                 >
-                  <i class="fa-solid fa-car-side"></i>
-                  Apartar auto
+                  <i class="fa-solid fa-lock"></i>
+                  Apartar Vehículo
                 </button>
 
               </div>

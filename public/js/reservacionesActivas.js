@@ -1,4 +1,3 @@
-
 (function (global) {
     'use strict';
 
@@ -866,7 +865,7 @@ window.addEventListener("DOMContentLoaded", () => {
       return `${fecha} ${hora}`;
     };
 
-    const fmtHora = (h) => (h ? String(h).slice(0, 5) : "—");
+    const fmtHora = (h) => (h ? `${String(h).slice(0, 5)} hrs` : "—");
 
     const colorEstado = (estado) => {
       switch (estado) {
@@ -939,6 +938,19 @@ window.addEventListener("DOMContentLoaded", () => {
         : oficinaDevolucionPropia;
 
       const estadoTxt = (r.estado || "").charAt(0).toUpperCase() + (r.estado || "").slice(1);
+      const categoriasCompletas = {
+        C: "Compacto"
+      };
+      const codigoCategoria = String(r.categoria || "").trim().toUpperCase();
+      const categoriaCompleta = categoriasCompletas[codigoCategoria] || r.categoria || "Sin asignar";
+      const vehiculosSimilares = {
+        C: "Chevrolet Aveo o similar"
+      };
+      const detalleVehiculo = String(r.categoria_nombre || r.categoria_descripcion || "").trim();
+      const vehiculoSimilar = vehiculosSimilares[codigoCategoria]
+        || (detalleVehiculo && detalleVehiculo.toUpperCase() !== codigoCategoria
+          ? detalleVehiculo
+          : "Sin asignar");
 
       return `
         <div class="row"
@@ -970,20 +982,71 @@ window.addEventListener("DOMContentLoaded", () => {
         </div>
 
         <div class="row-detail" style="display:none;">
-          <div class="reserva-summary">
-            <div class="summary-title">Reservación Confirmada el: ${fmtFechaHora(r.created_at)}</div>
-            <div class="reserva-summary-line summary-full summary-contact"><b>Datos de Contacto:</b> ${escapeHtml(r.pais_cliente || r.pais || "MEXICO (MX)")} | ${escapeHtml(r.telefono_cliente || "—")} | ${escapeHtml(nombre)} | ${escapeHtml(r.email_cliente || "—")}</div>
-            <div class="reserva-summary-line"><b>Entrega:</b> ${fmtFecha(r.fecha_inicio)} a las ${fmtHora(r.hora_retiro)} HRS</div>
-            <div class="reserva-summary-line"><b>Devolución:</b> ${fmtFecha(r.fecha_fin)} a las ${fmtHora(r.hora_entrega)} HRS</div>
-            <div class="reserva-summary-line"><b>Oficina de entrega:</b> ${escapeHtml(oficinaRecoleccion)}</div>
-            <div class="reserva-summary-line"><b>Oficina de devolución:</b> ${escapeHtml(oficinaDevolucion)}</div>
-            <div class="reserva-summary-line summary-full">
-              <b>Vehículo Requerido:</b> ${escapeHtml(r.categoria || "")} | ${escapeHtml(r.categoria_nombre || "Sin asignar")} ${escapeHtml(r.transmision || "Sin transmisión")} ${escapeHtml(r.categoria_descripcion || "")} | Costo online: ${costoOnline} | Costo oficina: ${costoOficina}
+          <div class="reserva-summary reserva-summary-v2">
+            <div class="summary-route-card summary-route-pickup">
+              <div class="summary-section-title">Entrega</div>
+              <svg class="summary-main-icon summary-location-icon" viewBox="0 0 64 76" aria-hidden="true">
+                <path d="M32 4C18.2 4 7 15.2 7 29c0 18.2 25 37 25 37s25-18.8 25-37C57 15.2 45.8 4 32 4Z"/>
+                <circle cx="32" cy="29" r="8"/>
+                <path d="M21.5 59.2C11.2 60.4 5 63.2 5 66.5 5 71.2 17.1 75 32 75s27-3.8 27-8.5c0-3.3-6.2-6.1-16.5-7.3"/>
+              </svg>
+              <div class="summary-route-content">
+                <div class="summary-office">${escapeHtml(oficinaRecoleccion)}</div>
+                <div class="summary-date">${fmtFecha(r.fecha_inicio).toUpperCase()}</div>
+                <div class="summary-time">${fmtHora(r.hora_retiro)}</div>
+              </div>
             </div>
-            <div class="reserva-summary-line"><b>Número de vuelo:</b> ${escapeHtml(r.no_vuelo || "—")}</div>
-            <div class="reserva-summary-line"><b>Adicionales Requeridos:</b> ${extrasHtml}</div>
-            <div class="reserva-summary-line"><b>Seguros:</b><br>${r.seguro ? escapeHtml(r.seguro) : "—"}</div>
-            <div class="reserva-summary-line summary-total summary-total-devolucion"><b>Total(MXN):</b> ${totalFmt} - Forma de pago: (${escapeHtml(r.metodo_pago || "mostrador")})</div>
+            <div class="summary-route-card summary-route-return">
+              <div class="summary-section-title">Devolución</div>
+              <svg class="summary-main-icon summary-location-icon" viewBox="0 0 64 76" aria-hidden="true">
+                <path d="M32 4C18.2 4 7 15.2 7 29c0 18.2 25 37 25 37s25-18.8 25-37C57 15.2 45.8 4 32 4Z"/>
+                <circle cx="32" cy="29" r="8"/>
+                <path d="M21.5 59.2C11.2 60.4 5 63.2 5 66.5 5 71.2 17.1 75 32 75s27-3.8 27-8.5c0-3.3-6.2-6.1-16.5-7.3"/>
+              </svg>
+              <div class="summary-route-content">
+                <div class="summary-office">${escapeHtml(oficinaDevolucion)}</div>
+                <div class="summary-date">${fmtFecha(r.fecha_fin).toUpperCase()}</div>
+                <div class="summary-time">${fmtHora(r.hora_entrega)}</div>
+              </div>
+            </div>
+            <div class="summary-vehicle summary-full">
+              <div class="summary-vehicle-data">
+                <div class="summary-section-title">Vehículo requerido</div>
+                <svg class="summary-main-icon summary-car-icon" viewBox="0 0 76 58" aria-hidden="true">
+                  <path d="M13 23 18.5 9.8A7 7 0 0 1 25 5.5h26a7 7 0 0 1 6.5 4.3L63 23"/>
+                  <path d="M10 23h56a6 6 0 0 1 6 6v18H4V29a6 6 0 0 1 6-6Z"/>
+                  <path d="M9 47v6.5h11V47M56 47v6.5h11V47"/>
+                  <rect x="10" y="30" width="12" height="8" rx="1"/>
+                  <rect x="54" y="30" width="12" height="8" rx="1"/>
+                  <path d="M27 39h22"/>
+                </svg>
+                <div class="summary-vehicle-copy">
+                  <div class="summary-vehicle-name">${escapeHtml(categoriaCompleta)}</div>
+                  <div class="summary-vehicle-meta">${escapeHtml(vehiculoSimilar)}</div>
+                </div>
+              </div>
+              <div class="summary-rates"><span>Online <strong>${costoOnline}</strong></span><span>Oficina <strong>${costoOficina}</strong></span></div>
+            </div>
+            <div class="summary-info-card summary-contact">
+              <div class="summary-section-title">Datos de contacto</div>
+              <div class="summary-detail-line"><i class="fa-regular fa-user"></i><strong>${escapeHtml(nombre)}</strong></div>
+              <div class="summary-detail-line"><i class="fa-solid fa-phone"></i><span>${escapeHtml(r.pais_cliente || r.pais || "MEXICO (MX)")} · ${escapeHtml(r.telefono_cliente || "—")}</span></div>
+              <div class="summary-detail-line"><i class="fa-regular fa-envelope"></i><span>${escapeHtml(r.email_cliente || "—")}</span></div>
+            </div>
+            <div class="summary-info-card summary-trip">
+              <div class="summary-section-title">Detalles del viaje</div>
+              <div class="summary-detail-line"><i class="fa-solid fa-plane"></i><span>Número de vuelo:<strong>${escapeHtml(r.no_vuelo || "—")}</strong></span></div>
+              <div class="summary-detail-line"><i class="fa-regular fa-credit-card"></i><span>Forma de pago:<strong>${escapeHtml(r.metodo_pago || "mostrador")}</strong></span></div>
+            </div>
+            <div class="summary-info-card summary-services">
+              <div class="summary-section-title">Servicios</div>
+              <div class="summary-detail-line"><i class="fa-solid fa-shield-halved"></i><span>Seguro:<strong>${r.seguro ? escapeHtml(r.seguro) : "Sin seguros adicionales"}</strong></span></div>
+              <div class="summary-detail-line"><i class="fa-solid fa-user-plus"></i><span>Adicional:<strong>${extrasHtml}</strong></span></div>
+            </div>
+            <div class="summary-payment summary-full">
+              <div><b>Total de la reservación</b></div>
+              <strong>${totalFmt.replace(" MXN", "")} <small>MXN</small></strong>
+            </div>
 
             <div class="summary-actions">
               <div class="summary-actions-left">

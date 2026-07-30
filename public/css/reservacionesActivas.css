@@ -712,29 +712,7 @@ small, .small { font-size: 12px; color: var(--muted); }
   line-height: 1.45;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.reserva-summary b {
-  display: block;
-  color: #667085;
-  font-size: 11px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: .25px;
-  margin-bottom: 3px;
-}
-
-.reserva-summary br { display: none; }
-.reserva-summary>b, .reserva-summary>span, .reserva-summary>div, .reserva-summary>button { min-width: 0; }
-
-.reserva-summary-line {
-  background: #FAFBFC;
-  border: 1px solid #EEF0F3;
-  border-radius: 10px;
-  padding: 9px 10px;
-  color: #101828;
-  font-weight: 600;
+  gap: 12px;
 }
 
 .reserva-summary .summary-title {
@@ -751,13 +729,127 @@ small, .small { font-size: 12px; color: var(--muted); }
 
 .reserva-summary .summary-title b { color: #B42318; }
 .reserva-summary .summary-full { grid-column: 1 / -1; }
-.reserva-summary .summary-contact { background: #F8FAFC; }
-.reserva-summary .summary-total {
-  background: #FFF7ED;
-  border-color: #FED7AA;
-  font-size: 14px;
+
+.summary-route-card {
+  position: relative;
+  min-height: 112px;
+  padding: 22px 20px 18px;
+  border: 1px solid #E6E9EF;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #fff 0%, #FAFBFC 100%);
+  box-shadow: 0 5px 14px rgba(16, 24, 40, .05);
 }
-.reserva-summary .summary-total b { color: #C2410C; }
+
+.summary-route-label {
+  position: absolute;
+  top: -1px;
+  left: 18px;
+  padding: 5px 13px 6px;
+  border-radius: 0 0 9px 9px;
+  background: var(--brand);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+}
+
+.summary-office {
+  margin-top: 15px;
+  color: #111827;
+  font-size: 17px;
+  line-height: 1.3;
+  font-weight: 900;
+}
+
+.summary-datetime {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 9px;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 700;
+}
+.summary-datetime i { color: var(--brand); }
+
+.summary-vehicle {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 18px;
+  border: 1px solid #FFD1D6;
+  border-left: 4px solid var(--brand);
+  border-radius: 14px;
+  background: #FFF9FA;
+}
+.summary-vehicle-icon {
+  display: grid;
+  place-items: center;
+  width: 43px;
+  height: 43px;
+  border-radius: 12px;
+  background: #FFE4E7;
+  color: var(--brand-2);
+  font-size: 19px;
+}
+.summary-vehicle b,
+.summary-info-card b,
+.summary-payment b {
+  display: block;
+  color: #667085;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .55px;
+  text-transform: uppercase;
+}
+.summary-vehicle-name { margin-top: 3px; color: #101828; font-size: 15px; font-weight: 900; }
+.summary-vehicle-meta { margin-top: 2px; color: #667085; font-size: 12px; font-weight: 600; }
+.summary-rates { display: flex; gap: 7px; flex-wrap: wrap; justify-content: flex-end; }
+.summary-rates span {
+  padding: 6px 9px;
+  border: 1px solid #FFD1D6;
+  border-radius: 9px;
+  background: #fff;
+  color: #667085;
+  font-size: 10px;
+  font-weight: 800;
+}
+.summary-rates strong { display: block; color: #B42318; font-size: 12px; }
+
+.summary-info-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 92px;
+  padding: 14px 15px;
+  border: 1px solid #E9EDF3;
+  border-radius: 13px;
+  background: #FAFBFC;
+  color: #475467;
+}
+.summary-info-card b { margin-bottom: 4px; color: #475467; }
+.summary-info-card b i { width: 16px; color: var(--brand); font-size: 12px; }
+.summary-info-card > strong { color: #101828; font-size: 13px; }
+.summary-info-card > span,
+.summary-info-card > div { display: block; color: #667085; font-size: 12px; font-weight: 600; }
+
+.summary-payment {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 16px 19px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #151A23, #252C38);
+  color: #fff;
+}
+.summary-payment b { color: #CBD5E1; }
+.summary-payment span { display: block; margin-top: 3px; color: #CBD5E1; font-size: 12px; }
+.summary-payment > strong { color: #fff; font-size: 23px; white-space: nowrap; }
+.summary-payment small { color: #FDA4AF; font-size: 11px; }
 
 .reserva-summary .summary-actions,
 .reserva-summary>div:last-child {
@@ -2025,6 +2117,10 @@ span.flatpickr-weekday { color: var(--brand) !important; font-weight: 900 !impor
   }
 
   .reserva-summary .summary-title,
+  .summary-route-card,
+  .summary-vehicle,
+  .summary-info-card,
+  .summary-payment,
   .reserva-summary-line,
   .reserva-summary .summary-full,
   .reserva-summary .summary-total,
@@ -2032,6 +2128,18 @@ span.flatpickr-weekday { color: var(--brand) !important; font-weight: 900 !impor
     width: 100%;
     overflow-wrap: anywhere;
   }
+
+  .summary-route-card { min-height: 106px; padding: 20px 16px 15px; }
+  .summary-office { font-size: 15px; }
+  .summary-vehicle {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .summary-rates {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+  .summary-payment { flex-direction: row; }
 
   .reserva-summary b {
     font-size: 10.5px;
@@ -2101,6 +2209,8 @@ span.flatpickr-weekday { color: var(--brand) !important; font-weight: 900 !impor
   .table .row > div:nth-child(2) { font-size: 14.5px; }
 
   .reserva-summary { padding: 10px; font-size: 12.5px; }
+  .summary-payment { align-items: flex-start; flex-direction: column; }
+  .summary-payment > strong { font-size: 21px; }
   .reserva-summary-line { padding: 9px 10px; }
   .reserva-summary .summary-title { font-size: 12.5px; padding: 10px; }
   .summary-actions .btn { font-size: 12.5px; min-height: 44px; }
@@ -2544,5 +2654,722 @@ span.flatpickr-weekday { color: var(--brand) !important; font-weight: 900 !impor
   .table .state {
     padding: 3px 8px;
     font-size: 10.5px;
+  }
+}
+
+/* ==========================================================
+   RESUMEN V2 · DISEÑO APROBADO
+   Este bloque se mantiene al final para aislarlo de estilos
+   anteriores de .reserva-summary.
+========================================================== */
+.row-detail .reserva-summary-v2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  width: auto;
+  max-width: none;
+  margin: 8px 16px 14px 62px;
+  padding: 16px;
+  overflow: visible;
+  border: 1px solid #e3e7ee;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, .07);
+  color: #0f172a;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.row-detail .reserva-summary-v2 > .summary-title,
+.row-detail .reserva-summary-v2 > .summary-full,
+.row-detail .reserva-summary-v2 > .summary-actions {
+  grid-column: 1 / -1;
+}
+
+.row-detail .reserva-summary-v2 > .summary-title {
+  padding: 14px 16px;
+  border: 1px solid #ffc8ce;
+  border-radius: 14px;
+  background: #fff1f2;
+  color: #b71812;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.row-detail .reserva-summary-v2 > .summary-route-card {
+  position: relative;
+  min-height: 140px;
+  padding: 46px 24px 22px;
+  overflow: hidden;
+  border: 1px solid #e1e6ed;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #fff 0%, #fafbfc 100%);
+  box-shadow: 0 5px 14px rgba(16, 24, 40, .05);
+}
+
+.row-detail .reserva-summary-v2 .summary-route-label {
+  position: absolute;
+  top: 0;
+  left: 22px;
+  padding: 8px 18px 9px;
+  border-radius: 0 0 10px 10px;
+  background: #ff1e2d;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .45px;
+  text-transform: uppercase;
+}
+
+.row-detail .reserva-summary-v2 .summary-office {
+  margin: 0;
+  color: #0b1220;
+  font-size: 19px;
+  line-height: 1.25;
+  font-weight: 900;
+}
+
+.row-detail .reserva-summary-v2 .summary-datetime {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  color: #65728a;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.row-detail .reserva-summary-v2 .summary-datetime i {
+  color: #ff1e2d;
+}
+
+.row-detail .reserva-summary-v2 > .summary-vehicle {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  min-height: 112px;
+  padding: 18px 22px;
+  border: 1px solid #ffcbd1;
+  border-left: 5px solid #ff1e2d;
+  border-radius: 17px;
+  background: #fff9fa;
+}
+
+.row-detail .reserva-summary-v2 .summary-vehicle-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 15px;
+  background: #ffe4e7;
+  color: #dd1321;
+  font-size: 22px;
+}
+
+.row-detail .reserva-summary-v2 .summary-vehicle b,
+.row-detail .reserva-summary-v2 .summary-info-card b,
+.row-detail .reserva-summary-v2 .summary-payment b {
+  display: block;
+  margin: 0 0 5px;
+  color: #53627b;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .45px;
+  text-transform: uppercase;
+}
+
+.row-detail .reserva-summary-v2 .summary-vehicle-name {
+  margin: 0;
+  color: #0b1220;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.row-detail .reserva-summary-v2 .summary-vehicle-meta {
+  margin-top: 3px;
+  color: #63708a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.row-detail .reserva-summary-v2 .summary-rates {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.row-detail .reserva-summary-v2 .summary-rates span {
+  min-width: 84px;
+  padding: 9px 11px;
+  border: 1px solid #ffcbd1;
+  border-radius: 12px;
+  background: #fff;
+  color: #53627b;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.row-detail .reserva-summary-v2 .summary-rates strong {
+  display: block;
+  color: #bf1b14;
+  font-size: 14px;
+}
+
+.row-detail .reserva-summary-v2 > .summary-info-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-height: 128px;
+  padding: 18px 20px;
+  overflow-wrap: anywhere;
+  border: 1px solid #e1e6ed;
+  border-radius: 17px;
+  background: #fafbfc;
+  color: #53627b;
+}
+
+.row-detail .reserva-summary-v2 .summary-info-card b i {
+  width: 18px;
+  color: #ff1e2d;
+  font-size: 13px;
+}
+
+.row-detail .reserva-summary-v2 .summary-info-card > strong {
+  color: #0b1220;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.row-detail .reserva-summary-v2 .summary-info-card > span,
+.row-detail .reserva-summary-v2 .summary-info-card > div {
+  color: #63708a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.row-detail .reserva-summary-v2 > .summary-payment {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 82px;
+  padding: 18px 22px;
+  border: 0;
+  border-radius: 17px;
+  background: #202733;
+  color: #fff;
+}
+
+.row-detail .reserva-summary-v2 .summary-payment b {
+  color: #fff;
+}
+
+.row-detail .reserva-summary-v2 .summary-payment span {
+  display: block;
+  margin-top: 3px;
+  color: #fff;
+  font-size: 13px;
+}
+
+.row-detail .reserva-summary-v2 .summary-payment > strong {
+  color: #fff;
+  font-size: 27px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.row-detail .reserva-summary-v2 .summary-payment small {
+  color: #ff9ca5;
+  font-size: 11px;
+}
+
+.row-detail .reserva-summary-v2 > .summary-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin: 2px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid #e8ebf0;
+}
+
+@media (max-width: 900px) {
+  .row-detail .reserva-summary-v2 {
+    grid-template-columns: 1fr;
+    margin: 8px 6px 12px;
+    padding: 12px;
+  }
+
+  .row-detail .reserva-summary-v2 > * {
+    grid-column: 1 / -1;
+  }
+
+  .row-detail .reserva-summary-v2 > .summary-vehicle {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .row-detail .reserva-summary-v2 .summary-rates {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .row-detail .reserva-summary-v2 > .summary-actions,
+  .row-detail .reserva-summary-v2 .summary-actions-left,
+  .row-detail .reserva-summary-v2 .summary-actions-right {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .row-detail .reserva-summary-v2 .summary-actions .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .row-detail .reserva-summary-v2 > .summary-route-card {
+    min-height: 124px;
+    padding: 43px 17px 18px;
+  }
+
+  .row-detail .reserva-summary-v2 .summary-office {
+    font-size: 16px;
+  }
+
+  .row-detail .reserva-summary-v2 > .summary-vehicle {
+    padding: 15px;
+  }
+
+  .row-detail .reserva-summary-v2 .summary-payment {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .row-detail .reserva-summary-v2 .summary-payment > strong {
+    font-size: 23px;
+  }
+}
+
+/* ==========================================================
+   RESUMEN FINAL · COPIA FIEL DE LA REFERENCIA
+========================================================== */
+.row-detail .reserva-summary.reserva-summary-v2 {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px 18px;
+  width: auto;
+  margin: 6px 0 0;
+  padding: 18px 22px 0;
+  overflow: hidden;
+  border: 1px solid #e5e5e5;
+  border-radius: 11px;
+  background: #fdfdfd;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, .08);
+  color: #171717;
+  font-family: "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.row-detail .reserva-summary-v2 > .summary-route-card {
+  grid-column: span 3;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  column-gap: 16px;
+  min-height: 140px;
+  padding: 20px 24px;
+  border: 1px solid #d5d5d5;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .08);
+}
+
+.row-detail .reserva-summary-v2 .summary-section-title {
+  color: #b71317;
+  font-size: 12px;
+  font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue Condensed", sans-serif;
+  font-stretch: condensed;
+  font-weight: 900;
+  letter-spacing: .45px;
+  text-transform: uppercase;
+}
+
+/* ==========================================================
+   ICONOS Y TIPOGRAFÍA DEL RESUMEN
+   Compatible con el HTML generado por Blade y por JavaScript.
+========================================================== */
+.row-detail .reserva-summary-v2 .summary-section-title,
+.row-detail .reserva-summary-v2 .summary-route-label,
+.row-detail .reserva-summary-v2 .summary-vehicle b {
+  font-family: "Roboto Condensed", "Arial Narrow", Arial, sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: .45px !important;
+  text-transform: uppercase !important;
+}
+
+/* Pin lineal: reemplaza tanto el <i> anterior como el SVG nuevo. */
+.row-detail .reserva-summary-v2 i.summary-route-icon,
+.row-detail .reserva-summary-v2 svg.summary-location-icon {
+  display: block !important;
+  width: 42px !important;
+  min-width: 42px !important;
+  height: 50px !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  background-color: #b51217 !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 76'%3E%3Cg fill='none' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M32 4C18.2 4 7 15.2 7 29c0 18.2 25 37 25 37s25-18.8 25-37C57 15.2 45.8 4 32 4Z'/%3E%3Ccircle cx='32' cy='29' r='8'/%3E%3Cpath d='M21.5 59.2C11.2 60.4 5 63.2 5 66.5 5 71.2 17.1 75 32 75s27-3.8 27-8.5c0-3.3-6.2-6.1-16.5-7.3'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat !important;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 76'%3E%3Cg fill='none' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M32 4C18.2 4 7 15.2 7 29c0 18.2 25 37 25 37s25-18.8 25-37C57 15.2 45.8 4 32 4Z'/%3E%3Ccircle cx='32' cy='29' r='8'/%3E%3Cpath d='M21.5 59.2C11.2 60.4 5 63.2 5 66.5 5 71.2 17.1 75 32 75s27-3.8 27-8.5c0-3.3-6.2-6.1-16.5-7.3'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat !important;
+}
+
+/* Auto frontal: funciona con el <i> anterior y con el SVG nuevo. */
+.row-detail .reserva-summary-v2 .summary-vehicle-icon i,
+.row-detail .reserva-summary-v2 svg.summary-car-icon {
+  display: block !important;
+  width: 52px !important;
+  min-width: 52px !important;
+  height: 40px !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  background-color: #b51217 !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 76 58'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 23 18.5 9.8A7 7 0 0 1 25 5.5h26a7 7 0 0 1 6.5 4.3L63 23'/%3E%3Cpath d='M10 23h56a6 6 0 0 1 6 6v18H4V29a6 6 0 0 1 6-6Z'/%3E%3Cpath d='M9 47v6.5h11V47M56 47v6.5h11V47'/%3E%3Crect x='10' y='30' width='12' height='8' rx='1'/%3E%3Crect x='54' y='30' width='12' height='8' rx='1'/%3E%3Cpath d='M27 39h22'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat !important;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 76 58'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 23 18.5 9.8A7 7 0 0 1 25 5.5h26a7 7 0 0 1 6.5 4.3L63 23'/%3E%3Cpath d='M10 23h56a6 6 0 0 1 6 6v18H4V29a6 6 0 0 1 6-6Z'/%3E%3Cpath d='M9 47v6.5h11V47M56 47v6.5h11V47'/%3E%3Crect x='10' y='30' width='12' height='8' rx='1'/%3E%3Crect x='54' y='30' width='12' height='8' rx='1'/%3E%3Cpath d='M27 39h22'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat !important;
+}
+
+.row-detail .reserva-summary-v2 .summary-vehicle-icon {
+  background: transparent !important;
+}
+
+.row-detail .reserva-summary-v2 .summary-route-card > .summary-section-title {
+  grid-column: 1 / -1;
+  margin-bottom: 16px;
+}
+
+.row-detail .reserva-summary-v2 .summary-main-icon {
+  align-self: center;
+  justify-self: center;
+  color: #bc1519;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  overflow: visible;
+}
+
+.row-detail .reserva-summary-v2 .summary-location-icon {
+  width: 42px;
+  height: 50px;
+}
+
+.row-detail .reserva-summary-v2 .summary-car-icon {
+  width: 48px;
+  height: 38px;
+}
+
+.row-detail .reserva-summary-v2 .summary-route-content {
+  align-self: center;
+}
+
+.row-detail .reserva-summary-v2 .summary-office {
+  margin-bottom: 8px;
+  color: #080808;
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.row-detail .reserva-summary-v2 .summary-date,
+.row-detail .reserva-summary-v2 .summary-time {
+  margin-top: 4px;
+  color: #262626;
+  font-size: 13px;
+  line-height: 1.25;
+  font-weight: 400;
+  letter-spacing: .3px;
+}
+
+.row-detail .reserva-summary-v2 > .summary-vehicle {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 58% 42%;
+  gap: 0;
+  min-height: 112px;
+  padding: 17px 22px;
+  border: 1px solid #d5d5d5;
+  border-left: 1px solid #d5d5d5;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .07);
+}
+
+.row-detail .reserva-summary-v2 .summary-vehicle-data {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  column-gap: 14px;
+  padding-right: 22px;
+}
+
+.row-detail .reserva-summary-v2 .summary-vehicle-data > .summary-section-title {
+  grid-column: 1 / -1;
+  margin-bottom: 14px;
+}
+
+.row-detail .reserva-summary-v2 .summary-vehicle-copy {
+  align-self: center;
+}
+
+.row-detail .reserva-summary-v2 .summary-vehicle-name {
+  color: #080808;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.row-detail .reserva-summary-v2 .summary-vehicle-meta {
+  margin-top: 4px;
+  color: #333;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.row-detail .reserva-summary-v2 .summary-rates {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 5px 0 5px 26px;
+  border-left: 1px solid #ddd;
+}
+
+.row-detail .reserva-summary-v2 .summary-rates span {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #242424;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.row-detail .reserva-summary-v2 .summary-rates em {
+  font-style: normal;
+}
+
+.row-detail .reserva-summary-v2 .summary-rates strong {
+  color: #242424;
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.row-detail .reserva-summary-v2 > .summary-info-card {
+  grid-column: span 2;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-height: 124px;
+  padding: 18px 20px;
+  border: 1px solid #d5d5d5;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .07);
+  color: #202020;
+}
+
+.row-detail .reserva-summary-v2 .summary-info-card > .summary-section-title {
+  margin-bottom: 3px;
+}
+
+.row-detail .reserva-summary-v2 .summary-detail-line {
+  display: grid;
+  grid-template-columns: 25px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  color: #242424;
+  font-size: 12px;
+}
+
+.row-detail .reserva-summary-v2 .summary-detail-line > i {
+  width: auto;
+  color: #c21519;
+  font-size: 17px;
+  text-align: center;
+}
+
+.row-detail .reserva-summary-v2 .summary-detail-line > strong {
+  color: #111;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.row-detail .reserva-summary-v2 .summary-detail-line span {
+  color: #333;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.row-detail .reserva-summary-v2 .summary-detail-line span strong {
+  display: block;
+  margin-top: 1px;
+  color: #111;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.row-detail .reserva-summary-v2 > .summary-payment {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 50px;
+  padding: 12px 22px;
+  border: 1px solid #efbbbb;
+  border-radius: 8px;
+  background: #fffafa;
+  color: #b71317;
+}
+
+.row-detail .reserva-summary-v2 .summary-payment b,
+.row-detail .reserva-summary-v2 .summary-payment > strong {
+  margin: 0;
+  color: #b71317;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+.row-detail .reserva-summary-v2 .summary-payment > strong {
+  font-size: 21px;
+  letter-spacing: 0;
+}
+
+.row-detail .reserva-summary-v2 > .summary-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  width: auto;
+  margin: 0 -22px;
+  padding: 13px 22px 16px;
+  border-top: 1px solid #e4e4e4;
+  background: #fff;
+}
+
+.row-detail .reserva-summary-v2 .summary-actions-left,
+.row-detail .reserva-summary-v2 .summary-actions-right {
+  display: flex;
+  gap: 8px;
+}
+
+.row-detail .reserva-summary-v2 .summary-actions-left {
+  margin-left: auto;
+}
+
+.row-detail .reserva-summary-v2 .summary-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 96px;
+  min-height: 36px;
+  padding: 8px 14px;
+  border: 1px solid #cfcfcf;
+  border-radius: 6px;
+  background: #fff;
+  color: #252525;
+  box-shadow: none;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.row-detail .reserva-summary-v2 .summary-actions .btn i {
+  font-size: 14px;
+}
+
+.row-detail .reserva-summary-v2 .summary-actions .btn-apartar-auto {
+  border-color: #c91519;
+  background: #c91519;
+  color: #fff;
+}
+
+@media (max-width: 980px) {
+  .row-detail .reserva-summary.reserva-summary-v2 {
+    grid-template-columns: 1fr;
+    padding: 18px 18px 0;
+  }
+
+  .row-detail .reserva-summary-v2 > .summary-route-card,
+  .row-detail .reserva-summary-v2 > .summary-vehicle,
+  .row-detail .reserva-summary-v2 > .summary-info-card,
+  .row-detail .reserva-summary-v2 > .summary-payment,
+  .row-detail .reserva-summary-v2 > .summary-actions {
+    grid-column: 1;
+  }
+
+  .row-detail .reserva-summary-v2 > .summary-vehicle {
+    grid-template-columns: 1fr;
+  }
+
+  .row-detail .reserva-summary-v2 .summary-rates {
+    margin-top: 18px;
+    padding: 18px 0 0;
+    border-top: 1px solid #ddd;
+    border-left: 0;
+  }
+
+  .row-detail .reserva-summary-v2 > .summary-actions {
+    margin: 0 -18px;
+  }
+}
+
+@media (max-width: 620px) {
+  .row-detail .reserva-summary-v2 > .summary-route-card {
+    grid-template-columns: 55px 1fr;
+    padding: 22px 20px;
+  }
+
+  .row-detail .reserva-summary-v2 .summary-main-icon {
+    font-size: inherit;
+  }
+
+  .row-detail .reserva-summary-v2 .summary-location-icon {
+    width: 38px;
+    height: 46px;
+  }
+
+  .row-detail .reserva-summary-v2 .summary-car-icon {
+    width: 44px;
+    height: 34px;
+  }
+
+  .row-detail .reserva-summary-v2 .summary-vehicle-data {
+    grid-template-columns: 55px 1fr;
+    padding-right: 0;
+  }
+
+  .row-detail .reserva-summary-v2 > .summary-payment,
+  .row-detail .reserva-summary-v2 > .summary-actions,
+  .row-detail .reserva-summary-v2 .summary-actions-left,
+  .row-detail .reserva-summary-v2 .summary-actions-right {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .row-detail .reserva-summary-v2 .summary-payment > strong {
+    font-size: 22px;
+  }
+
+  .row-detail .reserva-summary-v2 .summary-actions .btn {
+    width: 100%;
   }
 }
