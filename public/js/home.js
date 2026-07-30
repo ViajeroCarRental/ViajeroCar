@@ -1,17 +1,136 @@
-/* ============================================================
-   HOME.JS - Versión optimizada
-   - Zombies eliminados: polyfill IE11, syncAccountIcon, welcomeModal,
-     año footer, initCarouselLazyLoad
-   - 11 DOMContentLoaded consolidados en 1 (vanilla) + 1 (jQuery)
-   - TODA la lógica funcional se preserva idéntica
-============================================================ */
+/* ==============================
+   OVERLAY ACTUALIZACION
+============================== */
+(function (global) {
+    'use strict';
 
+    const CONFIG = {
+        mensajes: [
+            'Procesando tu información…',
+            'Preparando los cambios…',
+            'Generando tu actualización…'
+        ],
+        intervaloMensajes: 1500,
+        retrasoEnvio: 800,
+        tiempoMaximo: 12000,
+        duracionExito: 1200,
+        selectorExito: '.visor-alert.alert-success, .alert-success',
+        claveSesion: 'vrUpdated'
+    };
+
+    const $ = (id) => document.getElementById(id);
+    let temporizadorMsg = null;
+
+    function rotarMensajes(lista) {
+        const el = $('vrUpdateMsg');
+        const mensajes = (lista && lista.length) ? lista : CONFIG.mensajes;
+        let i = 0;
+        if (el) el.textContent = mensajes[0];
+        clearInterval(temporizadorMsg);
+        temporizadorMsg = setInterval(() => {
+            i = (i + 1) % mensajes.length;
+            if (!el) return;
+            el.textContent = mensajes[i];
+            el.style.animation = 'none';
+            void el.offsetWidth;
+            el.style.animation = '';
+        }, CONFIG.intervaloMensajes);
+    }
+
+    function mostrar(estado, opciones) {
+        const overlay = $('vrUpdateOverlay');
+        if (!overlay) return;
+
+        opciones = opciones || {};
+
+        overlay.classList.remove('is-loading', 'is-success');
+        overlay.classList.add('show', estado === 'success' ? 'is-success' : 'is-loading');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+
+        if (estado === 'success') {
+            clearInterval(temporizadorMsg);
+            const t = $('vrUpdateTitle'), sub = $('vrUpdateSub');
+            if (t && opciones.titulo) t.textContent = opciones.titulo;
+            if (sub && opciones.subtitulo) sub.textContent = opciones.subtitulo;
+        } else {
+            rotarMensajes(opciones.mensajes);
+        }
+    }
+
+    function ocultar() {
+        const overlay = $('vrUpdateOverlay');
+        if (!overlay) return;
+        clearInterval(temporizadorMsg);
+        overlay.classList.remove('show');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    }
+
+    function conectar() {
+        const overlay = $('vrUpdateOverlay');
+        if (!overlay) return;
+
+        overlay.addEventListener('click', () => {
+            if (overlay.classList.contains('is-success')) ocultar();
+        });
+
+        document.querySelectorAll('form[data-overlay-actualizacion]').forEach((form) => {
+            form.addEventListener('submit', function (e) {
+                if (e.defaultPrevented) return;
+                if (form.dataset.enviando) return;
+
+                e.preventDefault();
+                form.dataset.enviando = '1';
+
+                try { sessionStorage.setItem(CONFIG.claveSesion, '1'); } catch (_) {}
+
+                mostrar('loading');
+                setTimeout(() => form.submit(), CONFIG.retrasoEnvio);
+                setTimeout(() => {
+                    if (overlay.classList.contains('is-loading')) ocultar();
+                }, CONFIG.tiempoMaximo);
+            });
+        });
+
+        let veniaGuardando = false;
+        try {
+            veniaGuardando = sessionStorage.getItem(CONFIG.claveSesion) === '1';
+            sessionStorage.removeItem(CONFIG.claveSesion);
+        } catch (_) {}
+
+        const hayExito = !!document.querySelector(CONFIG.selectorExito);
+
+        if (hayExito && veniaGuardando) {
+            mostrar('success');
+            setTimeout(ocultar, CONFIG.duracionExito);
+        }
+    }
+
+    global.OverlayActualizacion = {
+        cargando: (o) => mostrar('loading', o),
+        exito:    (o) => mostrar('success', o),
+        ocultar:  ocultar,
+        config:   CONFIG
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', conectar);
+    } else {
+        conectar();
+    }
+
+})(window);
+
+/* ==============================
+   HOME.JS
+============================== */
 (function () {
   "use strict";
 
-  /* ========================================================
-     HELPERS DE LOCALE
-  ======================================================== */
+  /* ==============================
+     HELPERS
+  ============================== */
   function getCurrentLocale() {
     return (document.documentElement.lang || 'es') === 'en' ? 'en' : 'es';
   }
@@ -53,9 +172,9 @@
     return messages[fieldType]?.[locale] ?? 'Campo requerido';
   }
 
-  /* ========================================================
-     MÓDULO: FLEET (flechas con topes)
-  ======================================================== */
+  /* ==============================
+     FLEET
+  ============================== */
   function initFleetControlled(fleet) {
     const track = fleet.querySelector('.fleet-track');
     const prev = fleet.querySelector('.fleet-btn.prev');
@@ -116,10 +235,9 @@
     setTimeout(forceStart, 100);
   }
 
-  /* ========================================================
-   MÓDULO: FLATPICKR + SELECTS DE HORA + RESUMEN
-   con selección automática de 13:00 al primer clic
-============================================================ */
+  /* ==============================
+     FLATPICKR + HORAS
+  ============================== */
 const TimeModule = (function () {
   function injectTimeCss() {
     if (document.getElementById("tpHideInputStyle")) return;
@@ -148,7 +266,6 @@ const TimeModule = (function () {
 
     function applyDefaultIfNeeded() {
       if (selectElem.dataset.defaultApplied === "true") return;
-
       if (selectElem.value && selectElem.value !== "") return;
 
       const defaultHour = "13";
@@ -201,7 +318,6 @@ const TimeModule = (function () {
     if (previousValue && previousValue !== "" && Array.from(selH.options).some(o => o.value === previousValue)) {
       selH.value = previousValue;
       input.value = `${previousValue}:00`;
-
       selH.dataset.defaultApplied = "true";
     } else {
       selH.selectedIndex = 0;
@@ -366,12 +482,11 @@ const TimeModule = (function () {
   };
 })();
 
-  // Exponer updateSummary globalmente (lo usa el MutationObserver del calendar)
   window.updateSummary = TimeModule.updateSummary;
 
-  /* ========================================================
-     MÓDULO: BURBUJA RADIAL REDES
-  ======================================================== */
+  /* ==============================
+     BURBUJA SOCIAL
+  ============================== */
   function initSocialFab() {
     const fab = document.getElementById("socialFab");
     const btn = document.getElementById("fabMain");
@@ -388,9 +503,9 @@ const TimeModule = (function () {
     document.addEventListener("keydown", e => { if (e.key === "Escape") closeFab(); });
   }
 
-  /* ========================================================
-     MÓDULO: SWIPER TILES
-  ======================================================== */
+  /* ==============================
+     SWIPER TILES
+  ============================== */
   function initTilesSwiper() {
     if (typeof window.Swiper !== "function") return;
     document.querySelectorAll('.vj-tiles-swiper').forEach(el => {
@@ -415,9 +530,9 @@ const TimeModule = (function () {
     });
   }
 
-  /* ========================================================
-     MÓDULO: CHECKBOX DROPOFF + SYNC
-  ======================================================== */
+  /* ==============================
+     DROPOFF
+  ============================== */
   function setDropoffState() {
     const chk = document.getElementById('differentDropoff');
     const dropWrap = document.getElementById('dropoffWrapper');
@@ -463,7 +578,6 @@ const TimeModule = (function () {
       dropWrap.style.opacity = '';
     }
   }
-  // Exponer (por si algún otro código la usa)
   window.setDropoffState = setDropoffState;
 
   function initDropoffSync() {
@@ -482,9 +596,9 @@ const TimeModule = (function () {
     window.addEventListener('resize', setDropoffState);
   }
 
-  /* ========================================================
-     MÓDULO: VALIDACIONES DEL FORMULARIO
-  ======================================================== */
+  /* ==============================
+     VALIDACIONES
+  ============================== */
   function initFormValidation() {
     const form = document.getElementById("rentalForm");
     if (!form) return;
@@ -498,7 +612,6 @@ const TimeModule = (function () {
         el.classList.remove('field-error', 'field-success');
       });
 
-      // 1. Ubicaciones
       [
         { id: 'pickupPlace', msgKey: 'location' },
         { id: 'dropoffPlace', msgKey: 'location' }
@@ -520,7 +633,6 @@ const TimeModule = (function () {
         }
       });
 
-      // 2. Fechas
       [
         { id: 'pickupDate', msgKey: 'date' },
         { id: 'dropoffDate', msgKey: 'date' }
@@ -546,7 +658,6 @@ const TimeModule = (function () {
         }
       });
 
-      // 3. Horas
       [
         { id: 'pickupTime', msgKey: 'time' },
         { id: 'dropoffTime', msgKey: 'time' }
@@ -571,13 +682,22 @@ const TimeModule = (function () {
         }
       });
 
-      if (valid) form.submit();
+      if (valid) {
+        OverlayActualizacion.cargando({
+          mensajes: [
+            'Buscando disponibilidad…',
+            'Consultando tarifas…',
+            'Preparando tus opciones…'
+          ]
+        });
+        form.submit();
+      }
     });
   }
 
-  /* ========================================================
-     MÓDULO: LIMPIAR ERRORES AL INTERACTUAR
-  ======================================================== */
+  /* ==============================
+     LIMPIAR ERRORES
+  ============================== */
   function initErrorClearer() {
     function clearError(el, containerSelector) {
       el.classList.remove('field-error');
@@ -611,9 +731,9 @@ const TimeModule = (function () {
     });
   }
 
-  /* ========================================================
-     MÓDULO: FLATPICKR CALENDARIOS (idioma dinámico)
-  ======================================================== */
+  /* ==============================
+     FLATPICKR CALENDARIOS
+  ============================== */
   function injectOverlay() {
     if (document.getElementById("fp-view-overlay-3")) return;
     const overlay = document.createElement("div");
@@ -621,7 +741,6 @@ const TimeModule = (function () {
     overlay.className = "fp-view-overlay-3";
     document.body.appendChild(overlay);
   }
-
 
 function initFlatpickrCalendars() {
   if (typeof flatpickr === 'undefined') return;
@@ -733,9 +852,9 @@ function initFlatpickrCalendars() {
   }, 100);
 }
 
-  /* ========================================================
-     MÓDULO: CONTROL SCROLL FORMULARIO MÓVIL/TABLET
-  ======================================================== */
+  /* ==============================
+     SCROLL MOVIL
+  ============================== */
   function initScrollControl() {
     const btnAbrir = document.getElementById('btn-abrir-buscador');
     const btnCerrar = document.getElementById('btn-cerrar-buscador');
@@ -827,38 +946,19 @@ function initFlatpickrCalendars() {
     });
   }
 
-  /* ========================================================
-     ENTRY POINT - 1 solo DOMContentLoaded
-  ======================================================== */
+  /* ==============================
+     INIT
+  ============================== */
   function initAll() {
-    // 1. Carruseles de coches
     document.querySelectorAll('.fleet').forEach(initFleetControlled);
-
-    // 2. Inputs de hora + summary + fixes del form
     TimeModule.init();
-
-    // 3. Burbuja redes
     initSocialFab();
-
-    // 4. Swiper tiles
     initTilesSwiper();
-
-    // 5. Checkbox dropoff y sync con pickup
     initDropoffSync();
-
-    // 6. Validaciones del form
     initFormValidation();
-
-    // 7. Limpiar errores al interactuar
     initErrorClearer();
-
-    // 8. Flatpickr calendarios (con idioma dinámico)
     initFlatpickrCalendars();
-
-    // 9. Control scroll del form móvil
     initScrollControl();
-
-    // 10. Scroll manual dropoffWrapper en móvil
     initMobileScrollOnDropoff();
   }
 
@@ -869,9 +969,9 @@ function initFlatpickrCalendars() {
   }
 })();
 
-/* ============================================================
-   SELECT2 con íconos (requiere jQuery, va separado)
-============================================================ */
+/* ==============================
+   SELECT2 CON ICONOS
+============================== */
 $(document).ready(function () {
   function formatOption(option) {
     if (!option.id) {
