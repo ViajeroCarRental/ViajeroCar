@@ -341,6 +341,55 @@ small, .small { font-size: 12px; color: var(--muted); }
 .table .tbody>.row:hover { background: #FFE1E4; }
 .table .row:last-child { border-bottom: none; }
 
+/* Separación gruesa entre grupos de días */
+.table .tbody > .row.grupo-fecha-inicio {
+  position: relative;
+  border-top: 3px solid #1f2937;
+}
+
+/* Línea animada sobre el borde del grupo */
+.table .tbody > .row.grupo-fecha-inicio::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #c40c18, #1f2937, #c40c18);
+  background-size: 200% 100%;
+  transform-origin: center;
+  animation:
+    grupoFechaPulso 1.6s ease-in-out infinite,
+    grupoFechaBrillo 3s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes grupoFechaPulso {
+  0%, 100% {
+    transform: scaleY(1);
+    filter: brightness(1);
+    box-shadow: 0 0 0 rgba(196, 12, 24, 0);
+  }
+  50% {
+    transform: scaleY(2);
+    filter: brightness(1.25);
+    box-shadow: 0 0 6px rgba(196, 12, 24, 0.5);
+  }
+}
+
+@keyframes grupoFechaBrillo {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Respeta a quienes prefieren menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  .table .tbody > .row.grupo-fecha-inicio::before {
+    animation: none;
+  }
+}
+
 .table .row>div {
   padding: 4px 6px;
   white-space: nowrap;
