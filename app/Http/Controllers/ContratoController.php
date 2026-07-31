@@ -268,45 +268,18 @@ class ContratoController extends ContratoBaseController
         return $modificada > 0 ? $modificada : $base;
     }
 
-    private function crearContrato(object $reservacion, object $catActual, ?int $asesorId): object
-    {
-        $timezone = 'America/Mexico_City';
-        $ahora    = Carbon::now($timezone);
-
-        $fechaInicioOriginal  = Carbon::parse($reservacion->fecha_inicio, $timezone)->startOfDay();
-        $fechaInicioNuevaCalc = $ahora->copy()->startOfDay();
-        $fechaFin             = Carbon::parse($reservacion->fecha_fin, $timezone)->startOfDay();
-
-        $diasOriginales = max(1, $fechaInicioOriginal->diffInDays($fechaFin));
-        $diasNuevos     = max(1, $fechaInicioNuevaCalc->diffInDays($fechaFin));
-        $diferenciaDias = $diasNuevos - $diasOriginales;
-
-        $precioDia      = $catActual->precio_dia ?? 0;
-        $ajusteSubtotal = $diferenciaDias * $precioDia;
-        $ajusteIVA      = $ajusteSubtotal * 0.16;
-
-        $subtotal  = $reservacion->subtotal + $ajusteSubtotal;
-        $impuestos = $reservacion->impuestos + $ajusteIVA;
-        $total     = $subtotal + $impuestos;
-
-        DB::table('reservaciones')
-            ->where('id_reservacion', $reservacion->id_reservacion)
-            ->update([
-                'fecha_inicio' => $ahora->toDateString(),
-                'hora_retiro'  => $ahora->toTimeString(),
-                'subtotal'     => $subtotal,
-                'impuestos'    => $impuestos,
-                'total'        => $total,
-                'updated_at'   => now(),
-            ]);
-
-        $reservacion->fecha_inicio = $ahora->toDateString();
-        $reservacion->hora_retiro  = $ahora->toTimeString();
-        $reservacion->subtotal     = $subtotal;
-        $reservacion->impuestos    = $impuestos;
-        $reservacion->total        = $total;
-
+    private function crearContrato(
+        object $reservacion,
+        object $catActual,
+        ?int $asesorId
+    ): object {
         return DB::transaction(function () use ($reservacion, $asesorId) {
+
+            /*
+            * Aquí únicamente se crea el contrato.
+            * No se actualiza la tabla reservaciones, por lo que se conservan
+            * la fecha, hora e importes originales de Bookings.
+            */
             $nuevoId = DB::table('contratos')->insertGetId([
                 'id_reservacion'  => $reservacion->id_reservacion,
                 'id_asesor'       => $asesorId,
@@ -316,10 +289,17 @@ class ContratoController extends ContratoBaseController
                 'created_at'      => now(),
                 'updated_at'      => now(),
             ]);
-            $folio = str_pad($nuevoId, 4, '0', STR_PAD_LEFT);
-            DB::table('contratos')->where('id_contrato', $nuevoId)->update(['numero_contrato' => $folio]);
 
-            return (object)[
+            $folio = str_pad($nuevoId, 4, '0', STR_PAD_LEFT);
+
+            DB::table('contratos')
+                ->where('id_contrato', $nuevoId)
+                ->update([
+                    'numero_contrato' => $folio,
+                    'updated_at'      => now(),
+                ]);
+
+            return (object) [
                 'id_contrato'     => $nuevoId,
                 'id_reservacion'  => $reservacion->id_reservacion,
                 'id_asesor'       => $asesorId,
