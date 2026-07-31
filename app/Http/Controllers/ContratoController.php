@@ -111,16 +111,29 @@ class ContratoController extends ContratoBaseController
                 ];
             }
 
-            $timezone     = 'America/Mexico_City';
-            $ahoraApertura = Carbon::now($timezone);
+            $timezone = 'America/Mexico_City';
 
-            // ENTREGA: fecha y hora exacta de apertura del contrato
-            $fechaInicio  = $ahoraApertura->copy();
-            $horaRetiro   = $ahoraApertura->copy();
+            // Las fechas y horas siempre se toman de la reservación.
+            // Abrir Contratos no debe modificarlas.
+            $fechaInicio = Carbon::parse(
+                $reservacion->fecha_inicio,
+                $timezone
+            );
 
-            // DEVOLUCIÓN: viene de la reservación
-            $fechaFin     = Carbon::parse($reservacion->fecha_fin ?? now()->addDay(), $timezone);
-            $horaEntrega  = Carbon::parse($reservacion->hora_entrega ?? '12:00:00', $timezone);
+            $horaRetiro = Carbon::parse(
+                $reservacion->hora_retiro ?? '12:00:00',
+                $timezone
+            );
+
+            $fechaFin = Carbon::parse(
+                $reservacion->fecha_fin,
+                $timezone
+            );
+
+            $horaEntrega = Carbon::parse(
+                $reservacion->hora_entrega ?? '12:00:00',
+                $timezone
+            );
 
             $diasTotales  = max(1, $fechaInicio->copy()->startOfDay()
                     ->diffInDays($fechaFin->copy()->startOfDay()));
