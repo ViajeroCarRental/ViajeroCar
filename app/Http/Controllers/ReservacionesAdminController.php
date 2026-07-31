@@ -1287,8 +1287,110 @@ class ReservacionesAdminController extends Controller
            datos YA ACTUALIZADOS de la reserva editada.
         ========================================================== */
 
+        $correoCliente = $request->email_cliente ?? null;
+        $correoEmpresa = env('MAIL_FROM_ADDRESS', 'reservaciones@viajerocarental.com');
+
+        // Reservación ya actualizada
+        $reservacion = DB::table('reservaciones')
+            ->where('id_reservacion', $id)
+            ->first();
+
+        // Seguro / paquete de la reserva
+        $seguroReserva = DB::table('reservacion_paquete_seguro as rps')
+            ->join('seguro_paquete as sp', 'sp.id_paquete', '=', 'rps.id_paquete')
+            ->where('rps.id_reservacion', $id)
+            ->select('sp.id_paquete', 'sp.nombre', 'sp.descripcion', 'rps.precio_por_dia')
+            ->first();
+
+        // Servicios / extras de la reserva
+        $extrasReserva = DB::table('reservacion_servicio as rs')
+            ->join('servicios as s', 's.id_servicio', '=', 'rs.id_servicio')
+            ->where('rs.id_reservacion', $id)
+            ->select(
+                's.id_servicio',
+                's.nombre',
+                's.descripcion',
+                'rs.cantidad',
+                'rs.precio_unitario',
+                DB::raw('(rs.cantidad * rs.precio_unitario) as total')
+            )
+            ->get();
+
+        // Lugares de retiro y entrega (ciudad - sucursal)
+        $retiroInfo = DB::table('sucursales as s')
+            ->join('ciudades as c', 'c.id_ciudad', '=', 's.id_ciudad')
+            ->where('s.id_sucursal', $reservacion->sucursal_retiro)
+            ->select('s.nombre as sucursal', 'c.nombre as ciudad')
+            ->first();
+
+        $entregaInfo = DB::table('sucursales as s')
+            ->join('ciudades as c', 'c.id_ciudad', '=', 's.id_ciudad')
+            ->where('s.id_sucursal', $reservacion->sucursal_entrega)
+            ->select('s.nombre as sucursal', 'c.nombre as ciudad')
+            ->first();
+
+        $lugarRetiro  = $retiroInfo ? ($retiroInfo->ciudad . ' - ' . $retiroInfo->sucursal) : '-';
+        $lugarEntrega = $entregaInfo ? ($entregaInfo->ciudad . ' - ' . $entregaInfo->sucursal) : '-';
+
+        // Imagen de la categoría
+        $catImages = [
+            1  => 'img/aveo.png',
+            2  => 'img/virtus.png',
+            3  => 'img/jetta.png',
+            4  => 'img/camry.png',
+            5  => 'img/renegade.png',
+            6  => 'img/taos.png',
+            7  => 'img/avanza.png',
+            8  => 'img/Odyssey.png',
+            9  => 'img/Hiace.png',
+            10 => 'img/Frontier.png',
+            11 => 'img/Tacoma.png',
+        ];
+
+        $catId = (int)($categoria->id_categoria ?? 0);
+        $baseUrl = rtrim(config('app.url'), '/');
+        $imgPath = $catImages[$catId] ?? 'img/categorias/placeholder.png';
+        $imgCategoria = $baseUrl . '/' . ltrim($imgPath, '/');
+
+        // Capacidad / transmisión del auto (para el correo)
+        $predeterminadosMail = [
+            'A'  => ['pax' => 5,  'small' => 2, 'big' => 1],
+            'B'  => ['pax' => 5,  'small' => 2, 'big' => 1],
+            'C'  => ['pax' => 5,  'small' => 2, 'big' => 1],
+            'D'  => ['pax' => 5,  'small' => 2, 'big' => 1],
+            'E'  => ['pax' => 5,  'small' => 2, 'big' => 2],
+            'F'  => ['pax' => 5,  'small' => 2, 'big' => 2],
+            'IC' => ['pax' => 5,  'small' => 2, 'big' => 2],
+            'I'  => ['pax' => 5,  'small' => 3, 'big' => 2],
+            'IB' => ['pax' => 7,  'small' => 3, 'big' => 2],
+            'M'  => ['pax' => 7,  'small' => 4, 'big' => 2],
+            'L'  => ['pax' => 13, 'small' => 4, 'big' => 3],
+            'H'  => ['pax' => 5,  'small' => 3, 'big' => 2],
+            'HI' => ['pax' => 5,  'small' => 3, 'big' => 2],
+        ];
+
+        $codigoCatMail = strtoupper(trim((string)($categoria->codigo ?? '')));
+        $capMail = $predeterminadosMail[$codigoCatMail] ?? ['pax' => 5, 'small' => 2, 'big' => 1];
+        $esManualMail = ((int) ($categoria->id_categoria ?? 0) === 9);
+
+        $tuAuto = array_merge($capMail, [
+            'transmision' => $esManualMail ? 'Manual' : 'Automática',
+        ]);
+
+        try {
+            if ($correoCliente) {
+                Mail::to($correoCliente)
+                    ->cc($correoEmpresa)
+                    ->send(new ReservacionAdminMail($reservacion, $categoria, $seguroReserva, $extrasReserva, $lugarRetiro, $lugarEntrega, $imgCategoria, $opcionesRentaTotal, $tuAuto));
+            } else {
+                Mail::to($correoEmpresa)
+                    ->send(new ReservacionAdminMail($reservacion, $categoria, $seguroReserva, $extrasReserva, $lugarRetiro, $lugarEntrega, $imgCategoria, $opcionesRentaTotal, $tuAuto));
+            }
+        } catch (\Throwable $e) {
+            Log::error('❌ Error al reenviar correo de reserva actualizada: ' . $e->getMessage());
+        }
+
         return redirect()->route('rutaReservacionesActivas')
             ->with('success', 'Reservación actualizada correctamente');
     }
 }
-

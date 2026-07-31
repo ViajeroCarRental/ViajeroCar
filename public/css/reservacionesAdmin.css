@@ -6560,6 +6560,54 @@ input.flatpickr-input.field-success {
     transform: rotate(90deg) !important;
 }
 
+/* Píldora de días en el header del modal de protecciones */
+#proteccionPop .prote-dias-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    background: rgba(167, 243, 208, 0.9) !important;
+    border: 1px solid rgba(34, 197, 94, 0.35) !important;
+    border-radius: 40px !important;
+    padding: 6px 14px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #166534 !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
+#proteccionPop .prote-dias-pill i {
+    font-size: 15px !important;
+    color: #166534 !important;
+}
+
+#proteccionPop .prote-dias-pill .prote-dias-num {
+    font-weight: 900 !important;
+}
+
+@media (max-width: 768px) {
+    #proteccionPop .prote-dias-pill {
+        padding: 4px 10px !important;
+        font-size: 11px !important;
+        gap: 5px !important;
+    }
+    #proteccionPop .prote-dias-pill i {
+        font-size: 13px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #proteccionPop .prote-dias-pill {
+        padding: 3px 8px !important;
+        font-size: 10px !important;
+        gap: 4px !important;
+    }
+    #proteccionPop .prote-dias-pill i {
+        font-size: 12px !important;
+    }
+}
+
 /* Footer del modal */
 #proteccionPop .modal-foot {
     background: #ffffff !important;

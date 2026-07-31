@@ -1,4 +1,3 @@
-
 (function (global) {
     'use strict';
 
@@ -551,6 +550,7 @@
     let adicionalesDesbloqueada = false;
     let proteccionesDesbloqueada = false;
     let clienteDesbloqueada = false;
+    let modalProteccionesInicializado = false;
     let flujoCompletado = false;
 
     function actualizarEstadoSeccion(seccion, desbloqueada) {
@@ -601,6 +601,27 @@
         }
     }
 
+    function enfocarSeccion(seccionOrId, delay = 120) {
+        const seccion = typeof seccionOrId === 'string'
+            ? document.querySelector(`.acordeon-item[data-seccion="${seccionOrId}"]`)
+            : seccionOrId;
+        if (!seccion) return;
+
+        setTimeout(() => {
+            // Offset para compensar la navbar fija superior
+            const navbar = document.getElementById('resNavbar');
+            const navbarH = navbar ? navbar.getBoundingClientRect().height : 0;
+            const offset = navbarH + 16;
+
+            const rect = seccion.getBoundingClientRect();
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const destino = rect.top + scrollTop - offset;
+
+            window.scrollTo({ top: Math.max(destino, 0), behavior: 'smooth' });
+        }, delay);
+    }
+    window.enfocarSeccionReserva = enfocarSeccion;
+
     function abrirSeccion(seccion, evitarScroll = false) {
         if (!seccion) return;
         const body = seccion.querySelector('.stack-body');
@@ -612,11 +633,8 @@
             indicator.classList.add('expanded');
         }
 
-        const seccionId = seccion.getAttribute('data-seccion');
-        if (!evitarScroll && seccionId !== 'cliente') {
-            setTimeout(() => {
-                seccion.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
+        if (!evitarScroll) {
+            enfocarSeccion(seccion, 100);
         }
     }
 
@@ -658,6 +676,8 @@
         if (indicator && !indicator.classList.contains('expanded')) {
             indicator.classList.add('expanded');
         }
+
+        enfocarSeccion(seccionCliente, 100);
     }
 
     function desbloquearProteccionesSinExpandir() {
@@ -793,6 +813,10 @@ function configurarBotonPrincipal() {
                 const indicator = seccion.querySelector('.stack-indicator');
                 if (body) body.classList.toggle('expanded');
                 if (indicator) indicator.classList.toggle('expanded');
+
+                if (body && body.classList.contains('expanded')) {
+                    enfocarSeccion(seccion, 100);
+                }
             });
         });
     }
@@ -2059,6 +2083,7 @@ function init() {
             syncProteccionHidden();
             syncTotalsHidden();
             refreshSummary();
+            if (typeof window.actualizarCarritoEnModal === 'function') window.actualizarCarritoEnModal();
             return;
         }
 
@@ -2070,6 +2095,7 @@ function init() {
         syncProteccionHidden();
         syncTotalsHidden();
         refreshSummary();
+        if (typeof window.actualizarCarritoEnModal === 'function') window.actualizarCarritoEnModal();
     }
 
     /* ==============================
@@ -2197,6 +2223,7 @@ function init() {
         syncTotalsHidden();
         refreshSummary();
         refreshProteccionUIHeader();
+        if (typeof window.actualizarCarritoEnModal === 'function') window.actualizarCarritoEnModal();
     }
 
     function repaintIndividualesUI() {
@@ -2293,7 +2320,7 @@ function init() {
         return sum;
     }
 
-    function preseleccionarProteccionesIndividuales() {
+    function preseleccionarProteccionesIndividuales(soloLI = false) {
         state.individuales.clear();
 
         const todasLasTarjetas = document.querySelectorAll('.individual-item');
@@ -2349,7 +2376,7 @@ function init() {
             });
         }
 
-        if (idDeclineCDW && datosDeclineCDW) {
+        if (!soloLI && idDeclineCDW && datosDeclineCDW) {
             state.individuales.set(idDeclineCDW, {
                 id: datosDeclineCDW.id,
                 nombre: datosDeclineCDW.nombre,
@@ -2360,18 +2387,20 @@ function init() {
             });
         }
 
-        idsProteccionesAuto.forEach(auto => {
-            if (!state.individuales.has(auto.id)) {
-                state.individuales.set(auto.id, {
-                    id: auto.id,
-                    nombre: auto.nombre,
-                    desc: auto.desc,
-                    precio: auto.precio,
-                    charge: "por_dia",
-                    grupo: "Protecciones automáticas"
-                });
-            }
-        });
+        if (!soloLI) {
+            idsProteccionesAuto.forEach(auto => {
+                if (!state.individuales.has(auto.id)) {
+                    state.individuales.set(auto.id, {
+                        id: auto.id,
+                        nombre: auto.nombre,
+                        desc: auto.desc,
+                        precio: auto.precio,
+                        charge: "por_dia",
+                        grupo: "Protecciones automáticas"
+                    });
+                }
+            });
+        }
 
         repaintIndividualesUI();
         refreshProteccionUIHeader();
@@ -4022,6 +4051,64 @@ if (!validateBeforeSubmit()) return;
                         window.location.href = "/ventas/menu";
                     });
                 }
+
+                // Botón "Reenviar correo": solo activo en modo edición
+                const btnReenviar = qs("#btnReenviarCorreo");
+                if (btnReenviar) {
+                    btnReenviar.addEventListener("click", async () => {
+                        const idResv = window.reservacionEditar?.id_reservacion;
+                        if (!idResv) return;
+
+                        const msg = qs("#confirmReenvioMsg");
+                        const tokenEl = document.querySelector('meta[name="csrf-token"]');
+                        const csrf = tokenEl ? tokenEl.getAttribute("content")
+                                             : (document.querySelector('input[name="_token"]')?.value || "");
+
+                        btnReenviar.disabled = true;
+                        const textoPrev = btnReenviar.innerHTML;
+                        btnReenviar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reenviando...';
+                        if (msg) { msg.textContent = ""; msg.style.color = ""; }
+
+                        try {
+                            const resp = await fetch(`/admin/reservaciones/${idResv}/reenviar-correo`, {
+                                method: "POST",
+                                headers: {
+                                    "X-CSRF-TOKEN": csrf,
+                                    "Accept": "application/json"
+                                }
+                            });
+                            const data = await resp.json().catch(() => ({}));
+
+                            if (resp.ok && data.success) {
+                                if (msg) {
+                                    msg.textContent = data.message || "Correo reenviado correctamente.";
+                                    msg.style.color = "#059669";
+                                }
+                                btnReenviar.innerHTML = '<i class="fas fa-check"></i> Correo reenviado';
+                            } else {
+                                if (msg) {
+                                    msg.textContent = data.message || "No se pudo reenviar el correo.";
+                                    msg.style.color = "#dc2626";
+                                }
+                                btnReenviar.disabled = false;
+                                btnReenviar.innerHTML = textoPrev;
+                            }
+                        } catch (e) {
+                            if (msg) {
+                                msg.textContent = "Error de conexión al reenviar el correo.";
+                                msg.style.color = "#dc2626";
+                            }
+                            btnReenviar.disabled = false;
+                            btnReenviar.innerHTML = textoPrev;
+                        }
+                    });
+                }
+            }
+
+            // Mostrar el bloque de reenvío SOLO cuando es edición
+            const bloqueReenvio = qs("#confirmReenvioBloque");
+            if (bloqueReenvio) {
+                bloqueReenvio.style.display = esEdicion ? "block" : "none";
             }
 
             OverlayActualizacion.exito({
@@ -4055,6 +4142,10 @@ if (!validateBeforeSubmit()) return;
 
         btns.forEach(b => b.classList.toggle("is-active", b.dataset.tab === tabId));
         panels.forEach(p => p.classList.toggle("is-active", p.id === tabId));
+
+        if (typeof window.actualizarCarritoEnModal === 'function') {
+            window.actualizarCarritoEnModal();
+        }
     }
 
     function bindProteTabs() {
@@ -4458,6 +4549,10 @@ if (!validateBeforeSubmit()) return;
             openPop(protPop);
             setProteTab("tab-paquetes");
             await loadProtecciones();
+            if (!modalProteccionesInicializado) {
+                modalProteccionesInicializado = true;
+                preseleccionarProteccionesIndividuales(false);
+            }
             repaintIndividualesUI();
             refreshProteccionUIHeader();
         });
@@ -4607,7 +4702,7 @@ if (!validateBeforeSubmit()) return;
         }, 500);
 
         setTimeout(() => {
-            preseleccionarProteccionesIndividuales();
+            preseleccionarProteccionesIndividuales(true);
         }, 500);
     });
 
@@ -5039,10 +5134,8 @@ if (!validateBeforeSubmit()) return;
                 indicator.classList.add('expanded');
             }
 
-            if (seccionId !== 'cliente') {
-                setTimeout(() => {
-                    seccion.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 100);
+            if (typeof window.enfocarSeccionReserva === 'function') {
+                window.enfocarSeccionReserva(seccion, 100);
             }
         }
 
@@ -5095,6 +5188,13 @@ if (!validateBeforeSubmit()) return;
 
                     if (body) body.classList.toggle('expanded');
                     if (indicator) indicator.classList.toggle('expanded');
+
+                    // Si la sección quedó abierta, posicionar la pantalla en ella
+                    if (body && body.classList.contains('expanded')) {
+                        if (typeof window.enfocarSeccionReserva === 'function') {
+                            window.enfocarSeccionReserva(seccion, 100);
+                        }
+                    }
                 });
             });
         }
@@ -5162,8 +5262,8 @@ if (!validateBeforeSubmit()) return;
                     expandirSeccion('adicionales');
 
                     setTimeout(() => {
-                        if (typeof desbloquearProtecciones === 'function') desbloquearProtecciones();
-                        if (typeof desbloquearCliente === 'function') desbloquearCliente();
+                        if (typeof desbloquearProteccionesSinExpandir === 'function') desbloquearProteccionesSinExpandir();
+                        if (typeof desbloquearClienteSinExpandir === 'function') desbloquearClienteSinExpandir();
                         if (typeof actualizarTodasSecciones === 'function') actualizarTodasSecciones();
                         mostrarToast(`✅ Categoría ${categoriaSeleccionada.nombre} seleccionada`, 'success');
                     }, 200);
@@ -5367,7 +5467,7 @@ if (!validateBeforeSubmit()) return;
             const observer = new MutationObserver(() => {
                 const body = clienteSection.querySelector('.stack-body');
                 if (body && body.classList.contains('expanded')) {
-                    setTimeout(saveClienteSectionPosition, 50);
+                    setTimeout(saveClienteSectionPosition, 200);
                 }
             });
             observer.observe(clienteSection, { attributes: true });
@@ -5551,6 +5651,44 @@ if (!validateBeforeSubmit()) return;
        CARRITO PROTECCIONES
     ============================== */
     (function() {
+        function crearPildoraDiasEnModal() {
+            const modalHeader = document.querySelector('#proteccionPop .modal-head');
+            if (!modalHeader) return null;
+
+            let diasPill = document.getElementById('proteDiasPill');
+            if (diasPill) return diasPill;
+
+            diasPill = document.createElement('div');
+            diasPill.id = 'proteDiasPill';
+            diasPill.className = 'prote-dias-pill';
+            diasPill.innerHTML = `
+                <i class="fa-regular fa-clock"></i>
+                <span class="prote-dias-num">0</span> día(s)
+            `;
+
+            const cartHeaderBtn = document.getElementById('cartHeaderBtn');
+            const closeBtn = modalHeader.querySelector('#proteClose');
+
+            if (cartHeaderBtn) {
+                modalHeader.insertBefore(diasPill, cartHeaderBtn);
+            } else if (closeBtn) {
+                modalHeader.insertBefore(diasPill, closeBtn);
+            } else {
+                modalHeader.appendChild(diasPill);
+            }
+
+            return diasPill;
+        }
+
+        function actualizarPildoraDiasEnModal() {
+            const diasPill = document.getElementById('proteDiasPill');
+            if (!diasPill) return;
+            const num = diasPill.querySelector('.prote-dias-num');
+            if (num) num.textContent = String(state.days || 0);
+        }
+
+        window.actualizarPildoraDiasEnModal = actualizarPildoraDiasEnModal;
+
         function crearOCarritoEnModal() {
             const modalHeader = document.querySelector('#proteccionPop .modal-head');
             if (!modalHeader) return null;
@@ -5583,6 +5721,9 @@ if (!validateBeforeSubmit()) return;
                 if (resumenPop) resumenPop.style.display = 'flex';
             });
 
+            crearPildoraDiasEnModal();
+            actualizarPildoraDiasEnModal();
+
             return cartHeaderBtn;
         }
 
@@ -5594,10 +5735,18 @@ if (!validateBeforeSubmit()) return;
         }
 
         function contarItemsSeleccionados() {
-            let count = 0;
-            if (state.proteccion !== null) count++;
-            count += state.individuales.size;
-            return count;
+            // El badge depende de la pestaña activa del modal:
+            // - Paquetes: solo cuenta el paquete seleccionado (0 o 1)
+            // - Individuales: cuenta las protecciones individuales seleccionadas
+            const tabIndividualesActiva = document
+                .querySelector('#proteccionPop .tab-btn[data-tab="tab-individuales"]')
+                ?.classList.contains('is-active');
+
+            if (tabIndividualesActiva) {
+                return state.individuales.size;
+            }
+
+            return state.proteccion !== null ? 1 : 0;
         }
 
         function tieneItemsConCosto() {
@@ -5610,6 +5759,8 @@ if (!validateBeforeSubmit()) return;
         function actualizarCarritoEnModal() {
             const cartHeaderBtn = document.getElementById('cartHeaderBtn');
             if (!cartHeaderBtn) return;
+
+            actualizarPildoraDiasEnModal();
 
             const totalGeneral = obtenerTotalGeneral();
             const count = contarItemsSeleccionados();
@@ -5643,6 +5794,7 @@ if (!validateBeforeSubmit()) return;
                 if (modal) {
                     clearInterval(checkModal);
                     crearOCarritoEnModal();
+                    crearPildoraDiasEnModal();
                     setTimeout(forzarActualizacionTotal, 200);
                 }
             }, 100);
@@ -5652,6 +5804,7 @@ if (!validateBeforeSubmit()) return;
                 btnProtecciones.addEventListener('click', () => {
                     setTimeout(() => {
                         crearOCarritoEnModal();
+                        crearPildoraDiasEnModal();
                         forzarActualizacionTotal();
                     }, 200);
                 });
@@ -6173,15 +6326,8 @@ function __bloquearCamposEdicion() {
 
     const contratoIniciado = !!(window.reservacionEditar && window.reservacionEditar.contrato_iniciado);
 
-    if (contratoIniciado) {
-        [
-            "#fecha_inicio_ui",
-            "#fecha_inicio",
-            "#hora_retiro_ui",
-            "#hora_retiro"
-        ].forEach(bloquearCampo);
-    }
-    bloquear(document.querySelector(".cliente-datos-card"));
+    // Edición: todos los campos quedan EDITABLES (se quitaron los bloqueos
+    // de fecha/hora de inicio y de los datos del cliente).
     const coment = document.getElementById("comentarios");
     if (coment) {
         coment.readOnly = false;
@@ -6195,8 +6341,6 @@ function __bloquearCamposEdicion() {
         btnReservar.innerHTML = `<i class="fas fa-check-circle"></i> Actualizar reservación`;
     }
 
-    console.log(contratoIniciado
-        ? "🔒 Contrato ABIERTO: fecha/hora de inicio + datos del cliente bloqueados"
-        : "🔒 Contrato no iniciado: solo datos del cliente bloqueados (fechas/lugar/hora editables)");
+    console.log("✏️ Modo edición: todos los campos son editables");
 }
 })();

@@ -307,10 +307,36 @@ const toDMY = (dateStr) => {
 };
 
 /* ==============================
+   SEPARADOR DE GRUPOS DE DÍAS
+============================== */
+function marcarGruposDeFecha(scopeSelector) {
+  const tablas = scopeSelector
+    ? [document.querySelector(scopeSelector)].filter(Boolean)
+    : $$("#tablaActivas .tbody, #tablaPrevias .tbody");
+
+  tablas.forEach((tbody) => {
+    if (!tbody) return;
+    let fechaPrevia = null;
+    tbody.querySelectorAll(":scope > .row").forEach((row) => {
+      row.classList.remove("grupo-fecha-inicio");
+      const fecha = row.getAttribute("data-fecha-salida");
+      if (!fecha) return; // filas sin fecha (ej. "No se encontraron...") se ignoran
+      if (fechaPrevia !== null && fecha !== fechaPrevia) {
+        row.classList.add("grupo-fecha-inicio");
+      }
+      fechaPrevia = fecha;
+    });
+  });
+}
+window.marcarGruposDeFecha = marcarGruposDeFecha;
+
+/* ==============================
    DOM READY
 ============================== */
 window.addEventListener("DOMContentLoaded", () => {
   console.log("✅ JS cargado correctamente - Reservaciones Activas");
+
+  marcarGruposDeFecha();
 
   /* ==============================
      FILTRO FECHA
@@ -1102,6 +1128,8 @@ window.addEventListener("DOMContentLoaded", () => {
           tbody.innerHTML = data.data.map(construirFila).join("");
         }
 
+        marcarGruposDeFecha("#tablaActivas .tbody");
+
         if (count) count.textContent = data.total;
       } catch (err) {
         if (err.name === "AbortError") return;
@@ -1117,6 +1145,7 @@ window.addEventListener("DOMContentLoaded", () => {
       if (q === "") {
         if (ultimoController) ultimoController.abort();
         tbody.innerHTML = filasOriginales;
+        marcarGruposDeFecha("#tablaActivas .tbody");
         if (count) count.textContent = $$("#tablaActivas .tbody .row").length;
         return;
       }
@@ -1149,27 +1178,6 @@ window.addEventListener("DOMContentLoaded", () => {
       current = data;
 
       $("#mTitle").textContent = `Detalle Reservación ${data.codigo || "—"}`;
-
-      const fullName = [data.nombre_cliente, data.apellidos_cliente]
-        .filter(Boolean)
-        .join(" ")
-        .trim();
-
-      const fmtFecha = (fechaStr, horaStr) => {
-        if (!fechaStr) return "—";
-        const meses = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
-        const [y, m, d] = String(fechaStr).split("-");
-        const mesTxt = meses[parseInt(m, 10) - 1] || m;
-        const hora = horaStr ? ` ${String(horaStr).slice(0, 5)}` : "";
-        return `${String(d).padStart(2,"0")}-${mesTxt}-${y}${hora}`;
-      };
-
-      const salida  = fmtFecha(data.fecha_inicio, data.hora_retiro);
-      const entrega = fmtFecha(data.fecha_fin, data.hora_entrega);
-
-      $("#mFechas").textContent = `${salida} al ${entrega}`;
-      $("#mVehiculo").textContent = `${data.categoria || ""} ${data.categoria_nombre || ""} ${data.categoria_descripcion || ""}`;
-      $("#mCliente").textContent = data.nombre_completo || data.nombre_cliente || "—";
 
       const comentarioRaw = data.comentarios ?? "";
       const tieneComentarios = String(comentarioRaw).trim() !== "";
@@ -1295,16 +1303,6 @@ window.addEventListener("DOMContentLoaded", () => {
       if (!res.ok || !data.success) throw new Error(data.message);
 
       Object.assign(current, payload);
-
-      $("#mCliente").textContent = current.nombre_cliente;
-      $("#mEmail").textContent = current.email_cliente;
-      $("#mNumero").textContent = current.telefono_cliente;
-
-      const salida = `${toDMY(current.fecha_inicio)} ${String(current.hora_retiro || "").slice(0, 5)}`;
-      const entrega = `${toDMY(current.fecha_fin)} ${String(current.hora_entrega || "").slice(0, 5)}`;
-
-      $("#mSalida").textContent = salida;
-      $("#mEntrega").textContent = entrega;
 
       mostrarAviso("Reservación actualizada correctamente", "ok");
       closeEditModal();
