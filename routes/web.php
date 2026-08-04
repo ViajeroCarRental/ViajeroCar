@@ -270,6 +270,11 @@ Route::get('/admin/contrato/buscar-persona', [Contrato2Controller::class, 'busca
 Route::get('/admin/contrato/categorias-dinamicas', [ContratoController::class, 'obtenerCategoriasDinamicas']);
 Route::get('/admin/contrato/categoria-info/{codigo}', [ContratoController::class, 'categoriaInfo'])->name('contrato.categoria-info');
 
+// Comentarios de la reservación (campanita del contrato) — deben ir antes de {id}
+Route::get('/admin/contrato/comentarios/{idReservacion}', [ContratoController::class, 'obtenerComentarios'])->name('contrato.comentarios.obtener');
+Route::post('/admin/contrato/comentarios', [ContratoController::class, 'guardarComentarios'])->name('contrato.comentarios.guardar');
+Route::post('/admin/contrato/sucursal-devolucion', [ContratoController::class, 'actualizarSucursalDevolucion'])->name('contrato.sucursalDevolucion');
+
 // ContratoController
 Route::get('/admin/contrato/{id}', [ContratoController::class, 'mostrarContrato'])->name('contrato.mostrar');
 
@@ -511,6 +516,7 @@ Route::get('/admin/reservacion/{id}/checklist',[ChecklistController::class, 'sho
 Route::post('/admin/checklist/{id}/actualizar-km-salida', [ChecklistController::class, 'actualizarKmSalida']);
 Route::post('/admin/checklist/{id}/guardar-gasolina-salida', [ChecklistController::class, 'guardarGasolinaSalida']);
 Route::post('/admin/checklist/{id}/guardar-fotos-salida', [ChecklistController::class, 'guardarFotosSalida']);
+Route::delete('/admin/checklist/foto/{idFoto}', [ChecklistController::class, 'eliminarFotoSalida'])->name('checklist.eliminarFotoSalida');
 
 // 📤 Enviar checklist de SALIDA (fotos + comentarios + fechas/horas)
 Route::post('/admin/checklist/{id}/enviar-salida',[ChecklistController::class, 'enviarChecklistSalida'])->name('checklist.enviarSalida');

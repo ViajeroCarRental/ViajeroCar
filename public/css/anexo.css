@@ -20,7 +20,6 @@ body {
     font-family: var(--font);
 }
 
-/* Contenedor principal (formato carta centrado) */
 .document-wrapper {
     background: var(--paper);
     padding: 28px 34px 38px;
@@ -33,9 +32,8 @@ body {
 }
 
 /* ===============================
-        ENCABEZADO
+   ENCABEZADO
 ================================= */
-
 .doc-header {
     display: flex;
     justify-content: space-between;
@@ -118,9 +116,8 @@ body {
 }
 
 /* ===============================
-            INTRO
+   INTRO
 ================================= */
-
 .intro-section {
     text-align: center;
     margin-bottom: 16px;
@@ -141,9 +138,8 @@ body {
 }
 
 /* ===============================
-    BLOQUES / TARJETAS
+   BLOQUES
 ================================= */
-
 .card-block {
     background: #fafafa;
     border-radius: var(--radius-md);
@@ -171,9 +167,8 @@ body {
 }
 
 /* ===============================
-            TABLA
+   TABLA
 ================================= */
-
 .styled-table {
     width: 100%;
     border-collapse: collapse;
@@ -181,7 +176,6 @@ body {
     margin-top: 8px;
 }
 
-/* Encabezado tipo contrato */
 .styled-table thead th {
     background: #f9fafb;
     color: var(--ink);
@@ -194,7 +188,6 @@ body {
     border-right: 1px solid #111;
 }
 
-/* Celdas cuerpo */
 .styled-table td {
     border-left: 1px solid #111;
     border-right: 1px solid #111;
@@ -239,7 +232,6 @@ body {
     color: var(--muted);
 }
 
-/* Botón icono en tabla */
 .actions {
     text-align: center;
 }
@@ -257,9 +249,8 @@ body {
 }
 
 /* ===============================
-            FORMULARIO
+   FORMULARIO
 ================================= */
-
 .form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -325,8 +316,9 @@ body {
     margin-top: 4px;
 }
 
-/* BOTONES GENERALES */
-
+/* ===============================
+   BOTONES
+================================= */
 .btn-primary {
     background: var(--brand);
     color: #fff;
@@ -361,7 +353,6 @@ body {
     background: rgba(229, 9, 20, 0.05);
 }
 
-/* Botón eliminar firma / limpiar lienzo */
 .btn-del {
     background: #ffffff;
     border-radius: 999px;
@@ -376,9 +367,8 @@ body {
 }
 
 /* ===============================
-        TEXTO LEGAL
+   TEXTO LEGAL
 ================================= */
-
 .legal-block {
     background: #ffffff;
 }
@@ -391,9 +381,8 @@ body {
 }
 
 /* ===============================
-            FIRMAS
+   FIRMAS
 ================================= */
-
 .signatures-wrapper {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -425,9 +414,8 @@ body {
 }
 
 /* ===============================
-          MODALES FIRMA
+   MODALES FIRMA
 ================================= */
-
 .modal-firma {
     display: none;
     position: fixed;
@@ -468,12 +456,16 @@ canvas {
     max-width: 560px;
     height: 200px;
     background: #f9fafb;
+    touch-action: none;
+    -ms-touch-action: none;
+    display: block;
+    margin: 0 auto;
+    box-sizing: border-box;
 }
 
 /* ===============================
-        RESPONSIVE
+   RESPONSIVE
 ================================= */
-
 @media (max-width: 768px) {
     .doc-header {
         flex-direction: column;
@@ -481,14 +473,55 @@ canvas {
         gap: 14px;
     }
 
+    .header-left {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .big-header-logo {
+        max-width: 220px;
+    }
+
     .header-right {
         align-items: flex-start;
         text-align: left;
+        width: 100%;
+    }
+
+    .doc-meta {
+        text-align: left;
+    }
+
+    .doc-title {
+        text-align: left;
+        font-size: 22px;
+    }
+
+    .legal-section p {
+        text-align: justify;
+        font-size: 13px;
+        line-height: 1.7;
+        hyphens: auto;
+        -webkit-hyphens: auto;
+        word-spacing: -0.5px;
+    }
+
+    .legal-block .block-subtitle,
+    .card-block .block-subtitle,
+    .intro-section .section-sub,
+    .firma-hint {
+        text-align: justify;
     }
 
     .meta-grid {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .meta-item {
+        text-align: left;
     }
 
     .form-grid {
@@ -504,22 +537,129 @@ canvas {
         grid-template-columns: 1fr;
         gap: 18px;
     }
+
+    .signature-card {
+        text-align: center;
+        padding: 8px 0;
+    }
+
+    .sig-line {
+        width: 100%;
+        max-width: 260px;
+        margin: 14px auto 6px;
+    }
+
+    .signature-card > span {
+        display: block;
+        text-align: center;
+        margin-bottom: 6px;
+    }
+
+    .sig-label {
+        text-align: center;
+    }
+
+    .styled-table{
+        border: 0;
+        font-size: 14px;
+    }
+
+    .styled-table thead{
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .styled-table,
+    .styled-table tbody,
+    .styled-table tr,
+    .styled-table td{
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .styled-table tbody tr{
+        border: 1px solid #111;
+        border-radius: 10px;
+        margin-bottom: 14px;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .styled-table tbody tr:nth-child(even){
+        background: #fff;
+    }
+
+    .styled-table td{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        text-align: right;
+        border: 0;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 10px 12px;
+    }
+
+    .styled-table td:last-child{
+        border-bottom: 0;
+    }
+
+    .styled-table td::before{
+        content: attr(data-label);
+        font-weight: 700;
+        color: #111827;
+        text-align: left;
+        flex: 0 0 45%;
+    }
+
+    .styled-table td.empty-row{
+        display: block;
+        text-align: center;
+    }
+    .styled-table td.empty-row::before{
+        content: "";
+        display: none;
+    }
+
+    .styled-table td.firma-col .doc-thumb{
+        max-width: 55%;
+        height: auto;
+        margin: 0;
+    }
+
+    .styled-table td.actions{
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    .styled-table td.actions .btn-icon{
+        width: 40px;
+        height: 40px;
+    }
 }
-/* ===========================================
-   FIX — AJUSTE DEL LOGO EN DOCUMENTOS PDF/HTML
-=========================================== */
+
+/* ===============================
+   LOGO
+================================= */
 .big-header-logo {
     width: 100%;
-    max-height: 80px;   /* Ajusta la altura total visible */
+    max-height: 80px;
     object-fit: cover;
     object-position: center;
     display: block;
-    margin: 0 auto 1px; /* Centrado */
+    margin: 0 auto 1px;
 }
-/* ===============================
-   FIRMAS DE CONDUCTORES (BLOQUE NUEVO)
-================================= */
 
+/* ===============================
+   FIRMAS CONDUCTORES
+================================= */
 .firmas {
     margin-top: 8px;
     display: flex;
@@ -539,7 +679,6 @@ canvas {
     margin: 6px auto 0;
 }
 
-/* Botón rojo de firma de conductor */
 .btn-red {
     background: #b91c1c;
     color: #fff;
@@ -556,9 +695,8 @@ canvas {
 }
 
 /* ===============================
-   TRANSICIÓN "CARRUSEL" DE CARTAS
+   TRANSICION CARRUSEL
 ================================= */
-
 .document-wrapper.fade-out {
     opacity: 0;
     transform: translateX(-8px);
@@ -569,4 +707,19 @@ canvas {
     opacity: 1;
     transform: translateX(0);
     transition: opacity 0.22s ease, transform 0.22s ease;
+}
+/* ==========================================================
+   FIX RESPONSIVE
+========================================================== */
+@media (max-width: 768px) {
+    .document-wrapper {
+        display: flex;
+        flex-direction: column;
+        min-height: calc(100vh - 110px);
+        min-height: calc(100dvh - 110px);
+    }
+
+    .document-wrapper > section.card-block:last-of-type {
+        margin-top: auto;
+    }
 }

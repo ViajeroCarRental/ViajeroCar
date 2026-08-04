@@ -106,7 +106,7 @@
         font-weight: bold;
     }
 
-    /* ===== MODAL ===== */
+    /* ===== MODAL DE DAÑOS (estilizado, tonos rojos) ===== */
     #modalDaño {
         display: none;
         position: fixed !important;
@@ -114,10 +114,11 @@
         width: 100vw;
         height: 100vh;
         padding: 20px;
-        background: rgba(0, 0, 0, 0.55);
+        background: rgba(60, 8, 15, .55);
+        backdrop-filter: blur(3px);
         z-index: 999999;
 
-        align-items: center;
+        align-items: flex-start;   /* la caja se ancla arriba; el top lo pone el JS */
         justify-content: center;
 
         box-sizing: border-box;
@@ -126,46 +127,344 @@
     #modalDaño .box {
         position: relative;
         width: 100%;
-        max-width: 360px;
-        padding: 22px;
+        max-width: 380px;
+        padding: 0;                /* el padding ahora va en head/body */
         margin: 0;
 
         background: #ffffff;
-        border-radius: 14px;
-        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.25);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 24px 60px rgba(150, 20, 30, .35);
+        animation: invPop .25s cubic-bezier(.34,1.56,.64,1);
 
         box-sizing: border-box;
     }
 
+    /* Cabecera roja con degradado */
+    #modalDaño .dano-head {
+        background: linear-gradient(135deg, #ff4d6a 0%, #c9184a 100%);
+        padding: 22px 24px 20px;
+        text-align: center;
+        color: #fff;
+    }
+
+    #modalDaño .dano-icon {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 10px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+    }
+
     #modalDaño h4 {
-        font-size: 18px;
-        font-weight: 800;
-        margin-bottom: 10px;
+        font-size: 19px;
+        font-weight: 900;
+        margin: 0;
+        letter-spacing: .3px;
+        color: #fff;
+    }
+
+    /* Cuerpo del modal */
+    #modalDaño .dano-body {
+        padding: 20px 22px 22px;
     }
 
     #modalDaño textarea {
         width: 100%;
-        padding: 10px;
+        padding: 12px;
         resize: none;
         min-height: 90px;
-        background: #f7f7f7;
+        background: #fdf3f5;
+        border-radius: 12px;
+        border: 1.5px solid #f6d0d9;
+        box-sizing: border-box;
+        font-size: 15px;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    #modalDaño textarea:focus {
+        outline: none;
+        border-color: #ff4d6a;
+        box-shadow: 0 0 0 3px rgba(255,77,106,.15);
+    }
+
+    /* Input de archivo estilizado como botón suave */
+    #modalDaño input[type="file"] {
+        width: 100%;
+        margin-top: 12px;
+        font-size: 14px;
+        color: #c9184a;
+        box-sizing: border-box;
+    }
+
+    #modalDaño input[type="file"]::file-selector-button {
+        padding: 9px 14px;
+        margin-right: 10px;
+        border: none;
         border-radius: 10px;
-        border: 1px solid #ddd;
+        background: #fdeef1;
+        color: #c9184a;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background .15s ease;
+    }
+
+    #modalDaño input[type="file"]::file-selector-button:hover {
+        background: #fbdde3;
     }
 
     .btn {
         width: 100%;
-        padding: 10px;
-        border-radius: 10px;
+        padding: 13px;
+        border-radius: 12px;
         border: none;
-        margin-top: 10px;
-        font-weight: 600;
+        margin-top: 12px;
+        font-weight: 800;
         font-size: 15px;
         cursor: pointer;
+        transition: transform .12s ease, box-shadow .15s ease, opacity .15s;
     }
 
-    .btn-save { background:#1976D2; color:white; }
-    .btn-cancel { background:#aaa; color:white; }
+    .btn:active { transform: scale(.97); }
+
+    /* Botón guardar en rojo (degradado) */
+    .btn-save {
+        background: linear-gradient(135deg, #ff4d6a, #c9184a);
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(201,24,74,.35);
+    }
+    .btn-save:hover { box-shadow: 0 8px 22px rgba(201,24,74,.45); }
+
+    /* Botón cancelar suave */
+    .btn-cancel {
+        background: #fdeef1;
+        color: #c9184a;
+    }
+    .btn-cancel:hover { background: #fbdde3; }
+
+    /* ===================================================== */
+    /*   MODAL BONITO DE INVENTARIO (tonos rojos)          */
+    /* ===================================================== */
+    #modalInventario {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999999;
+        background: rgba(60, 8, 15, .55);
+        backdrop-filter: blur(3px);
+        align-items: flex-start;      /* la caja se ancla arriba; el top lo pone el JS */
+        justify-content: center;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    #modalInventario.show {
+        display: flex;
+        animation: invFade .2s ease;
+    }
+
+    @keyframes invFade { from { opacity: 0 } to { opacity: 1 } }
+
+    #modalInventario .inv-box {
+        width: 100%;
+        max-width: 380px;
+        background: #fff;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 24px 60px rgba(150, 20, 30, .35);
+        animation: invPop .25s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    @keyframes invPop {
+        from { transform: scale(.9) translateY(10px); opacity: 0 }
+        to   { transform: scale(1) translateY(0); opacity: 1 }
+    }
+
+    /* Cabecera roja con degradado */
+    #modalInventario .inv-head {
+        background: linear-gradient(135deg, #ff4d6a 0%, #c9184a 100%);
+        padding: 26px 24px 22px;
+        text-align: center;
+        color: #fff;
+        position: relative;
+    }
+
+    #modalInventario .inv-icon {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto 12px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        font-weight: 900;
+    }
+
+    #modalInventario .inv-head h4 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 900;
+        letter-spacing: .3px;
+    }
+
+    #modalInventario .inv-body {
+        padding: 22px 24px 24px;
+        text-align: center;
+    }
+
+    #modalInventario .inv-msg {
+        color: #444;
+        font-size: 15px;
+        line-height: 1.5;
+        margin: 0 0 20px;
+    }
+
+    #modalInventario .inv-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    #modalInventario .inv-btn {
+        flex: 1;
+        padding: 13px;
+        border: none;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 15px;
+        cursor: pointer;
+        transition: transform .12s ease, box-shadow .15s ease, opacity .15s;
+    }
+
+    #modalInventario .inv-btn:active { transform: scale(.96) }
+
+    #modalInventario .inv-btn-primary {
+        background: linear-gradient(135deg, #ff4d6a, #c9184a);
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(201,24,74,.35);
+    }
+    #modalInventario .inv-btn-primary:hover { box-shadow: 0 8px 22px rgba(201,24,74,.45) }
+
+    #modalInventario .inv-btn-ghost {
+        background: #fdeef1;
+        color: #c9184a;
+    }
+    #modalInventario .inv-btn-ghost:hover { background: #fbdde3 }
+
+    /* Estado de error: rojo más oscuro/sobrio */
+    #modalInventario.inv-error .inv-head {
+        background: linear-gradient(135deg, #e5383b 0%, #8b0000 100%);
+    }
+
+    /* ===================================================== */
+    /*   RESPONSIVE: SECCIÓN AUTO EN MÓVIL                  */
+    /* ===================================================== */
+    @media (max-width: 760px){
+        /* El diagrama y la tabla dejan de ir lado a lado y se apilan */
+        .checklist-card{
+            flex-direction: column;
+            gap: 20px;
+            padding: 16px;
+            align-items: stretch;
+        }
+
+        /* El diagrama del auto ocupa el ancho y se centra, sin ancho fijo */
+        .car-box{
+            width: 100%;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+
+        /* La tabla ocupa todo el ancho debajo del diagrama */
+        .tabla-entrega{
+            width: 100%;
+            margin-top: 0;
+        }
+
+        .tabla-entrega h3{
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        /* ---- TABLA "EL CLIENTE SE LO LLEVA" EN MÓVIL ----
+           La tabla tiene 4 columnas: item | check | item | check.
+           En móvil las reacomodamos a 2 columnas (texto | check),
+           de modo que cada item quede con su checkbox en su propia
+           línea y el texto tenga espacio (ya no se parte letra a letra). */
+        table.entrega{
+            display: block;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        table.entrega tbody{
+            display: block;
+            width: 100%;
+        }
+
+        /* Cada fila = grid de 2 columnas; los 4 td se acomodan en 2 filas:
+           td1(texto) td2(check) / td3(texto) td4(check) */
+        table.entrega tr{
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            width: 100%;
+        }
+
+        table.entrega td{
+            padding: 12px 12px;
+            border-bottom: 1px solid #eee;
+            /* Texto normal: NO romper palabras a la fuerza */
+            word-break: normal;
+            overflow-wrap: normal;
+            white-space: normal;
+        }
+
+        /* Columnas de texto (1 y 3) alineadas a la izquierda */
+        table.entrega td:nth-child(1),
+        table.entrega td:nth-child(3){
+            text-align: left;
+            font-weight: 600;
+        }
+
+        /* Columnas de checkbox (2 y 4) alineadas a la derecha */
+        table.entrega td:nth-child(2),
+        table.entrega td:nth-child(4){
+            text-align: right;
+            justify-self: end;
+        }
+
+        /* Los checkbox con buen tamaño para tocar */
+        table.entrega td input[type="checkbox"]{
+            width: 20px;
+            height: 20px;
+        }
+
+        /* El rayado alterno por fila deja de tener sentido con grid;
+           lo quitamos para que no confunda visualmente */
+        table.entrega tr:nth-child(even){
+            background: transparent;
+        }
+    }
+
+    @media (max-width: 480px){
+        .checklist-card{
+            padding: 12px;
+        }
+
+        table.entrega{
+            font-size: 13px;
+        }
+
+        table.entrega td{
+            padding: 10px 10px;
+        }
+    }
 </style>
 
 
@@ -304,7 +603,8 @@
         </tr>
     </table>
 
-    <button id="guardarInventario" class="btn btn-save" style="margin-top:20px;">
+    <button id="guardarInventario" class="btn btn-save"
+            style="margin-top:20px; background:#2e9e4f; box-shadow:0 6px 16px rgba(46,158,79,.3);">
         Guardar inventario
     </button>
 </div>
@@ -312,24 +612,58 @@
 
 </div>
 
-{{-- ================== MODAL ================== --}}
+{{-- ================== MODAL DE DAÑOS (estilizado) ================== --}}
 <div id="modalDaño">
     <div class="box">
-        <h4 id="tituloModal">Zona</h4>
-        <textarea id="comentarioDaño"
-                  placeholder="Describe el daño o comentario..."></textarea>
+        <div class="dano-head">
+            <div class="dano-icon">
+                <svg viewBox="0 0 24 24" width="30" height="30" fill="none"
+                     stroke="#fff" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                </svg>
+            </div>
+            <h4 id="tituloModal">Zona</h4>
+        </div>
 
-                     <!-- 🔥 NUEVO -->
-        <input type="file"
-               id="fotoDaño"
-               accept="image/*"
-               capture="environment">
+        <div class="dano-body">
+            <textarea id="comentarioDaño"
+                      placeholder="Describe el daño o comentario..."></textarea>
 
-        <!-- preview -->
-        <div id="previewFoto" style="margin-top:10px;"></div>
+            {{-- Foto del daño --}}
+            <input type="file"
+                   id="fotoDaño"
+                   accept="image/*"
+                   capture="environment">
 
-        <button type="button" id="guardarDaño" class="btn btn-save">Guardar</button>
-        <button type="button" id="cancelarDaño" class="btn btn-cancel">Cancelar</button>
+            {{-- Vista previa --}}
+            <div id="previewFoto" style="margin-top:10px;"></div>
+
+            <button type="button" id="guardarDaño" class="btn btn-save">Guardar</button>
+            <button type="button" id="cancelarDaño" class="btn btn-cancel">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+{{-- ================== MODAL INVENTARIO (bonito, tonos rojos) ================== --}}
+<div id="modalInventario">
+    <div class="inv-box">
+        <div class="inv-head">
+            <div class="inv-icon" id="invIcon">
+                <svg viewBox="0 0 24 24" width="32" height="32" fill="none"
+                     stroke="#fff" stroke-width="2.5"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </div>
+            <h4 id="invTitulo">Inventario guardado</h4>
+        </div>
+        <div class="inv-body">
+            <p class="inv-msg" id="invMensaje">Se guardó correctamente.</p>
+            <div class="inv-actions" id="invActions">
+                <button type="button" class="inv-btn inv-btn-primary" id="invAceptar">Aceptar</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -387,10 +721,97 @@ document.addEventListener("DOMContentLoaded", () => {
     let posicionScrollModal = 0;
 
     /* =====================================================
+       MODAL BONITO DE INVENTARIO (reemplaza los alerts)
+    ===================================================== */
+
+    const modalInv      = document.getElementById("modalInventario");
+    const invIcon       = document.getElementById("invIcon");
+    const invTitulo     = document.getElementById("invTitulo");
+    const invMensaje    = document.getElementById("invMensaje");
+    const invAceptarBtn = document.getElementById("invAceptar");
+
+    // SVG de check (éxito) y de alerta (error), en blanco
+    const svgCheck = `
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none"
+             stroke="#fff" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+        </svg>`;
+
+    const svgAlerta = `
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none"
+             stroke="#fff" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="8" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+            <circle cx="12" cy="12" r="10"/>
+        </svg>`;
+
+    function mostrarInventarioModal({ tipo = "success", titulo, mensaje } = {}) {
+        modalInv.classList.toggle("inv-error", tipo === "error");
+        invIcon.innerHTML      = tipo === "error" ? svgAlerta : svgCheck;
+        invTitulo.textContent  = titulo  || (tipo === "error" ? "Algo salió mal" : "Listo");
+        invMensaje.textContent = mensaje || "";
+
+        modalInv.classList.add("show");
+
+        // Ubicar la caja justo sobre el botón de guardar
+        posicionarInventarioModal();
+    }
+
+    /* Coloca la caja del modal de inventario centrada sobre la tarjeta
+       del auto (.checklist-card), sin salirse de la pantalla. Se usa
+       position: fixed (viewport) + margin-top. */
+    function posicionarInventarioModal() {
+        const box = modalInv.querySelector(".inv-box");
+        if (!box) return;
+
+        // Referencia: la tarjeta completa del auto
+        const referencia = document.querySelector(".checklist-card");
+
+        const margen = 16;
+        const vpH = window.innerHeight;
+        const boxH = box.offsetHeight || 0;
+
+        let top;
+        if (referencia &&
+            typeof referencia.getBoundingClientRect === "function") {
+            const r = referencia.getBoundingClientRect();
+            // Centrar la caja verticalmente respecto a la tarjeta del auto
+            top = r.top + (r.height / 2) - (boxH / 2);
+        } else {
+            // Sin referencia: centrar en el viewport
+            top = (vpH - boxH) / 2;
+        }
+
+        // Limitar para que no se salga por arriba ni por abajo
+        const topMax = vpH - boxH - margen;
+        if (top > topMax) top = topMax;
+        if (top < margen) top = margen;
+
+        box.style.marginTop = `${top}px`;
+        box.style.marginBottom = `${margen}px`;
+    }
+
+    function cerrarInventarioModal() {
+        modalInv.classList.remove("show");
+    }
+
+    if (invAceptarBtn) {
+        invAceptarBtn.addEventListener("click", cerrarInventarioModal);
+    }
+
+    if (modalInv) {
+        modalInv.addEventListener("click", event => {
+            if (event.target === modalInv) cerrarInventarioModal();
+        });
+    }
+
+    /* =====================================================
        FUNCIONES DEL MODAL
     ===================================================== */
 
-    function abrirModal(zona) {
+    function abrirModal(zona, trigger) {
         zonaSeleccionada = zona;
 
         tituloModal.textContent =
@@ -414,17 +835,15 @@ document.addEventListener("DOMContentLoaded", () => {
             document.body.appendChild(modal);
         }
 
-        /* Guarda exactamente dónde está viendo el usuario */
+        /* Bloquear el scroll del fondo SIN mover el body
+           (mover el body con position:fixed descolocaba el modal). */
         posicionScrollModal = window.scrollY;
-
-        document.body.style.position = "fixed";
-        document.body.style.top = `-${posicionScrollModal}px`;
-        document.body.style.left = "0";
-        document.body.style.right = "0";
-        document.body.style.width = "100%";
         document.body.style.overflow = "hidden";
 
         modal.style.display = "flex";
+
+        /* Posicionar el modal cerca del botón/punto que lo abrió */
+        posicionarModalDano(trigger);
 
         setTimeout(() => {
             comentarioInput.focus({
@@ -433,21 +852,43 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 100);
     }
 
+    /* Coloca la caja del modal a la altura del botón que lo disparó,
+       sin salirse de la pantalla. */
+    function posicionarModalDano(trigger) {
+        const box = modal.querySelector(".box");
+        if (!box) return;
+
+        // Alinear la caja desde arriba y controlar posición con margin-top
+        modal.style.alignItems = "flex-start";
+        modal.style.justifyContent = "center";
+
+        const margen = 16;
+        const vpH = window.innerHeight;
+        const boxH = box.offsetHeight || 0;
+
+        let top;
+        if (trigger && typeof trigger.getBoundingClientRect === "function") {
+            const r = trigger.getBoundingClientRect();
+            // Centrar verticalmente respecto al botón/punto
+            top = r.top + (r.height / 2) - (boxH / 2);
+        } else {
+            // Sin referencia: centrar en el viewport
+            top = (vpH - boxH) / 2;
+        }
+
+        // Limitar para que no se salga por arriba ni por abajo
+        const topMax = vpH - boxH - margen;
+        if (top > topMax) top = topMax;
+        if (top < margen) top = margen;
+
+        box.style.marginTop = `${top}px`;
+        box.style.marginBottom = `${margen}px`;
+    }
+
     function cerrarModal() {
         modal.style.display = "none";
 
-        document.body.style.position = "";
-        document.body.style.top = "";
-        document.body.style.left = "";
-        document.body.style.right = "";
-        document.body.style.width = "";
         document.body.style.overflow = "";
-
-        window.scrollTo({
-            top: posicionScrollModal,
-            left: 0,
-            behavior: "instant"
-        });
 
         comentarioInput.value = "";
         fotoInput.value = "";
@@ -476,7 +917,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.querySelectorAll(".damage-trigger").forEach(punto => {
         punto.addEventListener("click", () => {
-            abrirModal(punto.dataset.zone);
+            abrirModal(punto.dataset.zone, punto);
         });
     });
 
@@ -704,6 +1145,15 @@ document.addEventListener("DOMContentLoaded", () => {
         ) {
             cerrarModal();
         }
+
+        // También cerrar el modal de inventario con Escape
+        if (
+            event.key === "Escape" &&
+            modalInv &&
+            modalInv.classList.contains("show")
+        ) {
+            cerrarInventarioModal();
+        }
     });
 
     /* =====================================================
@@ -744,15 +1194,27 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await respuesta.json();
 
             if (!respuesta.ok || !data.ok) {
-                alert(data.msg || "Error al guardar el inventario.");
+                mostrarInventarioModal({
+                    tipo: "error",
+                    titulo: "No se pudo guardar",
+                    mensaje: data.msg || "Ocurrió un error al guardar el inventario."
+                });
                 return;
             }
 
-            alert(data.msg || "Inventario guardado correctamente.");
+            mostrarInventarioModal({
+                tipo: "success",
+                titulo: "Inventario guardado",
+                mensaje: data.msg || "Se guardó correctamente."
+            });
 
         } catch (error) {
             console.error(error);
-            alert("Error de conexión al guardar el inventario.");
+            mostrarInventarioModal({
+                tipo: "error",
+                titulo: "Error de conexión",
+                mensaje: "No se pudo conectar con el servidor. Intenta de nuevo."
+            });
 
         } finally {
             guardarInventarioBtn.disabled = false;

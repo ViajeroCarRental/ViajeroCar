@@ -378,73 +378,121 @@ body {
 }
 
 /* ============================================
-   RESPONSIVE TOPBAR
+   RESPONSIVE TOPBAR - CORREGIDO
    ============================================ */
 @media (max-width: 768px) {
     .topbar-contrato {
         width: calc(100% - 16px);
         border-radius: 40px;
-        padding: 4px 12px;
+        padding: 3px 8px;
         margin: 0 auto 10px;
+        overflow: hidden !important;
     }
     .topbar-contrato.scrolled {
-        padding: 3px 12px;
+        padding: 3px 8px;
     }
+
     .nav-contrato {
         display: flex !important;
         flex-direction: row !important;
         align-items: center !important;
         justify-content: space-between !important;
-        gap: 4px !important;
+        gap: 3px !important;
         padding: 0 !important;
         flex-wrap: nowrap !important;
+        min-width: 0 !important;
+        min-height: 34px !important;
     }
-    .brand-subtitle,
-    .resumen-dias,
-    .resumen-usd,
-    .btn-regresar-wrapper {
+
+    /* ===== IZQUIERDA: Icono + VIAJERO + Contador días ===== */
+    .brand-contrato {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 3px !important;
+        font-size: 0.7rem !important;
+        padding: 0 !important;
+        flex-wrap: nowrap !important;
+        flex-shrink: 0 !important;
+        min-width: 0 !important;
+    }
+    .brand-contrato i {
+        font-size: 0.7rem !important;
+        flex-shrink: 0 !important;
+    }
+    .brand-separator {
         display: none !important;
     }
+    .brand-subtitle {
+        display: none !important;
+    }
+
+    /* Contador de días - visible en móvil */
+    .contador-dias-contrato {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 2px !important;
+        padding: 1px 5px !important;
+        border-radius: 999px !important;
+        background: rgba(255, 255, 255, 0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: #fff !important;
+        font-weight: 800 !important;
+        font-size: 0.5rem !important;
+        white-space: nowrap !important;
+        line-height: 1.2 !important;
+        flex-shrink: 0 !important;
+        margin-left: 2px !important;
+    }
+    .contador-dias-contrato i {
+        font-size: 0.45rem !important;
+        opacity: 0.9 !important;
+    }
+    .contador-dias-num {
+        font-size: 0.55rem !important;
+        font-weight: 900 !important;
+    }
+    .contador-dias-txt {
+        display: inline !important;
+        font-size: 0.45rem !important;
+        font-weight: 700 !important;
+        opacity: 0.9 !important;
+    }
+
+    /* ===== CENTRO: Número de contrato ===== */
     .contrato-info {
         display: inline-block !important;
-        background: transparent !important;
-        padding: 0 !important;
-        border-radius: 0 !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        padding: 1px 6px !important;
+        border-radius: 12px !important;
         margin: 0 !important;
         width: auto !important;
-        flex-shrink: 0 !important;
+        flex-shrink: 1 !important;
+        min-width: 0 !important;
     }
     .contrato-numero {
         font-size: 0 !important;
         color: transparent !important;
         font-weight: 400 !important;
+        line-height: 1 !important;
     }
     .contrato-numero strong {
-        font-size: 0.65rem !important;
-        color: #fff !important;
-        background: rgba(255, 255, 255, 0.15) !important;
-        padding: 1px 6px !important;
-        border-radius: 12px !important;
-        margin-left: 0 !important;
-        font-weight: 700 !important;
-        display: inline-block !important;
-    }
-    .brand-contrato {
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
-        gap: 4px !important;
-        font-size: 0.85rem !important;
+        font-size: 0.6rem !important;
+        color: #ffffff !important;
+        background: transparent !important;
         padding: 0 !important;
-        flex-wrap: nowrap !important;
-        flex-shrink: 0 !important;
+        border-radius: 0 !important;
+        margin-left: 0 !important;
+        font-weight: 800 !important;
+        display: inline-block !important;
+        letter-spacing: 0.3px !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
     }
-    .brand-contrato i {
-        font-size: 0.8rem !important;
-    }
-    .brand-separator {
-        display: none !important;
-    }
+
+    /* ===== DERECHA: Campanita + Carrito ===== */
     .nav-actions-contrato {
         display: flex !important;
         align-items: center !important;
@@ -452,25 +500,95 @@ body {
         margin: 0 !important;
         padding: 0 !important;
         flex-shrink: 0 !important;
+        gap: 3px !important;
+        min-width: 0 !important;
     }
+
+    /* --- Campanita --- */
+    .campanita-wrapper {
+        display: flex !important;
+        align-items: center !important;
+        flex-shrink: 0 !important;
+        position: relative !important;
+    }
+    .btn-campanita-contrato {
+        width: 26px !important;
+        height: 26px !important;
+        border-radius: 50% !important;
+        padding: 0 !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: #fff !important;
+        cursor: pointer !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s ease !important;
+        flex-shrink: 0 !important;
+    }
+    .btn-campanita-contrato i {
+        font-size: 0.65rem !important;
+    }
+    .campanita-badge {
+        position: absolute !important;
+        top: -2px !important;
+        right: -2px !important;
+        min-width: 13px !important;
+        height: 13px !important;
+        padding: 0 3px !important;
+        background: #fff !important;
+        color: var(--brand) !important;
+        border-radius: 999px !important;
+        font-size: 7px !important;
+        font-weight: 900 !important;
+        line-height: 13px !important;
+        text-align: center !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+    }
+    .campanita-badge.is-empty {
+        display: none !important;
+    }
+
+    /* --- Carrito / Resumen --- */
     .resumen-wrapper {
         display: flex !important;
         align-items: center !important;
-        justify-content: flex-end !important;
+        justify-content: center !important;
         width: auto !important;
-        padding: 0 !important;
+        padding: 1px 6px 1px 4px !important;
         gap: 2px !important;
-        background: transparent !important;
-        border-radius: 0 !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        border-radius: 30px !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        min-height: 24px !important;
+        flex-shrink: 0 !important;
+        position: relative !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+    }
+    .resumen-dias {
+        display: none !important;
     }
     .btn-resumen-contrato {
+        display: flex !important;
+        align-items: center !important;
         gap: 2px !important;
         padding: 0 !important;
-        font-size: 0.7rem !important;
+        font-size: 0.55rem !important;
+        background: transparent !important;
+        border: none !important;
+        color: #ffffff !important;
+        font-weight: 800 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        min-height: 20px !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
     }
     .btn-resumen-contrato i:first-child {
-        font-size: 0.6rem !important;
-        opacity: 0.8 !important;
+        font-size: 0.55rem !important;
+        opacity: 0.9 !important;
+        flex-shrink: 0 !important;
     }
     .resumen-totales-container {
         display: flex !important;
@@ -478,25 +596,67 @@ body {
         align-items: baseline !important;
         gap: 2px !important;
         line-height: 1 !important;
+        min-width: 0 !important;
     }
     #btnTotalTextContrato {
-        font-size: 0.7rem !important;
+        font-size: 0.6rem !important;
         font-weight: 900 !important;
         line-height: 1 !important;
+        letter-spacing: -0.2px !important;
+        white-space: nowrap !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    .resumen-usd {
+        display: none !important;
     }
     #iconoFlechaResumen {
-        font-size: 0.5rem !important;
+        font-size: 0.4rem !important;
         opacity: 0.7 !important;
+        flex-shrink: 0 !important;
+        transition: transform 0.2s ease !important;
     }
+    #iconoFlechaResumen.rotada {
+        transform: rotate(180deg) !important;
+    }
+
+    /* --- Badge del carrito (cantidad de items) --- */
+    .cart-badge {
+        position: absolute !important;
+        top: -4px !important;
+        right: -3px !important;
+        min-width: 14px !important;
+        height: 14px !important;
+        padding: 0 3px !important;
+        background: #fff !important;
+        color: var(--brand) !important;
+        border-radius: 999px !important;
+        font-size: 8px !important;
+        font-weight: 900 !important;
+        line-height: 14px !important;
+        text-align: center !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+        pointer-events: none !important;
+    }
+    .cart-badge.is-empty {
+        display: none !important;
+    }
+
+    /* --- Desplegable del resumen --- */
     .resumen-desplegable-contrato {
         position: absolute !important;
         top: calc(100% + 6px) !important;
         right: 0 !important;
         left: auto !important;
         width: 320px !important;
+        max-width: calc(100vw - 20px) !important;
         z-index: 1001 !important;
+        display: none !important;
     }
-    .resumen-desplegable-contrato.visible {
+    .resumen-desplegable-contrato.visible,
+    .resumen-desplegable-contrato.abierto {
         display: block !important;
         animation: fadeInDownMobile 0.25s ease !important;
     }
@@ -514,10 +674,88 @@ body {
         width: 100% !important;
         border-radius: 16px !important;
         max-height: 70vh !important;
+        overflow: hidden !important;
     }
     .resumen-card-contrato .cnt {
         max-height: 55vh !important;
         overflow-y: auto !important;
+    }
+}
+
+/* ---------- MÓVIL MUY PEQUEÑO (≤ 400px) ---------- */
+@media (max-width: 400px) {
+    .topbar-contrato {
+        padding: 2px 5px !important;
+        border-radius: 30px !important;
+    }
+    .nav-contrato {
+        gap: 2px !important;
+        min-height: 28px !important;
+    }
+    .brand-contrato {
+        font-size: 0.55rem !important;
+        gap: 2px !important;
+    }
+    .brand-contrato i {
+        font-size: 0.55rem !important;
+    }
+    .contador-dias-contrato {
+        font-size: 0.4rem !important;
+        padding: 1px 3px !important;
+    }
+    .contador-dias-num {
+        font-size: 0.45rem !important;
+    }
+    .contador-dias-txt {
+        font-size: 0.35rem !important;
+    }
+    .contrato-numero strong {
+        font-size: 0.5rem !important;
+    }
+    .btn-campanita-contrato {
+        width: 22px !important;
+        height: 22px !important;
+    }
+    .btn-campanita-contrato i {
+        font-size: 0.5rem !important;
+    }
+    .campanita-badge {
+        min-width: 11px !important;
+        height: 11px !important;
+        font-size: 6px !important;
+        line-height: 11px !important;
+        top: -2px !important;
+        right: -2px !important;
+    }
+    .resumen-wrapper {
+        padding: 1px 4px 1px 3px !important;
+        min-height: 20px !important;
+    }
+    .btn-resumen-contrato {
+        font-size: 0.45rem !important;
+        min-height: 18px !important;
+    }
+    .btn-resumen-contrato i:first-child {
+        font-size: 0.45rem !important;
+    }
+    #btnTotalTextContrato {
+        font-size: 0.5rem !important;
+    }
+    #iconoFlechaResumen {
+        font-size: 0.35rem !important;
+    }
+    .cart-badge {
+        min-width: 12px !important;
+        height: 12px !important;
+        font-size: 7px !important;
+        line-height: 12px !important;
+        top: -3px !important;
+        right: -2px !important;
+    }
+    .resumen-desplegable-contrato {
+        width: calc(100vw - 16px) !important;
+        right: 8px !important;
+        left: 8px !important;
     }
 }
 
@@ -944,6 +1182,21 @@ body {
     background: #f1f5f9;
 }
 
+/* ===== CONTADOR DE DÍAS ===== */
+.contador-dias-contrato {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 999px;
+    background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.25);
+    color: #fff; font-weight: 800; font-size: .82rem; white-space: nowrap; line-height: 1;
+}
+.contador-dias-contrato i { font-size: .8rem; opacity: .9; }
+.contador-dias-num { font-size: .98rem; font-weight: 900; }
+.contador-dias-txt { font-weight: 700; opacity: .95; }
+
+@media (max-width: 768px) {
+    .contador-dias-contrato { padding: 4px 9px; font-size: .75rem; }
+    .contador-dias-contrato .contador-dias-txt { display: none; } /* en móvil solo el número */
+}
 /* ============================================
    PASOS - OCULTAR/MOSTRAR
    ============================================ */
@@ -1190,7 +1443,7 @@ body {
     position: relative;
     border: 2px dashed #cbd5e1;
     border-radius: 10px;
-    min-height: 130px;
+    min-height: 190px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1242,6 +1495,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
+    min-height: 190px;
     background: #fff;
     border-radius: 8px;
     z-index: 10;
@@ -1249,15 +1503,21 @@ body {
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    padding: 8px;
+    box-sizing: border-box;
 }
 .step[data-step="4"] .uploader .preview:empty {
     display: none !important;
 }
 .step[data-step="4"] .uploader .preview img {
-    width: 100%;
-    height: 100%;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
-    padding: 8px;
+    object-position: center;
+    box-sizing: border-box;
+    display: block;
 }
 .search-conductor-wrapper {
     position: relative;
@@ -1374,21 +1634,22 @@ body {
     background: #f1f5f9;
 }
 .step[data-step="4"] .acciones-finales .btn.primary {
-    background: var(--brand);
+    background: #16a34a;
     color: #fff;
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.20);
 }
+
 .step[data-step="4"] .acciones-finales .btn.primary:hover {
-    background: var(--brand-2);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    background: #15803d;
+    box-shadow: 0 4px 12px rgba(21, 128, 61, 0.30);
 }
 .step[data-step="4"] .acciones-finales .btn.success {
-    background: #10b981;
+    background: #d6121f;
     color: #fff;
     box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
 }
 .step[data-step="4"] .acciones-finales .btn.success:hover {
-    background: #059669;
+    background: #a50e18;
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 .step[data-step="4"] .mt-12 {
@@ -1427,11 +1688,11 @@ body {
     color: #fff;
 }
 .step[data-step="4"] .acciones-finales .btn.btn-saltar {
-    background: #10b981;
+    background: #d6121f;
     color: #fff;
 }
 .step[data-step="4"] .acciones-finales .btn.btn-saltar:hover {
-    background: #059669;
+    background: #a50e18;
 }
 .step[data-step="4"] .campo-hint {
     display: flex;
@@ -1522,7 +1783,7 @@ body {
         padding: 10px;
     }
     .step[data-step="4"] .uploader {
-        min-height: 100px;
+        min-height: 150px;
     }
 }
 @media (max-width: 480px) {
@@ -4352,5 +4613,157 @@ body.fp-modal-abierto #clearPaso5Adicional {
     .step[data-step="5"] .acciones-finales .btn.gray::before,
     .step[data-step="5"] .acciones-finales .btn-continuar-yellow::after {
         font-size: 13px;
+    }
+}
+
+/* ===== CAMPANITA DE COMENTARIOS ===== */
+.nav-actions-contrato { display: flex; align-items: center; gap: 10px; }
+
+.campanita-wrapper { position: relative; display: flex; align-items: center; }
+
+.btn-campanita-contrato {
+    position: relative; display: flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border-radius: 50%; padding: 0; cursor: pointer;
+    background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.25);
+    color: #fff; transition: all .2s ease;
+}
+.btn-campanita-contrato:hover { background: rgba(255,255,255,0.3); transform: translateY(-1px); }
+.btn-campanita-contrato i { font-size: 1rem; }
+.btn-campanita-contrato.tiene-comentarios i { animation: campanaSuena .6s ease; }
+@keyframes campanaSuena {
+    0%,100% { transform: rotate(0); } 20% { transform: rotate(-15deg); }
+    40% { transform: rotate(12deg); } 60% { transform: rotate(-8deg); } 80% { transform: rotate(5deg); }
+}
+.campanita-badge {
+    position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px;
+    background: #fff; color: var(--brand); border-radius: 999px; font-size: 11px; font-weight: 900;
+    line-height: 18px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,.25);
+}
+.campanita-badge.is-empty { display: none; }
+
+.comentarios-desplegable {
+    position: absolute; top: calc(100% + 12px); right: 0; width: 360px;
+    max-width: calc(100vw - 32px); z-index: 1500; animation: fadeInDown .25s ease;
+}
+.comentarios-card {
+    background: #fff; border-radius: 20px; border: 1px solid var(--stroke);
+    box-shadow: 0 25px 50px rgba(0,0,0,.25); overflow: hidden;
+    display: flex; flex-direction: column; max-height: calc(100vh - 120px);
+}
+.comentarios-head {
+    background: linear-gradient(135deg,#f8fafc,#fff); padding: 16px 20px; font-weight: 900;
+    color: var(--brand); border-bottom: 2px solid var(--brand); display: flex; align-items: center;
+    gap: 10px; font-size: .95rem; flex: 0 0 auto;
+}
+.comentarios-lista {
+    padding: 16px 18px; overflow-y: auto; flex: 1 1 auto; min-height: 60px; max-height: 320px;
+    display: flex; flex-direction: column; gap: 10px; background: #f8fafc;
+}
+.comentario-item {
+    background: #fff; border: 1px solid #eef2f6; border-left: 3px solid var(--brand);
+    border-radius: 10px; padding: 10px 14px; font-size: .85rem; color: #334155; line-height: 1.5;
+    word-break: break-word; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.comentario-item .comentario-fecha {
+    display: block; font-size: .68rem; font-weight: 800; color: #94a3b8;
+    text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px;
+}
+.comentarios-vacio { text-align: center; color: #94a3b8; font-style: italic; font-size: .85rem; padding: 24px 10px; }
+.comentarios-form { padding: 14px 16px; border-top: 1px solid var(--stroke); background: #fff; flex: 0 0 auto; }
+.comentario-textarea {
+    width: 100%; box-sizing: border-box; border: 1.5px solid #e2e8f0; border-radius: 12px;
+    padding: 10px 12px; font-size: .85rem; font-family: inherit; resize: vertical; min-height: 60px;
+    transition: border-color .2s ease;
+}
+.comentario-textarea:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(255,30,45,.12); }
+.btn-agregar-comentario {
+    width: 100%; margin-top: 10px; padding: 11px 14px; border: none; border-radius: 12px;
+    background: var(--brand); color: #fff; font-weight: 800; font-size: .88rem; cursor: pointer;
+    transition: all .2s ease; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-agregar-comentario:hover { background: var(--brand-2); transform: translateY(-1px); }
+.btn-agregar-comentario:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+@media (max-width: 768px) {
+    .nav-actions-contrato { gap: 6px; }
+    .btn-campanita-contrato { width: 32px; height: 32px; }
+    .btn-campanita-contrato i { font-size: .85rem; }
+    .comentarios-desplegable { position: fixed; top: 64px; left: 12px; right: 12px; width: auto; max-width: none; }
+}
+/* ============================================================================
+   FIX NAVBAR RESPONSIVE
+   1) MÓVIL: que el total ("$… MXN") no se salga del borde redondeado.
+   2) TABLET VERTICAL: ocultar "No. Contrato:", mostrar solo el número.
+   ============================================================================ */
+
+/* ---------- 1) MÓVIL (≤768px): total contenido dentro de la píldora ---------- */
+@media (max-width: 768px) {
+
+    /* La navbar y sus contenedores no deben permitir desborde */
+    .topbar-contrato {
+        overflow: hidden !important;
+    }
+    .nav-contrato {
+        min-width: 0 !important;
+    }
+
+    /* Que el bloque de acciones pueda encogerse (clave para que no empuje hacia afuera) */
+    .nav-actions-contrato,
+    .resumen-wrapper {
+        min-width: 0 !important;
+        overflow: hidden !important;
+    }
+
+    .btn-resumen-contrato {
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    /* El contenedor del total puede reducirse */
+    .resumen-totales-container {
+        min-width: 0 !important;
+    }
+
+    /* EL FIX REAL: el monto ("$… MXN") no fuerza ancho y se recorta con … si hace falta */
+    #btnTotalTextContrato {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    /* El número de contrato tampoco debe empujar; que ceda espacio al total */
+    .contrato-info {
+        min-width: 0 !important;
+        flex-shrink: 1 !important;
+    }
+    .contrato-numero strong {
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+}
+
+/* ---------- 2) TABLET VERTICAL (769–1024px, portrait): solo el número ---------- */
+@media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
+
+    /* Ocultar el texto "No. Contrato:" dejando visible únicamente el número (el <strong>) */
+    .contrato-numero {
+        font-size: 0 !important;      /* colapsa el texto "No. Contrato:" */
+        color: transparent !important;
+        line-height: 1 !important;
+    }
+
+    /* Restaurar el número para que se vea normal */
+    .contrato-numero strong {
+        font-size: 0.85rem !important;
+        color: #ffffff !important;
+        margin-left: 0 !important;
+        display: inline-block !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        padding: 2px 8px !important;
+        border-radius: 12px !important;
     }
 }

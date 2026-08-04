@@ -616,6 +616,13 @@ class Contrato2Controller extends ContratoBaseController
                 $idConductor = $c['id_conductor'] ?? null;
                 $esTitular   = isset($c['es_titular']) && $c['es_titular'] == '1';
 
+                // El titular SIEMPRE debe guardarse con id_conductor = NULL.
+                // El formulario envía value="" (cadena vacía), que en SQL NO es NULL
+                // y rompe la lectura posterior (whereNull) en el contrato final.
+                if ($esTitular || $idConductor === '' || $idConductor === '0') {
+                    $idConductor = null;
+                }
+
                 if ($esTitular) {
                     DB::table('reservaciones')->where('id_reservacion', $idReservacion)->update([
                         'nombre_cliente'    => $c['nombre'],
