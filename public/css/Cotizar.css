@@ -4166,6 +4166,102 @@ input.flatpickr-input.field-success {
     width: 100%;
 }
 
+/* Píldora de días en el header del modal de protecciones */
+#proteccionPop .prote-dias-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    background: rgba(167, 243, 208, 0.9) !important;
+    border: 1px solid rgba(34, 197, 94, 0.35) !important;
+    border-radius: 40px !important;
+    padding: 6px 14px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #166534 !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
+#proteccionPop .prote-dias-pill i {
+    font-size: 15px !important;
+    color: #166534 !important;
+}
+
+#proteccionPop .prote-dias-pill .prote-dias-num {
+    font-weight: 900 !important;
+}
+
+@media (max-width: 768px) {
+    #proteccionPop .modal-head {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px 12px !important;
+    }
+    #proteccionPop .modal-title {
+        font-size: 15px;
+        gap: 8px;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+    #proteccionPop .prote-dias-pill {
+        padding: 4px 10px !important;
+        font-size: 11px !important;
+        gap: 5px !important;
+        order: 1;
+    }
+    #proteccionPop .prote-dias-pill i {
+        font-size: 13px !important;
+    }
+    #proteccionPop .btn-cart-header {
+        padding: 4px 10px !important;
+        margin-right: 6px !important;
+    }
+    #proteccionPop .btn-cart-header .cart-header-total {
+        font-size: 11px !important;
+    }
+    #proteccionPop .btn-cart-header i {
+        font-size: 14px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #proteccionPop .modal-head {
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 8px 10px !important;
+    }
+    #proteccionPop .modal-title {
+        flex: 1 1 100%;
+        font-size: 14px;
+        gap: 6px;
+        order: 0;
+    }
+    #proteccionPop .prote-dias-pill {
+        padding: 3px 8px !important;
+        font-size: 10px !important;
+        gap: 4px !important;
+        order: 1;
+    }
+    #proteccionPop .prote-dias-pill i {
+        font-size: 12px !important;
+    }
+    #proteccionPop .btn-cart-header {
+        padding: 3px 8px !important;
+        margin-right: auto !important;
+        order: 2;
+    }
+    #proteccionPop .btn-cart-header .cart-header-total {
+        font-size: 10px !important;
+    }
+    #proteccionPop .btn-cart-header i {
+        font-size: 13px !important;
+    }
+    #proteccionPop #proteClose {
+        order: 3;
+    }
+}
+
 #proteccionPop .modal-title {
     flex: 1;
     text-align: left;
@@ -4204,22 +4300,6 @@ input.flatpickr-input.field-success {
     font-weight: 700;
     color: #ffffff;
     letter-spacing: -0.2px;
-}
-
-.btn-cart-header .cart-header-badge {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    color: white;
-    font-size: 10px;
-    font-weight: 900;
-    padding: 2px 6px;
-    border-radius: 30px;
-    min-width: 18px;
-    text-align: center;
-    display: none;
-}
-
-.btn-cart-header .cart-header-badge:not(:empty) {
-    display: inline-flex;
 }
 
 .btn-cart-header {
@@ -5808,4 +5888,64 @@ input.flatpickr-input.field-success {
   .vr-emoji-stage { width: 100%; max-width: 240px; }
   .vr-update-msg { font-size: .95rem; }
   .vr-icon-thumb { width: 64px; height: 64px; }
+}
+
+
+/* =========================================================
+   FILTRO PROTECCIONES INDIVIDUALES (chips)  — (agregado)
+========================================================= */
+#proteccionPop .filtro-individuales {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 2px 16px;
+    margin-bottom: 4px;
+}
+#proteccionPop .filtro-chip {
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    color: #374151;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: .15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+#proteccionPop .filtro-chip:hover {
+    background: #f8fafc;
+    border-color: #d1d5db;
+}
+/* Chip activo (rojo) */
+#proteccionPop .filtro-chip.is-active {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(239, 68, 68, .25);
+}
+/* Chip con protección seleccionada (verde + palomita) */
+#proteccionPop .filtro-chip.has-selection {
+    background: #dcfce7;
+    border-color: #86efac;
+    color: #15803d;
+}
+#proteccionPop .filtro-chip.has-selection::after {
+    content: " \2713";
+    font-weight: 900;
+}
+/* Si un chip está activo y además tiene selección, gana el estilo activo */
+#proteccionPop .filtro-chip.is-active.has-selection {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: #ffffff;
+}
+
+/* Ocultar grupos filtrados (gana a los display:flex !important de .scroll-h por especificidad) */
+#proteccionPop .cat-title.filtro-oculto,
+#proteccionPop .tab-panel#tab-individuales .scroll-h.filtro-oculto {
+    display: none !important;
 }

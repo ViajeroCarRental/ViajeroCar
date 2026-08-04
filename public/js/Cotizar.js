@@ -1,4 +1,3 @@
-
 (function (global) {
     'use strict';
 
@@ -1424,6 +1423,58 @@ function getGrupoLabelFromTrack(trackId) {
     return map[trackId] || "";
 }
 
+// =========================================
+// FILTRO DE PROTECCIONES INDIVIDUALES (chips)
+// =========================================
+const FILTRO_GRUPO_LABEL = {
+    colision: "Colisión y robo",
+    medicos: "Gastos médicos",
+    camino: "Asistencia para el camino",
+    terceros: "Daños a terceros",
+    auto: "Protecciones automáticas",
+};
+
+// Marca en verde (+ palomita) los chips cuyo grupo tiene alguna selección.
+function actualizarChipsFiltro() {
+    if (!window.state || !window.state.individuales) return;
+    const gruposSeleccionados = new Set();
+    state.individuales.forEach((it) => { if (it.grupo) gruposSeleccionados.add(it.grupo); });
+    qsa('#filtroIndividuales .filtro-chip').forEach((chip) => {
+        const key = chip.dataset.filtro;
+        if (key === "todas") return;
+        chip.classList.toggle("has-selection", gruposSeleccionados.has(FILTRO_GRUPO_LABEL[key]));
+    });
+}
+
+// Muestra sólo el grupo elegido (o todos con "todas").
+function aplicarFiltroIndividuales(filtro) {
+    qsa('#tab-individuales .cat-title').forEach((titulo) => {
+        const grupo = titulo.dataset.grupo;
+        if (!grupo) return;
+        const ocultar = !(filtro === "todas" || grupo === filtro);
+        titulo.classList.toggle("filtro-oculto", ocultar);
+        const grid = titulo.nextElementSibling;
+        if (grid && grid.classList.contains("scroll-h")) {
+            grid.classList.toggle("filtro-oculto", ocultar);
+        }
+    });
+    qsa('#filtroIndividuales .filtro-chip').forEach((chip) => {
+        chip.classList.toggle("is-active", chip.dataset.filtro === filtro);
+    });
+}
+
+// Enlaza los clics de los chips (una sola vez).
+function initFiltroIndividuales() {
+    const barra = qs('#filtroIndividuales');
+    if (!barra || barra.dataset.bound === "1") return;
+    barra.dataset.bound = "1";
+    qsa('#filtroIndividuales .filtro-chip').forEach((chip) => {
+        chip.addEventListener("click", () => aplicarFiltroIndividuales(chip.dataset.filtro || "todas"));
+    });
+    aplicarFiltroIndividuales("todas");
+    actualizarChipsFiltro();
+}
+
 function inicializarEstadoProteccionesIndividuales() {
     if (!window.state || !window.state.individuales) return;
 
@@ -1435,10 +1486,8 @@ function inicializarEstadoProteccionesIndividuales() {
                 const nombre = (prot.nombre || "").toUpperCase();
                 const grupo = prot.grupo || "";
                 const esLI = nombre === "LI" || (nombre.includes("LI") && !nombre.includes("EXT") && !nombre.includes("ALI"));
-                const esAutomatica = (grupo === "Protecciones automáticas" || grupo === "automaticas");
-                const esDecline = nombre.includes("DECLINE") || nombre.includes("CDW DECLINE");
 
-                if (esAutomatica || esLI || esDecline) {
+                if (esLI) {
                     state.individuales.set(String(prot.id), {
                         id: String(prot.id),
                         nombre: prot.nombre,
@@ -1467,15 +1516,6 @@ function inicializarEstadoProteccionesIndividuales() {
         const nombre = (card.querySelector("h4")?.textContent?.trim() || "").toUpperCase();
 
         const esLI = nombre === "LI" || (nombre.includes("LI") && !nombre.includes("EXT") && !nombre.includes("ALI"));
-        const esAutomatica = (grupo === "Protecciones automáticas");
-
-        if (esAutomatica) {
-            if (!state.individuales.has(id)) {
-                const precio = Number(card.dataset.precio || 0);
-                const desc = card.dataset.descripcion || card.querySelector("p")?.textContent?.trim() || "";
-                state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
-            }
-        }
 
         if (grupo === "Daños a terceros") {
             if (esLI) liItem = { card, id, nombre, grupo };
@@ -1493,12 +1533,6 @@ function inicializarEstadoProteccionesIndividuales() {
             const precio = Number(liItem.card.dataset.precio || 0);
             const desc = liItem.card.dataset.descripcion || liItem.card.querySelector("p")?.textContent?.trim() || "";
             state.individuales.set(liItem.id, { id: liItem.id, nombre: liItem.nombre, desc, precio, charge: "por_dia", grupo: liItem.grupo });
-        }
-
-        if (cdwDeclineItem && !tieneOtraProteccionColisionActiva && !state.individuales.has(cdwDeclineItem.id)) {
-            const precio = Number(cdwDeclineItem.card.dataset.precio || 0);
-            const desc = cdwDeclineItem.card.dataset.descripcion || cdwDeclineItem.card.querySelector("p")?.textContent?.trim() || "";
-            state.individuales.set(cdwDeclineItem.id, { id: cdwDeclineItem.id, nombre: cdwDeclineItem.nombre, desc, precio, charge: "por_dia", grupo: cdwDeclineItem.grupo });
         }
         window._proteccionesInicializadas = true;
     } else {
@@ -1521,12 +1555,9 @@ function toggleIndividualFromCard(card) {
     const grupo = getGrupoLabelFromTrack(parentTrack);
 
     const nombreUpper = nombre.toUpperCase();
-    const esAutomatica = (grupo === "Protecciones automáticas");
 
-    if (esAutomatica) {
-        console.log("🔒 Esta protección automática está bloqueada.");
-        return;
-    }
+    // (COTIZACIONES) Las Protecciones automaticas (LA, LOU) ya NO estan bloqueadas:
+    // el usuario las puede prender/apagar manualmente y de forma independiente.
 
     if (state.individuales.has(id)) {
         state.individuales.delete(id);
@@ -1543,6 +1574,9 @@ function toggleIndividualFromCard(card) {
         state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
         console.log(`✅ Activada: ${nombre}`);
     }
+
+    // Acople: prender/apagar las protecciones automáticas (LOU y LA) según Colisión y robo.
+    verificarProteccionesAutomaticas();
 
     ejecutarRepaintYRefresh();
 }
@@ -1567,15 +1601,11 @@ function repaintIndividualesUI() {
         const sw = card.querySelector(".switch-individual");
         if (sw) sw.classList.toggle("is-on", on);
 
-        if (grupo === "Protecciones automáticas") {
-            card.classList.add("locked-protection");
-            card.style.cursor = "not-allowed";
-            if (sw) sw.style.opacity = "0.6";
-        } else {
-            card.classList.remove("locked-protection");
-            card.style.cursor = "pointer";
-            if (sw) sw.style.opacity = "1";
-        }
+        // (COTIZACIONES) Se quito el bloqueo visual de las Protecciones automaticas
+        // para que se vean y se puedan seleccionar como cualquier otra proteccion.
+        card.classList.remove("locked-protection");
+        card.style.cursor = "pointer";
+        if (sw) sw.style.opacity = "1";
     });
 }
 
@@ -1588,22 +1618,25 @@ function ejecutarRepaintYRefresh() {
 }
 
 function verificarProteccionesAutomaticas() {
+    // (COTIZACIONES) Las Protecciones automáticas (LOU y LA) se prenden
+    // automáticamente cuando hay alguna protección de "Colisión y robo"
+    // seleccionada, y se apagan cuando no queda ninguna.
     const tarjetasAutomaticas = document.querySelectorAll("#insAutoTrack .individual-item");
     if (tarjetasAutomaticas.length === 0) return;
-    let otrasCategoriasActivas = 0;
+
+    let hayColision = false;
     for (const [_, item] of state.individuales.entries()) {
-        if (item.grupo && item.grupo !== "Protecciones automáticas") {
-            otrasCategoriasActivas++;
-        }
+        if (item.grupo === "Colisión y robo") { hayColision = true; break; }
     }
-    if (otrasCategoriasActivas > 0) {
+
+    if (hayColision) {
         tarjetasAutomaticas.forEach(card => {
             const autoId = String(card.dataset.id || "");
+            if (!autoId) return;
             if (!state.individuales.has(autoId)) {
                 const autoPrecio = Number(card.dataset.precio || 0);
                 const autoNombre = card.querySelector("h4")?.textContent?.trim() || "Protección automática";
-                const autoDesc = card.querySelector("p")?.textContent?.trim() || "";
-
+                const autoDesc = card.dataset.descripcion || card.querySelector("p")?.textContent?.trim() || "";
                 state.individuales.set(autoId, {
                     id: autoId,
                     nombre: autoNombre,
@@ -1616,8 +1649,7 @@ function verificarProteccionesAutomaticas() {
         });
     } else {
         tarjetasAutomaticas.forEach(card => {
-            const autoId = String(card.dataset.id || "");
-            state.individuales.delete(autoId);
+            state.individuales.delete(String(card.dataset.id || ""));
         });
     }
 }
@@ -1630,6 +1662,7 @@ function repaintIndividualesUI() {
         const sw = card.querySelector(".switch-individual");
         if (sw) sw.classList.toggle("is-on", on);
     });
+    actualizarChipsFiltro();
 }
 
 // =========================================
@@ -1651,7 +1684,7 @@ function inicializarYReglarProtecciones() {
 
         if (!inputSwitch) return;
 
-        if (grupo === "daños_terceros" && (nombre.includes("li") || nombre.includes("responsabilidad civil")) || grupo === "automaticas") {
+        if (grupo === "daños_terceros" && (nombre.includes("li") || nombre.includes("responsabilidad civil"))) {
             inputSwitch.checked = true;
             inputSwitch.disabled = true;
             card.classList.add('selected', 'locked');
@@ -1669,24 +1702,6 @@ function inicializarYReglarProtecciones() {
             }
         }
     });
-
-    if (cdwDeclineCard) {
-        const switchDecline = cdwDeclineCard.querySelector('input[type="checkbox"]');
-        if (switchDecline) {
-            if (!tieneOtraProteccionColisionActiva) {
-                if (!switchDecline.dataset.inicializado) {
-                    switchDecline.checked = true;
-                    cdwDeclineCard.classList.add('selected');
-                    guardarProteccionEnState(cdwDeclineCard, true);
-                    switchDecline.dataset.inicializado = "true";
-                }
-            } else {
-                switchDecline.checked = false;
-                cdwDeclineCard.classList.remove('selected');
-                guardarProteccionEnState(cdwDeclineCard, false);
-            }
-        }
-    }
 
     itemsIndividuales.forEach(card => {
         const inputSwitch = card.querySelector('input[type="checkbox"]');
@@ -1929,7 +1944,6 @@ function preseleccionarProteccionesIndividuales() {
 
     let idLI = null;
     let datosLI = null;
-    const idsProteccionesAuto = [];
 
     todasLasTarjetas.forEach(card => {
         const nombre = card.querySelector('h4')?.textContent?.trim() || '';
@@ -1949,10 +1963,6 @@ function preseleccionarProteccionesIndividuales() {
             idLI = id;
             datosLI = { id, nombre, desc, precio, grupo };
         }
-
-        if (grupo === 'Protecciones automáticas') {
-            idsProteccionesAuto.push({ id, nombre, desc, precio, grupo });
-        }
     });
 
     if (idLI && datosLI && !state.individuales.has(idLI)) {
@@ -1967,20 +1977,6 @@ function preseleccionarProteccionesIndividuales() {
         console.log(`✅ LI fijo agregado: ${datosLI.nombre}`);
     }
 
-    idsProteccionesAuto.forEach(auto => {
-        if (!state.individuales.has(auto.id)) {
-            state.individuales.set(auto.id, {
-                id: auto.id,
-                nombre: auto.nombre,
-                desc: auto.desc,
-                precio: auto.precio,
-                charge: 'por_dia',
-                grupo: 'Protecciones automáticas'
-            });
-            console.log(`✅ Protección automática agregada: ${auto.nombre}`);
-        }
-    });
-
     repaintIndividualesUI();
     refreshProteccionUIHeader();
     syncIndividualesHidden();
@@ -1989,6 +1985,56 @@ function preseleccionarProteccionesIndividuales() {
 
     console.log('🎯 Preselección de LI y automáticas completada.');
 }
+
+// Preselecciona en el MODAL: LI + DECLINE CDW + automáticas (LOU, LA)
+function preseleccionarModalCompleto() {
+    const todasLasTarjetas = document.querySelectorAll('.individual-item');
+    if (!todasLasTarjetas.length) return;
+
+    let idLI = null, datosLI = null;
+    let idDecline = null, datosDecline = null;
+    const idsAuto = [];
+
+    todasLasTarjetas.forEach(card => {
+        const nombre = card.querySelector('h4')?.textContent?.trim() || '';
+        const nombreUpper = nombre.toUpperCase();
+        const parentTrack = card.closest('.scroll-h')?.id || '';
+        const grupo = getGrupoLabelFromTrack(parentTrack);
+        const id = String(card.dataset.id || '');
+        const precio = Number(card.dataset.precio || 0);
+        const desc = card.dataset.descripcion || card.querySelector('p')?.textContent?.trim() || '';
+
+        const esLI = nombreUpper === 'LI' ||
+                     (nombreUpper.includes('LI') && !nombreUpper.includes('EXT') && !nombreUpper.includes('ALI'));
+
+        if (esLI && grupo === 'Daños a terceros') {
+            idLI = id; datosLI = { id, nombre, desc, precio, grupo };
+        }
+
+        const esDecline = (nombreUpper.includes('DECLINE') || nombreUpper.includes('DECLINADO')) &&
+                          grupo === 'Colisión y robo';
+        if (esDecline) {
+            idDecline = id; datosDecline = { id, nombre, desc, precio, grupo };
+        }
+
+        if (grupo === 'Protecciones automáticas') {
+            idsAuto.push({ id, nombre, desc, precio, grupo });
+        }
+    });
+
+    if (idLI && datosLI && !state.individuales.has(idLI)) {
+        state.individuales.set(idLI, { ...datosLI, charge: 'por_dia' });
+    }
+    // (COTIZACIONES) El modal ahora SOLO preselecciona LI. Ya no se agregan
+    // automaticamente DECLINE CDW ni las Protecciones automaticas (LA, LOU).
+
+    repaintIndividualesUI();
+    refreshProteccionUIHeader();
+    syncIndividualesHidden();
+    syncTotalsHidden();
+    refreshSummary();
+}
+window.preseleccionarModalCompleto = preseleccionarModalCompleto;
 
 // =========================================
 // 11 ADDONS CON SWITCH
@@ -3370,7 +3416,7 @@ if (typeof originalSetCategoria === 'function') {
 // 20 TABS EN MODAL PROTECCIONES
 // =========================================
 
-    function setProteTab(tabId) { const btns = qsa("#proteccionPop .tab-btn[data-tab]"); const panels = qsa("#proteccionPop .tab-panel"); btns.forEach(b => b.classList.toggle("is-active", b.dataset.tab === tabId)); panels.forEach(p => p.classList.toggle("is-active", p.id === tabId)); }
+    function setProteTab(tabId) { const btns = qsa("#proteccionPop .tab-btn[data-tab]"); const panels = qsa("#proteccionPop .tab-panel"); btns.forEach(b => b.classList.toggle("is-active", b.dataset.tab === tabId)); panels.forEach(p => p.classList.toggle("is-active", p.id === tabId)); if (typeof window.actualizarCarritoCotizacion === 'function') window.actualizarCarritoCotizacion(); }
     function bindProteTabs() {
     const pop = qs('#proteccionPop');
     if (!pop || pop.dataset.boundTabs === '1') return;
@@ -3381,12 +3427,6 @@ if (typeof originalSetCategoria === 'function') {
         b.addEventListener('click', () => {
             const tabId = b.dataset.tab;
             setProteTab(tabId);
-
-            if (tabId === 'tab-individuales') {
-                setTimeout(() => {
-                    asegurarCDWDecline();
-                }, 200);
-            }
         });
     });
 }
@@ -3522,7 +3562,7 @@ if (typeof originalSetCategoria === 'function') {
         catPop?.addEventListener("click", (e) => { const card = e.target.closest(".card-pick"); if (!card) return; const id = card.dataset.id, nombre = card.dataset.nombre || "", desc = card.dataset.desc || "", precio = Number(card.dataset.precio || 0), precioKm = Number(card.dataset.precioKm || 0), img = card.dataset.img || "", capacidad = parseFloat(card.dataset.litros || 0); setCategoria({ id, nombre, desc, precio_dia: precio, precio_km: precioKm, img, capacidad_tanque: capacidad }); closePop(catPop); });
         qs("#catRemove")?.addEventListener("click", () => setCategoria(null));
         const protPop = qs("#proteccionPop");
-        qs("#btnProtecciones")?.addEventListener("click", async () => { openPop(protPop); setProteTab("tab-paquetes"); await loadProtecciones(); inicializarEstadoProteccionesIndividuales(); repaintIndividualesUI(); inicializarYReglarProtecciones(); refreshProteccionUIHeader(); });
+        qs("#btnProtecciones")?.addEventListener("click", async () => { openPop(protPop); setProteTab("tab-paquetes"); await loadProtecciones(); inicializarEstadoProteccionesIndividuales(); if (!window._modalCotizacionInicializado) { window._modalCotizacionInicializado = true; preseleccionarModalCompleto(); } repaintIndividualesUI(); inicializarYReglarProtecciones(); refreshProteccionUIHeader(); });
         qs("#proteClose")?.addEventListener("click", () => closePop(protPop));
         qs("#proteCancel")?.addEventListener("click", () => closePop(protPop));
         qs("#proteRemove")?.addEventListener("click", () => { setProteccion(null); state.individuales.clear(); syncIndividualesHidden(); refreshProteccionUIHeader(); syncTotalsHidden(); refreshSummary(); });
@@ -3745,12 +3785,32 @@ function initDifferentDropoff() {
         }
     }
 
+    function enfocarSeccion(seccionOrId, delay = 120) {
+        const seccion = typeof seccionOrId === 'string'
+            ? document.querySelector(`.acordeon-item[data-seccion="${seccionOrId}"]`)
+            : seccionOrId;
+        if (!seccion) return;
+
+        setTimeout(() => {
+            const navbar = document.getElementById('resNavbar');
+            const navbarH = navbar ? navbar.getBoundingClientRect().height : 0;
+            const offset = navbarH + 16;
+
+            const rect = seccion.getBoundingClientRect();
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const destino = rect.top + scrollTop - offset;
+
+            window.scrollTo({ top: Math.max(destino, 0), behavior: 'smooth' });
+        }, delay);
+    }
+    window.enfocarSeccionCotizacion = enfocarSeccion;
+
     function abrirSeccion(seccion) {
         if (!seccion) return;
         const body = seccion.querySelector('.stack-body'), indicator = seccion.querySelector('.stack-indicator');
         if (body && !body.classList.contains('expanded')) body.classList.add('expanded');
         if (indicator && !indicator.classList.contains('expanded')) indicator.classList.add('expanded');
-        setTimeout(() => { seccion.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+        enfocarSeccion(seccion, 100);
     }
 
     function desbloquearCategoria() { if (categoriaDesbloqueada) return; categoriaDesbloqueada = true; actualizarTodasSecciones(); abrirSeccion(document.querySelector('.acordeon-item[data-seccion="categoria"]')); }
@@ -3863,6 +3923,10 @@ function initDifferentDropoff() {
                 const body = seccion.querySelector('.stack-body'), indicator = seccion.querySelector('.stack-indicator');
                 if (body) body.classList.toggle('expanded');
                 if (indicator) indicator.classList.toggle('expanded');
+
+                if (body && body.classList.contains('expanded')) {
+                    enfocarSeccion(seccion, 100);
+                }
             });
         });
     }
@@ -4330,6 +4394,7 @@ function desbloquearClienteSinExpandir() {
         initPhoneCombo();
         syncTelefonoFinal();
         bindUI();
+        initFiltroIndividuales();
         initAddonsWithSwitch();
         setTimeout(() => { initSelect2EnAdicionales(); }, 500);
         initDifferentDropoff();
@@ -4844,13 +4909,40 @@ function seleccionarCategoriaCotizacion(cardElement) {
         return 0;
     }
 
-    function contarProteccionesSeleccionadas() {
-        if (typeof state === 'undefined') return 0;
+    function crearPildoraDiasEnModal() {
+        const modalHeader = document.querySelector('#proteccionPop .modal-head');
+        if (!modalHeader) return;
 
-        let count = 0;
-        if (state.proteccion !== null) count++;
-        if (state.individuales) count += state.individuales.size;
-        return count;
+        let diasPill = document.getElementById('proteDiasPill');
+        if (diasPill) return diasPill;
+
+        diasPill = document.createElement('div');
+        diasPill.id = 'proteDiasPill';
+        diasPill.className = 'prote-dias-pill';
+        diasPill.innerHTML = `
+            <i class="fa-regular fa-clock"></i>
+            <span class="prote-dias-num">0</span> día(s)
+        `;
+
+        const cartBtn = document.getElementById('cartHeaderBtn');
+        const closeBtn = modalHeader.querySelector('#proteClose');
+
+        if (cartBtn) {
+            modalHeader.insertBefore(diasPill, cartBtn);
+        } else if (closeBtn) {
+            modalHeader.insertBefore(diasPill, closeBtn);
+        } else {
+            modalHeader.appendChild(diasPill);
+        }
+
+        return diasPill;
+    }
+
+    function actualizarPildoraDiasEnModal() {
+        const diasPill = document.getElementById('proteDiasPill');
+        if (!diasPill) return;
+        const num = diasPill.querySelector('.prote-dias-num');
+        if (num && typeof state !== 'undefined') num.textContent = String(state.days || 0);
     }
 
     function crearOCarritoEnModal() {
@@ -4859,6 +4951,8 @@ function seleccionarCategoriaCotizacion(cardElement) {
 
         if (document.getElementById('cartHeaderBtn')) {
             cartHeaderBtn = document.getElementById('cartHeaderBtn');
+            crearPildoraDiasEnModal();
+            actualizarPildoraDiasEnModal();
             return true;
         }
 
@@ -4868,7 +4962,6 @@ function seleccionarCategoriaCotizacion(cardElement) {
         cartHeaderBtn.innerHTML = `
             <i class="fas fa-shopping-cart"></i>
             <span class="cart-header-total">$0.00 MXN</span>
-            <span class="cart-header-badge">0</span>
         `;
         cartHeaderBtn.setAttribute('aria-label', 'Ver resumen completo');
         cartHeaderBtn.setAttribute('type', 'button');
@@ -4887,6 +4980,9 @@ function seleccionarCategoriaCotizacion(cardElement) {
             if (resumenPop) resumenPop.style.display = 'flex';
         });
 
+        crearPildoraDiasEnModal();
+        actualizarPildoraDiasEnModal();
+
         console.log('✅ Botón de carrito creado en el modal de cotizaciones');
         return true;
     }
@@ -4902,20 +4998,18 @@ function seleccionarCategoriaCotizacion(cardElement) {
         try {
             if (!cartHeaderBtn) return;
 
+            actualizarPildoraDiasEnModal();
+
             const tieneSeleccion = tieneProteccionSeleccionada();
 
             const totalGeneral = obtenerTotalGeneral();
-            const count = contarProteccionesSeleccionadas();
 
             const totalSpan = cartHeaderBtn.querySelector('.cart-header-total');
-            const badge = cartHeaderBtn.querySelector('.cart-header-badge');
 
             const totalAnterior = totalSpan?.dataset.total || '0';
-            const countAnterior = badge?.dataset.count || '0';
             const nuevoTotal = totalGeneral.toFixed(2);
-            const nuevoCount = String(count);
 
-            if (totalAnterior !== nuevoTotal || countAnterior !== nuevoCount || cartHeaderBtn.style.display !== (tieneSeleccion ? 'inline-flex' : 'none')) {
+            if (totalAnterior !== nuevoTotal || cartHeaderBtn.style.display !== (tieneSeleccion ? 'inline-flex' : 'none')) {
 
                 cartHeaderBtn.style.display = tieneSeleccion ? 'inline-flex' : 'none';
 
@@ -4926,12 +5020,6 @@ function seleccionarCategoriaCotizacion(cardElement) {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2
                         })} MXN`;
-                    }
-
-                    if (badge) {
-                        badge.dataset.count = nuevoCount;
-                        badge.textContent = count;
-                        badge.style.display = count > 0 ? 'inline-flex' : 'none';
                     }
                 }
             }
@@ -5008,6 +5096,8 @@ function seleccionarCategoriaCotizacion(cardElement) {
                 intervalId = setInterval(actualizarCarritoEnModal, 2000);
 
                 setTimeout(actualizarCarritoEnModal, 100);
+
+                window.actualizarCarritoCotizacion = actualizarCarritoEnModal;
 
                 console.log('✅ Carrito de protecciones inicializado en COTIZACIONES');
             }

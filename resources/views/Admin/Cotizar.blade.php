@@ -697,8 +697,18 @@
             <section class="tab-panel" id="tab-individuales">
                 <div class="note" style="margin-bottom:14px;">Selecciona una o varias protecciones individuales.</div>
 
+                <!-- FILTRO PROTECCIONES INDIVIDUALES -->
+                <div class="filtro-individuales" id="filtroIndividuales">
+                    <button type="button" class="filtro-chip is-active" data-filtro="todas">Todas</button>
+                    <button type="button" class="filtro-chip" data-filtro="colision">Colisión y robo</button>
+                    <button type="button" class="filtro-chip" data-filtro="medicos">Gastos médicos</button>
+                    <button type="button" class="filtro-chip" data-filtro="camino">Asistencia para el camino</button>
+                    <button type="button" class="filtro-chip" data-filtro="terceros">Daños a terceros</button>
+                    <button type="button" class="filtro-chip" data-filtro="auto">Protecciones automáticas</button>
+                </div>
+
                 {{-- GRUPO: COLISIÓN Y ROBO --}}
-                <h4 class="cat-title">Colisión y robo</h4>
+                <h4 class="cat-title" data-grupo="colision">Colisión y robo</h4>
                 <div class="scroll-h" id="insColisionTrack">
                     @php $colisionOrdenado = ($grupo_colision ?? collect())->sortByDesc('precio_por_dia'); @endphp
                     @forelse($colisionOrdenado as $ind)
@@ -728,7 +738,7 @@
                 </div>
 
                 {{-- GRUPO: GASTOS MÉDICOS --}}
-                <h4 class="cat-title">Gastos médicos</h4>
+                <h4 class="cat-title" data-grupo="medicos">Gastos médicos</h4>
                 <div class="scroll-h" id="insMedicosTrack">
                     @php $medicosOrdenado = ($grupo_medicos ?? collect())->sortByDesc('precio_por_dia'); @endphp
                     @forelse($medicosOrdenado as $ind)
@@ -758,7 +768,7 @@
                 </div>
 
                 {{-- GRUPO: ASISTENCIA PARA EL CAMINO --}}
-                <h4 class="cat-title">Asistencia para el camino</h4>
+                <h4 class="cat-title" data-grupo="camino">Asistencia para el camino</h4>
                 <div class="scroll-h" id="insCaminoTrack">
                     @php $asistenciaOrdenado = ($grupo_asistencia ?? collect())->sortByDesc('precio_por_dia'); @endphp
                     @forelse($asistenciaOrdenado as $ind)
@@ -788,7 +798,7 @@
                 </div>
 
                 {{-- GRUPO: DAÑOS A TERCEROS --}}
-                <h4 class="cat-title">Daños a terceros</h4>
+                <h4 class="cat-title" data-grupo="terceros">Daños a terceros</h4>
                 <div class="scroll-h" id="insTercerosTrack">
                     @php $tercerosOrdenado = ($grupo_terceros ?? collect())->sortByDesc('precio_por_dia'); @endphp
                     @forelse($tercerosOrdenado as $ind)
@@ -818,7 +828,7 @@
                 </div>
 
                 {{-- GRUPO: PROTECCIONES AUTOMÁTICAS --}}
-                <h4 class="cat-title">Protecciones automáticas</h4>
+                <h4 class="cat-title" data-grupo="auto">Protecciones automáticas</h4>
                 <div class="scroll-h" id="insAutoTrack">
                     @php $autoOrdenado = ($grupo_protecciones ?? collect())->sortByDesc('precio_por_dia'); @endphp
                     @forelse($autoOrdenado as $ind)
