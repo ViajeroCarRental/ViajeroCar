@@ -3,21 +3,30 @@
 @section('Titulo', 'Administración De Reservas')
 
 @section('css-vistaAdministracionReservaciones')
-<link rel="stylesheet" href="{{ asset('css/AdministracionReservas.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/AdministracionReservas.css') }}?v={{ @filemtime(public_path('css/AdministracionReservas.css')) ?: time() }}">
 @endsection
 
 @section('contenidoAdministracionReservaciones')
 <main class="main">
     <div class="page">
-
         <h1 class="h1">Contratos Abiertos</h1>
 
-        <!-- =====================
-             TOP BAR (BUSQUEDA)
-        ====================== -->
         <div class="topbar">
+            <div class="search">
+                <input id="txtSearch" class="input" type="search"
+                    placeholder="Buscar: contrato, reservación o nombre…">
+            </div>
 
-            <label>Mostrar
+            <label class="date-filter">
+                Cierre previsto
+                <input id="filtroFechaCierre" class="input" type="date">
+            </label>
+
+            <label class="records-control">
+                Mostrar
                 <select id="selSize" class="select">
                     <option>10</option>
                     <option>25</option>
@@ -26,85 +35,44 @@
                 </select>
                 registros
             </label>
-
-            <div class="search">
-                <input id="txtSearch" class="input" type="search"
-                    placeholder="Buscar: clave, nombre, email, estado…">
-            </div>
-
         </div>
 
-        <!-- =====================
-                TABLA PRINCIPAL
-        ====================== -->
-        <table class="table" id="tbl">
-            <thead>
-    <tr>
-        <th style="width:40px"></th>
-        <th>No. Contrato</th>
-        <th>Fecha Checkout</th>
-        <th>Categoría</th>
-        <th>Dropoff</th>
-        <th>Hora Checkout</th>
-        <th>Estatus</th>
-        <th>Forma de pago</th>
-        <th class="col-actions"></th>
-    </tr>
-</thead>
+        <div class="table-wrap">
+            <table class="table" id="tbl">
+                <thead>
+                    <tr>
+                        <th class="col-toggle"></th>
+                        <th>No. Contrato</th>
+                        <th>Fecha Checkout</th>
+                        <th>Hora Checkout</th>
+                        <th>Categoría</th>
+                        <th>Dropoff</th>
+                        <th>Estatus de contrato</th>
+                        <th>Estatus de pago</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody"></tbody>
+            </table>
+        </div>
 
-
-
-            <tbody id="tbody"></tbody>
-        </table>
-
-        <!-- =====================
-                 PAGINACION
-        ====================== -->
         <div class="pager">
             <button class="pbtn" id="prev">« Anterior</button>
             <div id="pgInfo" class="small"></div>
             <button class="pbtn" id="next">Siguiente »</button>
         </div>
-
     </div>
 </main>
-<!-- MODAL — CONFIRMAR FINALIZAR -->
+
 <div id="modalFinalizar" class="modal-fin" style="display:none;">
     <div class="modal-fin-box">
         <h2 id="mf_titulo">Finalizar contrato</h2>
         <p id="mf_msg">Mensaje aquí…</p>
-
         <div class="mf-btns">
-            <button id="mf_cancel" class="btn gray">Cancelar</button>
+            <button id="mf_cancel" class="btn b-gray">Cancelar</button>
             <button id="mf_ok" class="btn b-primary">Aceptar</button>
         </div>
     </div>
 </div>
-
-<style>
-.modal-fin {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.45);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 99999;
-}
-.modal-fin-box {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
-    width: 370px;
-    text-align: center;
-    box-shadow: 0 10px 25px rgba(0,0,0,.2);
-}
-.mf-btns {
-    margin-top: 20px;
-    display: flex;
-    justify-content: space-evenly;
-}
-</style>
 
 <script>
     const esSuperAdmin = @json($soloSuperAdmin);
@@ -112,5 +80,5 @@
 @endsection
 
 @section('js-vistaAdministracionReservaciones')
-<script src="{{ asset('js/AdministracionReservas.js') }}"></script>
+    <script src="{{ asset('js/AdministracionReservas.js') }}?v={{ @filemtime(public_path('js/AdministracionReservas.js')) ?: time() }}"></script>
 @endsection

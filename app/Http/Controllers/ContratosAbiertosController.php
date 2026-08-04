@@ -21,6 +21,7 @@ class ContratosAbiertosController extends Controller
     $size = intval($req->size ?? 10);
     $page = intval($req->page ?? 1);
     $q    = trim($req->q ?? '');
+    $fechaCierre = trim($req->fecha_cierre ?? '');
 
     $query = DB::table('contratos AS c')
         ->join('reservaciones AS r', 'c.id_reservacion', '=', 'r.id_reservacion')
@@ -32,7 +33,7 @@ class ContratosAbiertosController extends Controller
     'c.estado',
     'r.fecha_fin',
     'r.hora_entrega',
-    'cat.nombre AS categoria',
+    'cat.codigo AS categoria',
     'r.delivery_ubicacion',
     'r.delivery_direccion',
     'r.metodo_pago',
@@ -58,16 +59,28 @@ class ContratosAbiertosController extends Controller
 
     if ($q !== '') {
         $query->where(function ($w) use ($q) {
-            $w->where('c.numero_contrato','LIKE',"%$q%")
-              ->orWhere('r.codigo','LIKE',"%$q%")
-              ->orWhere('r.nombre_cliente','LIKE',"%$q%");
+            $w->where('c.numero_contrato', 'LIKE', "%{$q}%")
+            ->orWhere('r.codigo', 'LIKE', "%{$q}%")
+            ->orWhere('r.nombre_cliente', 'LIKE', "%{$q}%")
+            ->orWhere('r.apellidos_cliente', 'LIKE', "%{$q}%")
+            ->orWhereRaw(
+                "CONCAT_WS(' ', r.nombre_cliente, r.apellidos_cliente) LIKE ?",
+                ["%{$q}%"]
+            );
         });
+    }
+
+    // Filtra por la fecha programada de cierre/devolución, no por la apertura.
+    if ($fechaCierre !== '') {
+        $query->whereDate('r.fecha_fin', $fechaCierre);
     }
 
     $total = $query->count();
 
     $rows = $query
-        ->orderBy('c.id_contrato', 'DESC')
+        ->orderBy('r.fecha_fin', 'ASC')
+        ->orderBy('r.hora_entrega', 'ASC')
+        ->orderBy('c.id_contrato', 'ASC')
         ->skip(($page - 1) * $size)
         ->take($size)
         ->get();

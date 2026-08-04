@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const prev = document.getElementById("prev");
     const next = document.getElementById("next");
     const pgInfo = document.getElementById("pgInfo");
+    const filtroFechaCierre = document.getElementById("filtroFechaCierre");
 
 
     let page = 1;
@@ -14,16 +15,50 @@ document.addEventListener("DOMContentLoaded", () => {
     // ============================================================
     // Cargar datos principales
     // ============================================================
+    function formatDate(value) {
+        if (!value) return "—";
+
+        const datePart = String(value).split("T")[0];
+        const match = datePart.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!match) return value;
+
+        const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+        return `${match[3]}-${meses[Number(match[2]) - 1]}-${match[1]}`;
+    }
+
+    function formatTime(value) {
+        if (!value) return "—";
+        const match = String(value).match(/^(\d{1,2}):(\d{2})/);
+        return match ? `${String(match[1]).padStart(2, "0")}:${match[2]} hrs` : value;
+    }
+
+    function paymentStatus(value) {
+        const normalized = String(value ?? "").trim().toLowerCase();
+        return normalized === "pagado" || normalized === "paid" || normalized === "1"
+            ? { text: "Pagado", css: "payment-paid" }
+            : { text: "Pendiente", css: "payment-pending" };
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
     function loadData() {
 
         tbody.innerHTML = `
-            <tr><td colspan="9" style="text-align:center;padding:20px">Cargando…</td></tr>
+            <tr><td colspan="8" style="text-align:center;padding:20px">Cargando…</td></tr>
         `;
-
+ 
         const params = new URLSearchParams({
             q: search.value,
             size: size.value,
-            page: page
+            page: page,
+            fecha_cierre: filtroFechaCierre?.value ?? ""
         });
 
         fetch(`/api/contratos-abiertos?${params.toString()}`)
@@ -37,6 +72,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 json.data.forEach(r => {
 
+    const pago = paymentStatus(r.status_pago);
+
     const tr = document.createElement("tr");
 
     // 🔒 Guardamos el id_contrato real en la fila (oculto)
@@ -44,30 +81,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     tr.innerHTML = `
         <td>
-            <button class="btnToggle"
-                style="font-size:20px;border:none;background:none;cursor:pointer">+</button>
+            <button class="btnToggle" type="button" aria-label="Ver detalles">+</button>
         </td>
 
         <td>${r.numero_contrato ?? "—"}</td>
-        <td>${r.fecha_fin ?? "—"}</td>
-        <td>${r.categoria ?? "—"}</td>   <!-- ✅ categoría -->
+        <td>${formatDate(r.fecha_fin)}</td>
+        <td>${formatTime(r.hora_entrega)}</td>
+        <td class="col-categoria">${escapeHtml(r.categoria ?? "—")}</td>
         <td>${!r.tiene_dropoff ? "---" : r.delivery_ubicacion == 0 ? (r.delivery_direccion ?? "Sin dirección")
             : `${r.ubic_estado ?? ""} - ${r.ubic_destino ?? ""}`}</td>
-        <td>${r.hora_entrega ?? "—"}</td>
-        <td>${r.estado ?? "—"}</td>
-        <td class="text-center">
-                ${r.metodo_pago === 'mostrador'
-                    ? `
-                        <i class="fas fa-money-bill-wave text-success" title="Pago en efectivo"></i>
-                        ${r.status_pago === 'Pagado'
-                            ? '<i class="fas fa-check text-primary ms-1" title="Pagado"></i>'
-                            : ''
-                        }
-                    `
-                    : ''
-                }
+        <td>
+            <span class="status-tag status-${String(r.estado ?? "").toLowerCase()}">
+                ${r.estado ?? "—"}
+            </span>
         </td>
-        <td></td>
+        <td>
+            <span class="payment-tag ${pago.css}">${pago.text}</span>
+        </td>
     `;
 
     tbody.appendChild(tr);
@@ -77,7 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .catch(err => {
                 console.error("❌ ERROR FETCH:", err);
                 tbody.innerHTML = `
-                    <tr><td colspan="9" style="text-align:center;padding:20px;color:red">
+                    <tr><td colspan="8" style="text-align:center;padding:20px;color:red">
                         Error al cargar datos
                     </td></tr>`;
             });
@@ -103,6 +133,8 @@ const id  = tr.dataset.id;
         if (nextRow && nextRow.classList.contains("detail")) {
             nextRow.remove();
             btn.textContent = "+";
+            btn.classList.remove("is-open");
+            btn.setAttribute("aria-label", "Ver detalles");
             return;
         }
 
@@ -143,8 +175,128 @@ const id  = tr.dataset.id;
             const row = document.createElement("tr");
             row.classList.add("detail");
 
+            const nombreCliente = `${d.nombre_cliente ?? ""} ${d.apellidos_cliente ?? ""}`.trim() || "—";
+            const vehiculo = `${d.marca ?? ""} ${d.modelo ?? ""}`.trim() || "—";
+            const paquete = segurosPaqueteHTML || "Sin paquete adicional";
+            const individuales = segurosIndividualesHTML || "Sin seguros individuales";
+
+            const icon = (name) => {
+                const icons = {
+                    location: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+                    car: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 11 1.8-5h10.4l1.8 5"/><path d="M3 13a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5H3v-5Z"/><path d="M5 18v2M19 18v2M7 14h.01M17 14h.01"/></svg>',
+                    user: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+                    file: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6Z"/><path d="M15 3v5h4M9 13h6M9 17h6"/></svg>',
+                    shield: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 20 6v6c0 5-3.4 8-8 9-4.6-1-8-4-8-9V6l8-3Z"/><path d="m9 12 2 2 4-4"/></svg>',
+                    gauge: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16a8 8 0 1 1 16 0"/><path d="m12 14 4-4M7 18h10"/></svg>',
+                    alert: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 21h20L12 3Z"/><path d="M12 9v5M12 18h.01"/></svg>'
+                };
+                return icons[name] || "";
+            };
+
             row.innerHTML = `
-    <td colspan="9">
+    <td colspan="8">
+        <div class="reserva-summary contrato-summary">
+
+            <div class="summary-contract-head summary-full">
+                <div>
+                    <span class="summary-eyebrow">Contrato</span>
+                    <strong>No. ${escapeHtml(d.numero_contrato || "—")}</strong>
+                    <small>Reservación ${escapeHtml(d.clave || "—")}</small>
+                </div>
+                <span class="status-tag status-${String(d.estado ?? "").toLowerCase()}">${escapeHtml(d.estado || "—")}</span>
+            </div>
+
+            <div class="summary-route-card">
+                <div class="summary-section-title">Entrega</div>
+                <div class="summary-route-layout">
+                    <span class="summary-main-icon">${icon("location")}</span>
+                    <div>
+                        <div class="summary-office">${escapeHtml(d.entrega_lugar || "—")}</div>
+                        <div class="summary-datetime">${formatDate(d.entrega_fecha)} · ${formatTime(d.entrega_hora)}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-route-card">
+                <div class="summary-section-title">Devolución</div>
+                <div class="summary-route-layout">
+                    <span class="summary-main-icon">${icon("location")}</span>
+                    <div>
+                        <div class="summary-office">${escapeHtml(d.dev_lugar || d.sucursal_entrega_nombre || "—")}</div>
+                        <div class="summary-datetime">${formatDate(d.dev_fecha)} · ${formatTime(d.dev_hora)}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-vehicle">
+                <div class="summary-vehicle-data">
+                    <div class="summary-section-title">Vehículo</div>
+                    <span class="summary-car-icon">${icon("car")}</span>
+                    <div>
+                        <div class="summary-vehicle-name">${escapeHtml(vehiculo)}</div>
+                        <div class="summary-vehicle-meta">${escapeHtml(d.categoria || "—")} · ${escapeHtml(d.categoria_codigo || "—")}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-rate-card">
+                <div class="summary-section-title">Tarifa</div>
+                <div class="summary-rate-row"><span>Tarifa base</span><strong>$${Number(d.tarifa_base ?? 0).toFixed(2)}</strong></div>
+                <div class="summary-rate-row"><span>Dropoff</span><strong>$${Number(d.delivery_total ?? 0).toFixed(2)}</strong></div>
+            </div>
+
+            <div class="summary-info-card">
+                <div class="summary-card-heading"><span>${icon("user")}</span><div class="summary-section-title">Cliente y contacto</div></div>
+                <div class="summary-detail-line"><strong>${escapeHtml(nombreCliente)}</strong></div>
+                <div class="summary-detail-line">${escapeHtml([d.pais, d.telefono].filter(Boolean).join(" · ") || "—")}</div>
+                <div class="summary-detail-line">${escapeHtml(d.email_cliente || "—")}</div>
+            </div>
+
+            <div class="summary-info-card">
+                <div class="summary-card-heading"><span>${icon("file")}</span><div class="summary-section-title">Datos del contrato</div></div>
+                <div class="summary-detail-line"><strong>Oficina de regreso:</strong> ${escapeHtml(d.sucursal_entrega_nombre || "—")}</div>
+                <div class="summary-detail-line"><strong>Método de pago:</strong> ${escapeHtml(d.metodo_pago || "N/A")}</div>
+                <div class="summary-detail-line"><strong>Adicionales:</strong> ${escapeHtml(d.adicionales || "—")}</div>
+            </div>
+
+            <div class="summary-info-card">
+                <div class="summary-card-heading"><span>${icon("shield")}</span><div class="summary-section-title">Seguros</div></div>
+                <div class="summary-detail-line"><strong>Paquete:</strong> ${paquete}</div>
+                <div class="summary-detail-line"><strong>Seguros:</strong> ${individuales}</div>
+            </div>
+
+            <div class="summary-info-card summary-full">
+                <div class="summary-section-title">Revisión de devolución</div>
+                <div class="summary-review-grid">
+                    <div><i>${icon("gauge")}</i><strong>Combustible</strong><span>Salida: ${comb.salida ?? 0} L · Regreso: ${comb.entrada ?? 0} L · Faltante: ${comb.faltante ?? 0} L</span></div>
+                    <div><i>${icon("gauge")}</i><strong>Cargo de combustible</strong><span>${comb.faltante > 0 ? `$${Number(comb.total ?? 0).toFixed(2)}` : "Sin cargo"}</span></div>
+                    <div><i>${icon("alert")}</i><strong>Nuevos daños</strong><span>${danosHTML}</span></div>
+                </div>
+            </div>
+
+            <div class="summary-payment summary-full">
+                <div><b>Total del contrato</b><span>${escapeHtml(d.metodo_pago || "N/A")}</span></div>
+                <strong>$${Number(d.total ?? 0).toFixed(2)} <small>MXN</small></strong>
+            </div>
+
+            <div class="summary-actions">
+                <div class="summary-actions-left">
+                    <a class="btn b-primary" href="/admin/reservacion/${d.id_contrato}/checklist?modo=regreso">CHECK</a>
+                    <button class="btn b-warning btnExtension" data-id="${d.id_contrato}">EXTENSIÓN</button>
+                    <input type="date" class="inputExtension" data-id="${d.id_contrato}" style="display:none;">
+                    <button class="btn b-primary btnEditarContrato" data-id="${d.id_contrato}">CIERRE PENDIENTE</button>
+                </div>
+                <div class="summary-actions-right">
+                    <button class="btn b-primary btnEditarContrato" data-id="${d.id_contrato}" ${disabled}>EDITAR</button>
+                    <button class="btn b-red btnFinalizarContrato" data-id="${d.id_contrato}">CIERRE</button>
+                </div>
+            </div>
+
+        </div>
+    </td>
+`;
+
+/* Diseño anterior eliminado: se conserva un solo resumen para evitar estilos duplicados.
         <div class="card">
 
             <div class="card-hd">
@@ -258,7 +410,7 @@ const id  = tr.dataset.id;
                             <div class="tl-title">Entrega</div>
                             <div class="tl-sub">
                                 ${d.entrega_lugar}<br>
-                                ${d.entrega_fecha} · ${d.entrega_hora} HRS
+                                ${formatDate(d.entrega_fecha)} · ${formatTime(d.entrega_hora)}
                             </div>
                         </div>
                     </div>
@@ -269,7 +421,7 @@ const id  = tr.dataset.id;
                             <div class="tl-title">Devolución</div>
                             <div class="tl-sub">
                                 ${d.dev_lugar}<br>
-                                ${d.dev_fecha} · ${d.dev_hora} HRS
+                                ${formatDate(d.dev_fecha)} · ${formatTime(d.dev_hora)}
                             </div>
                         </div>
                     </div>
@@ -343,10 +495,13 @@ const id  = tr.dataset.id;
         </div>
     </td>
 `;
+*/
 
 
             tr.insertAdjacentElement("afterend", row);
             btn.textContent = "−";
+            btn.classList.add("is-open");
+            btn.setAttribute("aria-label", "Ocultar detalles");
 
         } catch (err) {
             console.error("❌ Error al cargar detalle:", err);
@@ -368,6 +523,11 @@ const id  = tr.dataset.id;
     });
 
     size.addEventListener("change", () => {
+        page = 1;
+        loadData();
+    });
+
+    filtroFechaCierre?.addEventListener("change", () => {
         page = 1;
         loadData();
     });

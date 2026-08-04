@@ -207,7 +207,7 @@
 
             <a href="{{ route('rutaReservacionesAdmin') }}" class="ventas-home-card">
                 <i class="fas fa-file-invoice"></i>
-                <span>Reservaciones</span>
+                <span>Nueva Reservación</span>
             </a>
 
             <a href="{{ route('rutaCotizar') }}" class="ventas-home-card">
@@ -227,7 +227,7 @@
 
             <a href="{{ route('rutaAdministracionReservaciones') }}" class="ventas-home-card">
                 <i class="fas fa-cogs"></i>
-                <span>Contratos</span>
+                <span>Contratos Abiertos</span>
             </a>
 
             <a href="{{ route('ventas.historial') }}" class="ventas-home-card">
