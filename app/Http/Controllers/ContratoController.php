@@ -66,7 +66,22 @@ class ContratoController extends ContratoBaseController
 
             $categorias   = cache()->remember('cat_carros', 86400, fn() => DB::table('categorias_carros')->orderBy('nombre')->get());
             $servicios    = cache()->remember('cat_servicios_contrato', 86400, fn() => DB::table('servicios')->where('activo', true)->whereIn('id_servicio', [1, 4, 5, 7, 8, 11])->get());
-            $ubicaciones  = cache()->remember('cat_ubicaciones', 86400, fn() => DB::table('ubicaciones_servicio')->where('activo', 1)->orderBy('estado')->get());
+            $ubicaciones  = cache()->remember('cat_ubicaciones_qro', 86400, fn() => DB::table('ubicaciones_servicio')
+                ->where('activo', 1)
+                ->orderByRaw("CASE WHEN estado = 'Querétaro' THEN 0 ELSE 1 END")
+                ->orderBy('estado')
+                ->orderBy('destino')
+                ->get());
+            $sucursales = cache()->remember('cat_sucursales_ordenadas', 86400, function () {
+                return DB::table('sucursales as s')
+                    ->leftJoin('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
+                    ->where('s.activo', 1)
+                    ->orderByRaw("CASE WHEN c.nombre = 'Querétaro' THEN 0 ELSE 1 END")
+                    ->orderBy('c.nombre')
+                    ->orderBy('s.nombre')
+                    ->select('s.id_sucursal', 's.nombre', 'c.nombre as ciudad')
+                    ->get();
+            });
             $seguros      = cache()->remember('cat_seguros', 86400, fn() => DB::table('seguro_paquete')->where('activo', true)->select('id_paquete as id_seguro', 'nombre', 'descripcion as cobertura', 'precio_por_dia')->get());
             $individuales = cache()->remember('cat_individuales', 86400, fn() => DB::table('seguro_individuales')->where('activo', true)->get());
 
@@ -203,6 +218,7 @@ class ContratoController extends ContratoBaseController
                 'contrato'            => $contrato,
                 'categorias'          => $categorias,
                 'ubicaciones'         => $ubicaciones,
+                'sucursales'          => $sucursales,
                 'costoKmCategoria'    => $reservacion->costo_km ?? 0,
                 'delivery'            => $delivery,
                 'individuales'        => $individuales,
@@ -1113,4 +1129,64 @@ class ContratoController extends ContratoBaseController
             return response()->json(['success' => false, 'error' => 'Error interno'], 500);
         }
     }
+
+    /**
+ * 🔔 Obtiene los comentarios de la reservación (campanita del contrato)
+ */
+public function obtenerComentarios($idReservacion)
+{
+    try {
+        $comentarios = DB::table('reservaciones')
+            ->where('id_reservacion', $idReservacion)
+            ->value('comentarios');
+
+        return response()->json([
+            'success'     => true,
+            'comentarios' => $comentarios ?? ''
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage(), 'comentarios' => ''], 500);
+    }
+}
+
+/**
+ * 🔔 Guarda/actualiza los comentarios de la reservación
+ */
+public function guardarComentarios(Request $request)
+{
+    try {
+        $data = $request->validate([
+            'id_reservacion' => 'required',
+            'comentarios'    => 'nullable|string'
+        ]);
+
+        DB::table('reservaciones')
+            ->where('id_reservacion', $data['id_reservacion'])
+            ->update(['comentarios' => $data['comentarios'] ?? '', 'updated_at' => now()]);
+
+        return response()->json(['success' => true]);
+    } catch (\Throwable $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+}
+/**
+ * 🏢 Actualiza la sucursal de devolución de la reservación (select paso 1)
+ */
+public function actualizarSucursalDevolucion(Request $request)
+{
+    try {
+        $data = $request->validate([
+            'id_reservacion'   => 'required',
+            'sucursal_entrega' => 'required|integer|exists:sucursales,id_sucursal',
+        ]);
+
+        DB::table('reservaciones')
+            ->where('id_reservacion', $data['id_reservacion'])
+            ->update(['sucursal_entrega' => $data['sucursal_entrega'], 'updated_at' => now()]);
+
+        return response()->json(['success' => true]);
+    } catch (\Throwable $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+}
 }
