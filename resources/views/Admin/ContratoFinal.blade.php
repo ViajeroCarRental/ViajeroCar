@@ -17,6 +17,10 @@
             ->count();
 
         $revisionCompleta = $seccionesRevisadas === count($seccionesObligatorias);
+
+        // Paginación de documentos (pie de página): total 3 o 4 según conductor adicional
+        $totalDocumentos = count($seccionesObligatorias);
+        $numeroContratoDisplay = $contrato->numero_contrato ?? $contrato->id_contrato ?? '—';
     @endphp
 
     <div class="contrato-final-container" id="contratoApp" data-id-contrato="{{ $contrato->id_contrato }}">
@@ -161,7 +165,7 @@
                             </div>
                             <div class="arrendatario-item">
                                 <span class="label">Fecha de nacimiento (DOB):</span>
-                                <span class="value">{{ $fechaNacimiento ?? '—' }}</span>
+                                <span class="value">{{ $fechaNacimiento ? str_replace('.', '', mb_strtolower(\Carbon\Carbon::parse($fechaNacimiento)->locale('es')->isoFormat('DD-MMM-YYYY'))) : '—' }}</span>
                             </div>
                             <div class="arrendatario-item">
                                 <span class="label">Edad:</span>
@@ -175,10 +179,6 @@
                                 <span class="label">Correo:</span>
                                 <span class="value">{{ $reservacion->email_cliente ?? '—' }}</span>
                             </div>
-                            <div class="arrendatario-item">
-                                <span class="label">Dirección:</span>
-                                <span class="value">{{ $reservacion->direccion_cliente ?? '—' }}</span>
-                            </div>
 
                             <!-- Tabla de licencia -->
                             <table class="licencia-table">
@@ -187,7 +187,6 @@
                                         <th>No. Licencia</th>
                                         <th>Vencimiento</th>
                                         <th>País</th>
-                                        <th>Estado</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -195,7 +194,6 @@
                                         <td>{{ $licencia->numero_identificacion ?? '—' }}</td>
                                         <td>{{ $licencia->fecha_vencimiento ?? '—' }}</td>
                                         <td>{{ $licencia->pais_emision ?? '—' }}</td>
-                                        <td>{{ $licencia->estado ?? '—' }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -610,6 +608,11 @@
                             <span>{{ !empty($revisionesContrato['contrato']) ? 'Contrato revisado' : 'Marcar contrato como revisado' }}</span>
                         </button>
                     </div>
+
+                    <div class="pie-documento">
+                        <span class="pie-documento-contrato">RA: {{ $numeroContratoDisplay }}</span>
+                        <span class="pie-documento-pagina">1/{{ $totalDocumentos }}</span>
+                    </div>
                 </div>
             </section>
 
@@ -645,6 +648,11 @@
                             <i class="fa-solid fa-check"></i>
                             <span>{{ !empty($revisionesContrato['clausulas']) ? 'Cláusulas revisadas' : 'Marcar cláusulas como revisadas' }}</span>
                         </button>
+                    </div>
+
+                    <div class="pie-documento">
+                        <span class="pie-documento-contrato">RA: {{ $numeroContratoDisplay }}</span>
+                        <span class="pie-documento-pagina">2/{{ $totalDocumentos }}</span>
                     </div>
                 </div>
             </section>
@@ -691,6 +699,11 @@
                             <span>{{ !empty($revisionesContrato['checklist']) ? 'Checklist revisado' : 'Marcar checklist como revisado' }}</span>
                         </button>
                     </div>
+
+                    <div class="pie-documento">
+                        <span class="pie-documento-contrato">RA: {{ $numeroContratoDisplay }}</span>
+                        <span class="pie-documento-pagina">3/{{ $totalDocumentos }}</span>
+                    </div>
                 </div>
             </section>
 
@@ -735,6 +748,11 @@
                                 <i class="fa-solid fa-check"></i>
                                 <span>{{ !empty($revisionesContrato['conductor_adicional']) ? 'Conductor adicional revisado' : 'Marcar conductor adicional como revisado' }}</span>
                             </button>
+                        </div>
+
+                        <div class="pie-documento">
+                            <span class="pie-documento-contrato">RA: {{ $numeroContratoDisplay }}</span>
+                            <span class="pie-documento-pagina">4/{{ $totalDocumentos }}</span>
                         </div>
                     </div>
                 </section>

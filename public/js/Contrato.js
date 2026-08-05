@@ -49,13 +49,9 @@ document.addEventListener("DOMContentLoaded", () => {
             return window.money ? window.money(amount) : `$${amount.toFixed(2)} MXN`;
         },
         notify(type, message) {
-            if (window.alertify) {
-                if (type === "error") return alertify.error(message);
-                if (type === "warning") return alertify.warning(message);
-                return alertify.success(message);
-            }
-            if (type === "error") return alert(message);
-            console[type === "warning" ? "warn" : "log"](message);
+            // NOTIFICACIONES DESACTIVADAS - solo console
+            console.log(`[${type}]`, message);
+            return;
         },
         setText(element, value) {
             if (element) element.textContent = value;
@@ -159,7 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             window.requestAnimationFrame(() => {
                 if (warning) {
-                    ContratoUI.notify("warning", "Fecha ajustada: La devolución debe ser posterior a la entrega.");
+                    console.warn("Fecha ajustada: La devolución debe ser posterior a la entrega.");
                 }
 
                 ContratoUI.setText($elId('txtDiaEntrega'), ui.entrega.dia);
@@ -194,9 +190,9 @@ document.addEventListener("DOMContentLoaded", () => {
                             if (inputE) inputE.value = `${solicitud.f}T${solicitud.h}`;
                             validarYPintarFechas();
                             if (typeof window.actualizarFechasYRecalcular === 'function') await window.actualizarFechasYRecalcular();
-                            ContratoUI.notify("success", "✅ Cambio de fecha aprobado.");
+                            console.log("✅ Cambio de fecha aprobado.");
                         } else {
-                            ContratoUI.notify("error", "❌ Solicitud de cambio rechazada.");
+                            console.log("❌ Solicitud de cambio rechazada.");
                         }
                     }
                 } catch (err) {
@@ -231,19 +227,49 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (inputId === 'inputOcultoEntrega') {
                     const [f, h] = nuevaFechaFull.split('T');
 
-                    alertify.confirm(
-                        "⚠️ Requiere Autorización",
-                        "Cambiar la fecha de Entrega requiere autorización de un supervisor. ¿Deseas enviar la solicitud de cambio?",
-                        async () => {
-                            try {
-                                const data = await ContratoAPI.postJSON("/admin/contrato/solicitar-cambio-fecha", {
-                                    id_reservacion: window.ID_RESERVACION,
-                                    nueva_fecha: f,
-                                    nueva_hora: h,
-                                    motivo: "Modificación en mostrador"
-                                });
+                    // ✅ MODAL DE CONFIRMACIÓN RESTAURADO
+                    if (typeof alertify !== 'undefined') {
+                        alertify.confirm(
+                            "⚠️ Requiere Autorización",
+                            "Cambiar la fecha de Entrega requiere autorización de un supervisor. ¿Deseas enviar la solicitud de cambio?",
+                            async () => {
+                                try {
+                                    const data = await ContratoAPI.postJSON("/admin/contrato/solicitar-cambio-fecha", {
+                                        id_reservacion: window.ID_RESERVACION,
+                                        nueva_fecha: f,
+                                        nueva_hora: h,
+                                        motivo: "Modificación en mostrador"
+                                    });
 
-                                ContratoUI.notify("success", data.msg || "Solicitud enviada. Esperando aprobación...");
+                                    console.log("Solicitud enviada:", data.msg || "Esperando aprobación...");
+                                    sessionStorage.setItem("solicitudCambio", JSON.stringify({
+                                        activa: true,
+                                        id_reservacion: window.ID_RESERVACION,
+                                        f, h
+                                    }));
+
+                                    if (typeof iniciarMonitoreoAprobacion === 'function') {
+                                        iniciarMonitoreoAprobacion();
+                                    }
+                                } catch (err) {
+                                    console.error("Error enviando solicitud:", err);
+                                }
+                            },
+                            () => {
+                                input.value = fechaOriginal;
+                            }
+                        ).set('labels', { ok: 'Enviar Solicitud', cancel: 'Cancelar' });
+                    } else {
+                        // Fallback si alertify no está disponible
+                        console.log("⚠️ Cambio de fecha requiere autorización");
+                        try {
+                            ContratoAPI.postJSON("/admin/contrato/solicitar-cambio-fecha", {
+                                id_reservacion: window.ID_RESERVACION,
+                                nueva_fecha: f,
+                                nueva_hora: h,
+                                motivo: "Modificación en mostrador"
+                            }).then(data => {
+                                console.log("Solicitud enviada:", data.msg || "Esperando aprobación...");
                                 sessionStorage.setItem("solicitudCambio", JSON.stringify({
                                     activa: true,
                                     id_reservacion: window.ID_RESERVACION,
@@ -253,14 +279,13 @@ document.addEventListener("DOMContentLoaded", () => {
                                 if (typeof iniciarMonitoreoAprobacion === 'function') {
                                     iniciarMonitoreoAprobacion();
                                 }
-                            } catch (err) {
-                                ContratoUI.notify("error", "Error enviando solicitud.");
-                            }
-                        },
-                        () => {
-                            input.value = fechaOriginal;
+                            }).catch(err => {
+                                console.error("Error enviando solicitud:", err);
+                            });
+                        } catch (err) {
+                            console.error("Error enviando solicitud:", err);
                         }
-                    ).set('labels', { ok: 'Enviar Solicitud', cancel: 'Cancelar' });
+                    }
 
                     e.target.value = fechaOriginal;
                     return;
@@ -467,33 +492,59 @@ document.addEventListener("DOMContentLoaded", () => {
                 const fechaOriginal = new Date(originalValueE.replace(' ', 'T'));
 
                 if (fechaSeleccionada.toDateString() !== fechaOriginal.toDateString()) {
-                    alertify.confirm(
-                        "⚠️ Requiere Autorización",
-                        "Cambiar la fecha requiere autorización. ¿Enviar solicitud?",
-                        async () => {
-                            try {
-                                const f = fechaSeleccionada.toISOString().split('T')[0];
-                                const h = `${String(fechaSeleccionada.getHours()).padStart(2, '0')}:${String(fechaSeleccionada.getMinutes()).padStart(2, '0')}`;
+                    // ✅ MODAL DE CONFIRMACIÓN RESTAURADO
+                    if (typeof alertify !== 'undefined') {
+                        alertify.confirm(
+                            "⚠️ Requiere Autorización",
+                            "Cambiar la fecha de Entrega requiere autorización de un supervisor. ¿Deseas enviar la solicitud de cambio?",
+                            async () => {
+                                try {
+                                    const f = fechaSeleccionada.toISOString().split('T')[0];
+                                    const h = `${String(fechaSeleccionada.getHours()).padStart(2, '0')}:${String(fechaSeleccionada.getMinutes()).padStart(2, '0')}`;
 
-                                await fetch('/admin/contrato/solicitar-cambio-fecha', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'X-CSRF-TOKEN': window.csrfToken
-                                    },
-                                    body: JSON.stringify({
-                                        id_reservacion: window.ID_RESERVACION,
-                                        nueva_fecha: f,
-                                        nueva_hora: h
-                                    })
-                                });
-                                alertify.success("Solicitud enviada.");
-                            } catch (e) {
+                                    await fetch('/admin/contrato/solicitar-cambio-fecha', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': window.csrfToken
+                                        },
+                                        body: JSON.stringify({
+                                            id_reservacion: window.ID_RESERVACION,
+                                            nueva_fecha: f,
+                                            nueva_hora: h
+                                        })
+                                    });
+                                    console.log("Solicitud enviada.");
+                                } catch (e) {
+                                    instance.setDate(fechaOriginal, false);
+                                }
+                            },
+                            () => {
                                 instance.setDate(fechaOriginal, false);
                             }
-                        },
-                        () => instance.setDate(fechaOriginal, false)
-                    );
+                        );
+                    } else {
+                        console.log("⚠️ Cambio de fecha requiere autorización");
+                        try {
+                            const f = fechaSeleccionada.toISOString().split('T')[0];
+                            const h = `${String(fechaSeleccionada.getHours()).padStart(2, '0')}:${String(fechaSeleccionada.getMinutes()).padStart(2, '0')}`;
+
+                            fetch('/admin/contrato/solicitar-cambio-fecha', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': window.csrfToken
+                                },
+                                body: JSON.stringify({
+                                    id_reservacion: window.ID_RESERVACION,
+                                    nueva_fecha: f,
+                                    nueva_hora: h
+                                })
+                            }).then(() => console.log("Solicitud enviada."));
+                        } catch (e) {
+                            instance.setDate(fechaOriginal, false);
+                        }
+                    }
                 } else {
                     originalValueE = instance.formatDate(fechaSeleccionada, "Y-m-d H:i");
                     pickerE.value = originalValueE;
@@ -524,7 +575,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     fechaDevolucion = new Date(fechaEntrega);
                     fechaDevolucion.setDate(fechaEntrega.getDate() + 1);
                     instance.setDate(fechaDevolucion, false);
-                    alertify.warning('Fecha de devolución ajustada automáticamente.');
+                    console.warn('Fecha de devolución ajustada automáticamente.');
                 }
 
                 actualizarUIFechas(fechaDevolucion, 'devolucion');
@@ -738,12 +789,12 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             if (result.success) {
                 if (typeof window.cargarResumenBasico === 'function') await window.cargarResumenBasico();
-                ContratoUI.notify("success", "Upgrade aplicado.");
+                console.log("Upgrade aplicado.");
                 modal.classList.remove("show");
                 window.showStep(2);
             }
         } catch (e) {
-            ContratoUI.notify("error", "Error de conexión.");
+            console.error("Error de conexión:", e);
             btn.disabled = false; btn.innerHTML = "Aceptar upgrade";
         }
     });
@@ -848,7 +899,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const codigoCat = card.dataset.codigo || "";
 
             if (card.classList.contains("activa")) {
-                ContratoUI.notify("warning", "Esa ya es la categoría actual.");
+                console.warn("Esa ya es la categoría actual.");
                 return;
             }
 
@@ -856,7 +907,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const inputD = $elId("pickerDevolucion");
 
             if (!inputE?.value || !inputD?.value) {
-                return ContratoUI.notify("error", "No se pudieron leer las fechas de la reservación.");
+                console.error("No se pudieron leer las fechas de la reservación.");
+                return;
             }
 
             const [fechaInicio, horaInicio] = inputE.value.split(" ");
@@ -909,14 +961,13 @@ document.addEventListener("DOMContentLoaded", () => {
                         await window.cargarResumenBasico();
                     }
 
-                    ContratoUI.notify("success", `Categoría cambiada a ${nombreCat}.`);
+                    console.log(`Categoría cambiada a ${nombreCat}.`);
                     cerrarModal();
                 } else {
-                    ContratoUI.notify("error", result.error || "No se pudo cambiar la categoría.");
+                    console.error(result.error || "No se pudo cambiar la categoría.");
                 }
             } catch (err) {
                 console.error("Error al cambiar categoría:", err);
-                ContratoUI.notify("error", "Error de conexión al cambiar categoría.");
             } finally {
                 categoriaEnProceso = false;
                 card.style.opacity = "1";
@@ -1719,7 +1770,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // =============================================
     $el("#go2")?.addEventListener("click", async () => {
         if (!obtenerVehiculoSeleccionadoId()) {
-            return ContratoUI.notify("error", "Debes seleccionar un vehículo antes de continuar.");
+            console.error("Debes seleccionar un vehículo antes de continuar.");
+            return;
         }
 
         window.showStep(2);
@@ -1746,13 +1798,17 @@ document.addEventListener("DOMContentLoaded", () => {
         const elInicial = $elId("contratoInicial");
         const idReservacion = window.ID_RESERVACION || (elInicial ? elInicial.dataset.idReservacion : null);
 
-        if (!idReservacion) return ContratoUI.notify("error", "Error: ID de reservación perdido.");
+        if (!idReservacion) {
+            console.error("Error: ID de reservación perdido.");
+            return;
+        }
 
         const paqueteSeleccionado = document.querySelector(".input-paquete:checked");
         const individualSeleccionado = document.querySelector(".switch-individual:checked");
 
         if (!paqueteSeleccionado && !individualSeleccionado) {
-            return ContratoUI.notify("warning", "Selecciona al menos un paquete o una protección para continuar.");
+            console.warn("Selecciona al menos un paquete o una protección para continuar.");
+            return;
         }
 
         localStorage.removeItem(`contratoPasoActual_${idReservacion}`);
@@ -1824,7 +1880,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let modal, btnAbrir, btnAplicar;
         let totalModal, totalResumen, resumenNombre;
 
-        const FORZADOS = ["LOU", "LA"];
+        const FORZADOS = [];   // antes ["LOU","LA"]
         const DEFAULT_COLISION = ["DECLINE CDW", "DECLINE"];
         const DEFAULT_TERCEROS = ["LI"];
 
@@ -1888,6 +1944,61 @@ document.addEventListener("DOMContentLoaded", () => {
             return parseFloat(card?.dataset?.precio || 0);
         }
 
+        // --- PROTECCIONES AUTOMÁTICAS (gratis, se encienden al activar Colisión y robo) ---
+        function getCardsAutomaticas() {
+            return modal.querySelectorAll(
+                '.individuales-grid[data-categoria="automaticas"] .individual-card'
+            );
+        }
+
+        function hayColisionActiva() {
+            for (const [, item] of individualesSeleccionados) {
+                if (normalizarSeccion(item.grupo) === "COLISIÓN Y ROBO") return true;
+            }
+            return false;
+        }
+
+        function aplicarEstadoAutomaticas() {
+            const encender = hayColisionActiva();
+
+            getCardsAutomaticas().forEach(card => {
+                const checkbox = card.querySelector(".switch-individual");
+                const pill = card.querySelector(".switch-pill");
+
+                // Estado visual (SIN sumar al total ni al Map de seleccionados)
+                card.classList.toggle("selected", encender);
+                if (checkbox) checkbox.checked = encender;
+
+                // Bloqueo permanente: nunca se tocan a mano
+                card.classList.add("card-automatica-bloqueada");
+                if (checkbox) checkbox.disabled = true;
+                if (pill) pill.classList.add("pill-bloqueada");
+            });
+        }
+
+        // Nombres de las automáticas que quedaron encendidas (para mostrarlas en los resúmenes).
+        // No cuestan: solo se listan como incluidas cuando hay colisión activa.
+        function getNombresAutomaticasActivas() {
+            if (!hayColisionActiva()) return [];
+            const nombres = [];
+            getCardsAutomaticas().forEach(card => {
+                const n = getNombreIndividual(card);
+                if (n) nombres.push(n);
+            });
+            return nombres;
+        }
+
+        // Automáticas activas como {id, precio:0} para persistirlas en backend (gratis).
+        function getAutomaticasParaGuardar() {
+            if (!hayColisionActiva()) return [];
+            const filas = [];
+            getCardsAutomaticas().forEach(card => {
+                const id = getIdCard(card);
+                if (id) filas.push({ id: id, precio: 0 });
+            });
+            return filas;
+        }
+
         function esForzado(nombre) {
             return FORZADOS.includes(normalizarTexto(nombre));
         }
@@ -1895,11 +2006,6 @@ document.addEventListener("DOMContentLoaded", () => {
         function esDefault(nombre, grupo) {
             const n = normalizarTexto(nombre);
             const g = normalizarTexto(grupo);
-
-            if (g.includes("COLISIÓN") || g.includes("COLISION") || g.includes("ROBO")) {
-                return n.includes("DECLINE");
-            }
-
             if (g.includes("TERCEROS") || g.includes("DAÑOS")) {
                 return n === "LI" || n.startsWith("LI ") || n.includes("LI -");
             }
@@ -1942,22 +2048,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const checkbox = card.querySelector(".switch-individual");
             const nombre = getNombreIndividual(card);
-            const forzado = esForzado(nombre);
 
             if (checkbox) {
                 checkbox.checked = checked;
-                checkbox.dataset.forzado = forzado ? "true" : "false";
-                checkbox.disabled = forzado;
+                checkbox.disabled = false;
+                checkbox.dataset.forzado = "false";
             }
 
             card.classList.toggle("selected", checked);
 
             const pill = card.querySelector(".switch-pill");
-            if (pill && forzado && !pill.querySelector(".lock-badge")) {
-                const badge = document.createElement("span");
-                badge.className = "lock-badge";
-                badge.textContent = " 🔒";
-                pill.appendChild(badge);
+            if (pill) {
+                const badge = pill.querySelector(".lock-badge");
+                if (badge) badge.remove();
             }
         }
 
@@ -1991,7 +2094,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 nombre,
                 grupo,
                 precio,
-                forzado
+                forzado: false
             });
 
             actualizarUICardIndividual(card, true);
@@ -2018,8 +2121,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 const nombre = getNombreIndividual(card);
                 const grupo = getGrupoDeCard(card);
 
-                if (esForzado(nombre) || esDefault(nombre, grupo)) {
-                    agregarIndividual(card, esForzado(nombre));
+                // SOLO seleccionar si es exactamente LI
+                // Nada de DECLINE, LOU, LA, CDW, etc.
+                if (esDefault(nombre, grupo)) {
+                    agregarIndividual(card, false);
+                }
+                // Si no es LI, aseguramos que NO esté seleccionado
+                else {
+                    const checkbox = card.querySelector(".switch-individual");
+                    if (checkbox) {
+                        checkbox.checked = false;
+                        card.classList.remove("selected");
+                    }
                 }
             });
 
@@ -2044,48 +2157,47 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         function seleccionarIndividual(card) {
-            limpiarPaquetes();
+                // Las automáticas están bloqueadas: no responden al clic manual
+                if (card.closest('.individuales-grid[data-categoria="automaticas"]')) {
+                    return;
+                }
 
-            const id = getIdCard(card);
-            const nombre = getNombreIndividual(card);
-            const grupo = getGrupoDeCard(card);
-            const checkbox = card.querySelector(".switch-individual");
+                limpiarPaquetes();
 
-            console.log("🔄 Seleccionando individual:", { id, nombre, grupo });
+                const id = getIdCard(card);
+                const nombre = getNombreIndividual(card);
+                const grupo = getGrupoDeCard(card);
+                const checkbox = card.querySelector(".switch-individual");
 
-            if (esForzado(nombre)) {
-                agregarIndividual(card, true);
-                return;
-            }
+                console.log("🔄 Seleccionando individual:", { id, nombre, grupo });
 
-            if (checkbox?.checked) {
-                quitarIndividual(card);
+                if (checkbox?.checked) {
+                    quitarIndividual(card);
+                    actualizarTotales();
+                    return;
+                }
+
+                const grupoNormalizado = normalizarSeccion(grupo);
+                const esSeccionUnica = SECCIONES_UNICAS.some(s => normalizarSeccion(s) === grupoNormalizado);
+
+                console.log("📌 Grupo normalizado:", grupoNormalizado, "¿Es sección única?", esSeccionUnica);
+
+                if (esSeccionUnica) {
+                    modal.querySelectorAll(".individual-card").forEach(otraCard => {
+                        if (otraCard === card) return;
+
+                        const otroGrupo = getGrupoDeCard(otraCard);
+                        const otroGrupoNormalizado = normalizarSeccion(otroGrupo);
+
+                        if (otroGrupoNormalizado === grupoNormalizado) {
+                            quitarIndividual(otraCard);
+                        }
+                    });
+                }
+
+                agregarIndividual(card, false);
                 actualizarTotales();
-                return;
             }
-
-            const grupoNormalizado = normalizarSeccion(grupo);
-            const esSeccionUnica = SECCIONES_UNICAS.some(s => normalizarSeccion(s) === grupoNormalizado);
-
-            console.log("📌 Grupo normalizado:", grupoNormalizado, "¿Es sección única?", esSeccionUnica);
-
-            if (esSeccionUnica) {
-                modal.querySelectorAll(".individual-card").forEach(otraCard => {
-                    if (otraCard === card) return;
-
-                    const otroGrupo = getGrupoDeCard(otraCard);
-                    const otroNombre = getNombreIndividual(otraCard);
-                    const otroGrupoNormalizado = normalizarSeccion(otroGrupo);
-
-                    if (otroGrupoNormalizado === grupoNormalizado && !esForzado(otroNombre)) {
-                        quitarIndividual(otraCard);
-                    }
-                });
-            }
-
-            agregarIndividual(card, false);
-            actualizarTotales();
-        }
 
         function pintarProteccionesEnCarrito() {
             const dias = parseInt(document.getElementById("detDiasRenta")?.textContent || 1);
@@ -2128,6 +2240,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
             }
 
+            // Protecciones automáticas (gratis): se listan como incluidas, sin sumar al total
+            getNombresAutomaticasActivas().forEach(nombre => {
+                html += `
+                <li>
+                    <span>${nombre}</span>
+                    <b>${money(0)}</b>
+                </li>
+            `;
+            });
+
             listas.forEach(lista => {
                 if (lista) {
                     lista.innerHTML = html || `<li class="empty">—</li>`;
@@ -2155,6 +2277,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
+            // Sumar las automáticas (gratis) al texto compacto
+            const autoCompacto = getNombresAutomaticasActivas();
+            if (autoCompacto.length) {
+                textoCompacto = (textoCompacto === "—")
+                    ? autoCompacto.join(", ")
+                    : `${textoCompacto}, ${autoCompacto.join(", ")}`;
+            }
+
             if (compacto) compacto.textContent = textoCompacto;
             if (compactoModal) compactoModal.textContent = textoCompacto;
         }
@@ -2162,36 +2292,12 @@ document.addEventListener("DOMContentLoaded", () => {
         function actualizarBadgeCarrito() {
             const btn = document.getElementById("btnToggleDetalleModal");
             if (!btn) return;
-
-            let badge = btn.querySelector(".cart-badge");
-            if (!badge) {
-                badge = document.createElement("span");
-                badge.className = "cart-badge";
-                const icono = btn.querySelector(".fa-shopping-cart");
-                (icono ? icono.parentNode : btn).insertBefore(
-                    badge, icono ? icono.nextSibling : btn.firstChild
-                );
-            }
-
-            const vistaInd = document.getElementById("modal-vista-individuales");
-            const enIndividuales = vistaInd && vistaInd.style.display !== "none";
-
-            const n = enIndividuales
-                ? individualesSeleccionados.size
-                : (paqueteSeleccionado ? 1 : 0);
-
-            badge.textContent = n;
-            badge.classList.toggle("is-empty", n === 0);
-
-            if (badge.dataset.prev !== String(n)) {
-                badge.classList.remove("pop");
-                void badge.offsetWidth;
-                badge.classList.add("pop");
-                badge.dataset.prev = String(n);
-            }
+            const badge = btn.querySelector(".cart-badge");
+            if (badge) badge.remove();
         }
 
         function actualizarTotales() {
+            aplicarEstadoAutomaticas();   // refresca estado de las automáticas (gratis/bloqueadas)
             const dias = parseInt(document.getElementById("detDiasRenta")?.textContent || 1);
             let subtotal = 0;
             let textoResumen = "";
@@ -2207,6 +2313,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
 
                 textoResumen = ` ${items.map(i => i.nombre).join(", ")}`;
+            }
+
+            // Agregar las protecciones automáticas (gratis) al texto, si están activas
+            const autoActivas = getNombresAutomaticasActivas();
+            if (autoActivas.length) {
+                const base = textoResumen.trim();
+                textoResumen = base
+                    ? `${base}, ${autoActivas.join(", ")}`
+                    : autoActivas.join(", ");
             }
 
             if (totalModal) totalModal.textContent = money(subtotal);
@@ -2266,6 +2381,39 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
+
+        // --- Campanita: mover la MISMA instancia al header del modal y devolverla ---
+        let _campanitaHome = null;
+        let _campanitaNext = null;
+
+        function moverCampanitaAlModal() {
+            const wrapper = document.querySelector('.campanita-wrapper');
+            const destino = modal?.querySelector('.modal-resumen-wrapper');
+            if (!wrapper || !destino) return;
+
+            if (!_campanitaHome) {
+                _campanitaHome = wrapper.parentNode;
+                _campanitaNext = wrapper.nextElementSibling;
+            }
+
+            // Insertar ANTES del carrito → queda a la izquierda
+            destino.parentNode.insertBefore(wrapper, destino);
+            wrapper.classList.add('campanita-en-modal');
+        }
+
+        function devolverCampanita() {
+            const wrapper = document.querySelector('.campanita-wrapper');
+            if (!wrapper || !_campanitaHome) return;
+
+            wrapper.classList.remove('campanita-en-modal');
+
+            if (_campanitaNext && _campanitaNext.parentNode === _campanitaHome) {
+                _campanitaHome.insertBefore(wrapper, _campanitaNext);
+            } else {
+                _campanitaHome.appendChild(wrapper);
+            }
+        }
+
         function abrirModal() {
 
             window.categoriaActual = obtenerCategoriaActual();
@@ -2293,9 +2441,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             setTimeout(actualizarTodasLasGarantias, 200);
             actualizarTotales();
+            moverCampanitaAlModal();
         }
 
         function cerrarModal() {
+            devolverCampanita();
             modal.classList.remove("active");
             modal.style.display = "none";
             document.body.style.overflow = "";
@@ -2312,16 +2462,29 @@ document.addEventListener("DOMContentLoaded", () => {
             const idRes = window.ID_RESERVACION;
             if (!idRes) return;
 
+            // Individuales elegidas por el usuario + automáticas gratis (precio 0) si hay colisión.
+            let individualesPayload = [];
+            if (!paqueteSeleccionado) {
+                individualesPayload = Array.from(individualesSeleccionados.values()).map(i => ({
+                    id: i.id,
+                    precio: i.precio
+                }));
+
+                // Agregar automáticas (gratis) evitando duplicados por id
+                const yaIds = new Set(individualesPayload.map(i => String(i.id)));
+                getAutomaticasParaGuardar().forEach(a => {
+                    if (!yaIds.has(String(a.id))) {
+                        individualesPayload.push(a);
+                        yaIds.add(String(a.id));
+                    }
+                });
+            }
+
             const payload = {
                 id_reservacion: idRes,
                 id_paquete: paqueteSeleccionado?.id ?? null,
                 precio_por_dia: paqueteSeleccionado?.precio ?? null,
-                individuales: paqueteSeleccionado
-                    ? []
-                    : Array.from(individualesSeleccionados.values()).map(i => ({
-                        id: i.id,
-                        precio: i.precio
-                    }))
+                individuales: individualesPayload
             };
 
             try {
@@ -2341,7 +2504,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             } catch (err) {
                 console.error("Error guardando protecciones:", err);
-                if (window.alertify) alertify.error("Error al guardar protecciones");
                 throw err;
             }
         }
@@ -2364,7 +2526,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 let huboAlgo = false;
 
                 r.seguros.lista.forEach(item => {
-
                     // ── Paquete ──
                     if (item.id_paquete) {
                         const radio = modal.querySelector(`.input-paquete[value="${item.id_paquete}"]`);
@@ -2378,23 +2539,32 @@ document.addEventListener("DOMContentLoaded", () => {
                     // ── Individual ──
                     if (item.id_individual) {
                         const card = modal.querySelector(`.individual-card[data-id="${item.id_individual}"]`);
-                        if (card) {
-                            agregarIndividual(card, esForzado(getNombreIndividual(card)));
-                            huboAlgo = true;
-                        }
+                        if (!card) return;
+
+                        // Las automáticas NO se meten al Map (son visuales/gratis).
+                        // Se encenderán solas si la colisión guardada las activa.
+                        const esAutomatica = !!card.closest('.individuales-grid[data-categoria="automaticas"]');
+                        if (esAutomatica) return;
+
+                        // Restaurar TODA individual guardada tal cual (colisión, LI, etc.)
+                        agregarIndividual(card, false);
+                        huboAlgo = true;
                     }
                 });
 
                 if (huboAlgo) {
                     actualizarTotales();
                     sincronizarModalAPaso();
-                    console.log("Protecciones hidratadas desde backend");
+                    console.log("✅ Selección de protecciones restaurada desde backend");
+                } else {
+                    aplicarDefaultsIndividuales();
                 }
 
                 return huboAlgo;
 
             } catch (e) {
                 console.error("Error hidratando protecciones:", e);
+                aplicarDefaultsIndividuales();
                 return false;
             }
         }
@@ -2575,7 +2745,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     pintarProteccionesEnCarrito();
                     cerrarModal();
 
-                    if (window.alertify) alertify.success("Protecciones aplicadas");
+                    console.log("Protecciones aplicadas");
                 } catch (err) {
                     console.error(err);
                 } finally {
@@ -2598,23 +2768,28 @@ document.addEventListener("DOMContentLoaded", () => {
                     modal.style.display = "none";
                     modal.classList.remove("active");
 
-                    const hidratado = await hidratarDesdeBackend();
+                    aplicarDefaultsIndividuales();
+                    sincronizarModalAPaso();
 
-                    if (!hidratado) {
+                    try {
+                        await hidratarDesdeBackend();
+                    } catch (e) {
+                        console.warn("Error en hidratación, usando defaults:", e);
                         aplicarDefaultsIndividuales();
-                        sincronizarModalAPaso();
                     }
 
                     if (typeof window.marcarChipsConSeleccion === "function") {
                         window.marcarChipsConSeleccion();
                     }
 
+                    aplicarEstadoAutomaticas();   // deja las automáticas bloqueadas desde el arranque
+
                     window.abrirModalProtecciones = abrirModal;
                     window.cerrarModalProtecciones = cerrarModal;
                     window.aplicarDefaultsIndividuales = aplicarDefaultsIndividuales;
                     window.hidratarProtecciones = hidratarDesdeBackend;
 
-                    console.log("Modal de protecciones listo");
+                    console.log("✅ Modal de protecciones listo - Solo LI por defecto");
                     return;
                 }
 
@@ -2623,7 +2798,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     console.warn("No se encontró el modal de protecciones");
                 }
             }, 200);
-        }
+}
 
         init();
     })();
@@ -3766,3 +3941,401 @@ document.addEventListener("DOMContentLoaded", () => {
     })();
 
 });
+
+/* ================================ CAMPANITA DE COMENTARIOS ================================ */
+(function () {
+    function init() {
+        const btnCampanita = document.getElementById('btnToggleComentarios');
+        const panel        = document.getElementById('comentariosDesplegable');
+        const lista        = document.getElementById('comentariosLista');
+        const input        = document.getElementById('comentarioInput');
+        const btnAgregar   = document.getElementById('btnAgregarComentario');
+        const badge        = document.getElementById('campanitaBadge');
+
+        if (!btnCampanita || !panel || !lista) return;
+
+        const idReservacion = window.ID_RESERVACION;
+        const csrf = window.csrfToken;
+        const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        let comentariosActuales = '';
+
+        const escapar = (t) => { const d = document.createElement('div'); d.textContent = t == null ? '' : String(t); return d.innerHTML; };
+
+        const parsear = (txt) => !txt ? [] : String(txt).split('\n').map(l => l.trim()).filter(Boolean);
+
+        const separarFecha = (linea) => {
+            const m = linea.match(/^\[([^\]]+)\]\s*(.*)$/);
+            return m ? { fecha: m[1], texto: m[2] } : { fecha: null, texto: linea };
+        };
+
+        function render(comentarios) {
+            const items = parsear(comentarios);
+            if (badge) { badge.textContent = items.length; badge.classList.toggle('is-empty', items.length === 0); }
+
+            if (!items.length) { lista.innerHTML = '<div class="comentarios-vacio">Sin comentarios registrados.</div>'; return; }
+
+            lista.innerHTML = items.map(l => {
+                const { fecha, texto } = separarFecha(l);
+                const f = fecha ? `<span class="comentario-fecha">${escapar(fecha)}</span>` : '';
+                return `<div class="comentario-item">${f}${escapar(texto)}</div>`;
+            }).join('');
+            lista.scrollTop = lista.scrollHeight;
+        }
+
+        function marca() {
+            const d = new Date();
+            const p = (n) => String(n).padStart(2, '0');
+            return `${p(d.getDate())}-${MESES[d.getMonth()]}-${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+        }
+
+        async function cargar() {
+            if (!idReservacion) return;
+            try {
+                const resp = await fetch(`/admin/contrato/comentarios/${idReservacion}`, { headers: { 'Accept': 'application/json' } });
+                const data = await resp.json();
+                comentariosActuales = data.comentarios || '';
+                render(comentariosActuales);
+                if (parsear(comentariosActuales).length) {
+                    btnCampanita.classList.remove('tiene-comentarios'); void btnCampanita.offsetWidth;
+                    btnCampanita.classList.add('tiene-comentarios');
+                }
+            } catch (e) {
+                console.error('Error cargando comentarios:', e);
+                lista.innerHTML = '<div class="comentarios-vacio">No se pudieron cargar los comentarios.</div>';
+            }
+        }
+
+        async function agregar() {
+            const texto = (input?.value || '').trim();
+            if (!texto) { input?.focus(); return; }
+
+            const nuevaLinea = `[${marca()}] ${texto}`;
+            const nuevoTexto = comentariosActuales.trim() !== '' ? comentariosActuales.replace(/\s+$/, '') + '\n' + nuevaLinea : nuevaLinea;
+
+            btnAgregar.disabled = true;
+            const original = btnAgregar.innerHTML;
+            btnAgregar.innerHTML = 'Guardando…';
+            try {
+                const resp = await fetch('/admin/contrato/comentarios', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
+                    body: JSON.stringify({ id_reservacion: idReservacion, comentarios: nuevoTexto })
+                });
+                const data = await resp.json();
+                if (!data.success) throw new Error(data.message || 'Error al guardar');
+
+                comentariosActuales = nuevoTexto;
+                render(comentariosActuales);
+                if (input) input.value = '';
+                btnCampanita.classList.remove('tiene-comentarios'); void btnCampanita.offsetWidth;
+                btnCampanita.classList.add('tiene-comentarios');
+                console.log('Comentario agregado');
+            } catch (e) {
+                console.error('Error guardando comentario:', e);
+            } finally {
+                btnAgregar.disabled = false;
+                btnAgregar.innerHTML = original;
+            }
+        }
+
+        const abrir  = () => panel.style.display = 'block';
+        const cerrar = () => panel.style.display = 'none';
+
+        btnCampanita.addEventListener('click', (e) => { e.stopPropagation(); panel.style.display === 'block' ? cerrar() : abrir(); });
+        panel.addEventListener('click', (e) => e.stopPropagation());
+        btnAgregar?.addEventListener('click', agregar);
+        document.addEventListener('click', (e) => {
+            if (panel.style.display !== 'block') return;
+            if (btnCampanita.contains(e.target) || panel.contains(e.target)) return;
+            cerrar();
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && panel.style.display === 'block') cerrar(); });
+
+        cargar();
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+})();
+
+/* ===== DROPDOWN OFICINA DEVOLUCIÓN (portal al body: escapa del transform de la card) ===== */
+(function () {
+    const ICONOS = {
+        avion:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>',
+        autobus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v8c0 .4.1.8.2 1.2C2.5 16.3 3 18 3 18h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h6"/><circle cx="17" cy="18" r="2"/></svg>',
+        oficina:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>',
+        pin:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>'
+    };
+
+    function pintarIconos() {
+        document.querySelectorAll('.oficina-ico').forEach(el => {
+            const tipo = el.getAttribute('data-tipo') || 'pin';
+            el.innerHTML = ICONOS[tipo] || ICONOS.pin;
+        });
+    }
+
+    function init() {
+        const dd = document.getElementById('oficinaDropdown');
+        if (!dd) return;
+
+        const btn      = document.getElementById('oficinaDropdownBtn');
+        const panel    = document.getElementById('oficinaDropdownPanel');
+        const labelSel = document.getElementById('oficinaLabelSel');
+        const hidden   = document.getElementById('sucursalDevolucionInput');
+        const icoBtn   = btn.querySelector('.oficina-ico');
+        const idReservacion = dd.getAttribute('data-id-reservacion');
+        const csrf = window.csrfToken;
+
+        // 🚪 PORTAL: sacar el panel de la card y colgarlo del body.
+        // Así ningún transform de la card puede romper el position:fixed.
+        document.body.appendChild(panel);
+
+        pintarIconos();
+
+        // 🔒 Evita que el click en el botón abra el calendario de la card
+        ['click', 'mousedown', 'pointerdown', 'touchstart'].forEach(evt => {
+            dd.addEventListener(evt, (e) => e.stopPropagation());
+        });
+
+        // 📌 Posiciona el panel pegado al botón (voltea hacia arriba si no cabe)
+        function posicionarPanel() {
+            const r = btn.getBoundingClientRect();
+            panel.style.width = r.width + 'px';
+            panel.style.left  = r.left + 'px';
+
+            const alto = panel.offsetHeight;
+            const espacioAbajo = window.innerHeight - r.bottom;
+            if (espacioAbajo < alto + 12 && r.top > alto + 12) {
+                panel.style.top = (r.top - alto - 6) + 'px';
+            } else {
+                panel.style.top = (r.bottom + 6) + 'px';
+            }
+        }
+
+        const abrir = () => {
+            dd.classList.add('is-open');
+            panel.style.display = 'block';   // 👈 controlado desde JS (el panel ya no está dentro de .oficina-dropdown)
+            posicionarPanel();
+            window.addEventListener('scroll', posicionarPanel, true);
+            window.addEventListener('resize', posicionarPanel);
+        };
+        const cerrar = () => {
+            dd.classList.remove('is-open');
+            panel.style.display = 'none';
+            window.removeEventListener('scroll', posicionarPanel, true);
+            window.removeEventListener('resize', posicionarPanel);
+        };
+        const toggle = () => dd.classList.contains('is-open') ? cerrar() : abrir();
+
+        btn.addEventListener('click', toggle);
+        document.addEventListener('click', (e) => {
+            if (!dd.contains(e.target) && !panel.contains(e.target)) cerrar();
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrar(); });
+
+        panel.querySelectorAll('.oficina-opcion').forEach(op => {
+            op.addEventListener('click', async () => {
+                const id     = op.getAttribute('data-id');
+                const nombre = op.getAttribute('data-nombre');
+                const tipo   = op.getAttribute('data-tipo');
+
+                labelSel.textContent = nombre;
+                hidden.value = id;
+                icoBtn.setAttribute('data-tipo', tipo);
+                icoBtn.innerHTML = ICONOS[tipo] || ICONOS.pin;
+                panel.querySelectorAll('.oficina-opcion').forEach(o => o.classList.remove('is-selected'));
+                op.classList.add('is-selected');
+                cerrar();
+
+                try {
+                    const resp = await fetch('/admin/contrato/sucursal-devolucion', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
+                        body: JSON.stringify({ id_reservacion: idReservacion, sucursal_entrega: id })
+                    });
+                    const data = await resp.json();
+                    if (!data.success) throw new Error(data.message || 'Error');
+                    console.log('Oficina de devolución actualizada');
+                } catch (e) {
+                    console.error('Error guardando sucursal de devolución:', e);
+                }
+            });
+        });
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+})();
+
+/* ===== DROPDOWN DELIVERY + LINK MAPS ===== */
+(function () {
+    const ICONOS = {
+        avion:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>',
+        autobus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v8c0 .4.1.8.2 1.2C2.5 16.3 3 18 3 18h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h6"/><circle cx="17" cy="18" r="2"/></svg>',
+        pin:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>',
+        edit:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+        maps:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>'
+    };
+    const pintar = (scope) => (scope || document).querySelectorAll('.deliv-ico').forEach(el => {
+        el.innerHTML = ICONOS[el.getAttribute('data-tipo')] || ICONOS.pin;
+    });
+
+    function init() {
+        const dd     = document.getElementById('delivUbicDropdown');
+        const select = document.getElementById('deliveryUbicacion');
+        if (!dd || !select) return;
+
+        const btn   = document.getElementById('delivUbicBtn');
+        const panel = document.getElementById('delivUbicPanel');
+        const label = document.getElementById('delivUbicLabel');
+        const ico   = btn.querySelector('.deliv-ico');
+
+        pintar(dd);
+
+        // Refleja el valor inicial del select en el botón
+        const optSel = select.options[select.selectedIndex];
+        if (optSel && optSel.value !== '') {
+            label.textContent = optSel.text.trim();
+            const opBtn = panel.querySelector(`.deliv-opcion[data-id="${optSel.value}"]`);
+            const tipo = opBtn?.getAttribute('data-tipo') || 'pin';
+            ico.setAttribute('data-tipo', tipo); ico.innerHTML = ICONOS[tipo] || ICONOS.pin;
+            opBtn?.classList.add('is-selected');
+        }
+
+        function posicionar() {
+            const r = btn.getBoundingClientRect();
+            panel.style.width = r.width + 'px';
+            panel.style.left  = r.left + 'px';
+            const alto = panel.offsetHeight, espacio = window.innerHeight - r.bottom;
+            panel.style.top = (espacio < alto + 12 && r.top > alto + 12) ? (r.top - alto - 6) + 'px' : (r.bottom + 6) + 'px';
+        }
+        const abrir  = () => { dd.classList.add('is-open'); panel.style.display = 'block'; posicionar();
+            window.addEventListener('scroll', posicionar, true); window.addEventListener('resize', posicionar); };
+        const cerrar = () => { dd.classList.remove('is-open'); panel.style.display = 'none';
+            window.removeEventListener('scroll', posicionar, true); window.removeEventListener('resize', posicionar); };
+
+        // Portal al body (evita recortes por overflow/transform)
+        document.body.appendChild(panel);
+
+        btn.addEventListener('click', (e) => { e.stopPropagation(); dd.classList.contains('is-open') ? cerrar() : abrir(); });
+        document.addEventListener('click', (e) => { if (!dd.contains(e.target) && !panel.contains(e.target)) cerrar(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrar(); });
+
+        panel.querySelectorAll('.deliv-opcion').forEach(op => {
+            op.addEventListener('click', () => {
+                const id   = op.getAttribute('data-id');
+                const txt  = op.querySelector('.deliv-opcion-txt')?.textContent.trim() || '';
+                const tipo = op.getAttribute('data-tipo') || 'pin';
+
+                // Actualiza UI del botón
+                label.textContent = txt;
+                ico.setAttribute('data-tipo', tipo); ico.innerHTML = ICONOS[tipo] || ICONOS.pin;
+                panel.querySelectorAll('.deliv-opcion').forEach(o => o.classList.remove('is-selected'));
+                op.classList.add('is-selected');
+                cerrar();
+
+                // 🔑 Pone el valor en el SELECT OCULTO y dispara change → tu lógica actual corre igual
+                select.value = id;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+        });
+    }
+
+    // ── Link de Maps: indicaciones oficina → dirección ──
+    function initMaps() {
+        const link = document.getElementById('deliveryMapsLink');
+        const dir  = document.getElementById('deliveryDireccion');
+        if (!link || !dir) return;
+
+        const actualizar = () => {
+            const destino = (dir.value || '').trim();
+            const origen  = (link.getAttribute('data-origen') || '').trim();
+            if (!destino) { link.classList.add('is-disabled'); link.href = '#'; return; }
+            link.classList.remove('is-disabled');
+            const base = 'https://www.google.com/maps/dir/?api=1';
+            link.href = origen
+                ? `${base}&origin=${encodeURIComponent(origen)}&destination=${encodeURIComponent(destino)}`
+                : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destino)}`;
+        };
+        dir.addEventListener('input', actualizar);
+        actualizar();
+    }
+
+    function run() { init(); initMaps(); }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+    else run();
+})();
+
+
+
+
+/* ===== DROPDOWN DROPOFF (mismo estilo/orden que delivery) ===== */
+(function () {
+    const ICONOS = {
+        avion:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>',
+        autobus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v8c0 .4.1.8.2 1.2C2.5 16.3 3 18 3 18h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h6"/><circle cx="17" cy="18" r="2"/></svg>',
+        pin:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>'
+    };
+    const pintar = (scope) => scope.querySelectorAll('.deliv-ico').forEach(el => {
+        el.innerHTML = ICONOS[el.getAttribute('data-tipo')] || ICONOS.pin;
+    });
+
+    function init() {
+        const dd     = document.getElementById('dropUbicDropdown');
+        const select = document.getElementById('dropUbicacion');
+        if (!dd || !select) return;
+
+        const btn   = document.getElementById('dropUbicBtn');
+        const panel = document.getElementById('dropUbicPanel');
+        const label = document.getElementById('dropUbicLabel');
+        const ico   = btn.querySelector('.deliv-ico');
+
+        pintar(dd);
+
+        const optSel = select.options[select.selectedIndex];
+        if (optSel && optSel.value !== '') {
+            const opBtn = panel.querySelector('.deliv-opcion[data-id="' + optSel.value + '"]');
+            if (opBtn) {
+                label.textContent = opBtn.querySelector('.deliv-opcion-txt')?.textContent.trim() || optSel.text.trim();
+                const tipo = opBtn.getAttribute('data-tipo') || 'pin';
+                ico.setAttribute('data-tipo', tipo); ico.innerHTML = ICONOS[tipo] || ICONOS.pin;
+                opBtn.classList.add('is-selected');
+            }
+        }
+
+        function posicionar() {
+            const r = btn.getBoundingClientRect();
+            panel.style.width = r.width + 'px';
+            panel.style.left  = r.left + 'px';
+            const alto = panel.offsetHeight, espacio = window.innerHeight - r.bottom;
+            panel.style.top = (espacio < alto + 12 && r.top > alto + 12) ? (r.top - alto - 6) + 'px' : (r.bottom + 6) + 'px';
+        }
+        const abrir  = () => { dd.classList.add('is-open'); panel.style.display = 'block'; posicionar();
+            window.addEventListener('scroll', posicionar, true); window.addEventListener('resize', posicionar); };
+        const cerrar = () => { dd.classList.remove('is-open'); panel.style.display = 'none';
+            window.removeEventListener('scroll', posicionar, true); window.removeEventListener('resize', posicionar); };
+
+        document.body.appendChild(panel);
+
+        btn.addEventListener('click', (e) => { e.stopPropagation(); dd.classList.contains('is-open') ? cerrar() : abrir(); });
+        document.addEventListener('click', (e) => { if (!dd.contains(e.target) && !panel.contains(e.target)) cerrar(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrar(); });
+
+        panel.querySelectorAll('.deliv-opcion').forEach(op => {
+            op.addEventListener('click', () => {
+                const id   = op.getAttribute('data-id');
+                const txt  = op.querySelector('.deliv-opcion-txt')?.textContent.trim() || '';
+                const tipo = op.getAttribute('data-tipo') || 'pin';
+                label.textContent = txt;
+                ico.setAttribute('data-tipo', tipo); ico.innerHTML = ICONOS[tipo] || ICONOS.pin;
+                panel.querySelectorAll('.deliv-opcion').forEach(o => o.classList.remove('is-selected'));
+                op.classList.add('is-selected');
+                cerrar();
+                select.value = id;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+        });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+})();

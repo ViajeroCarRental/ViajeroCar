@@ -1,4 +1,4 @@
-@extends('layouts.Ventas')
+@extends(request()->boolean('embed') ? 'layouts.embed' : 'layouts.Ventas')
 
 @section('Titulo', 'Anexo – Conductor Adicional')
 
@@ -82,17 +82,17 @@
                     @endphp
                     <tr data-id-conductor="{{ $c->id_conductor }}">
                         {{-- Nombre --}}
-                        <td>
+                        <td data-label="Nombre (Name)">
                             {{ $nombreCompleto ?: '---' }}
                         </td>
 
                         {{-- Licencia --}}
-                        <td>
+                        <td data-label="No. Licencia">
                             {{ $c->numero_licencia ?? '---' }}
                         </td>
 
                         {{-- Firma del conductor --}}
-                        <td class="img-cell firma-col">
+                        <td class="img-cell firma-col" data-label="Firma del Conductor">
                             @if(!empty($c->firma_conductor))
                                 <img src="{{ asset($c->firma_conductor) }}"
                                      class="doc-thumb"
@@ -103,7 +103,7 @@
                         </td>
 
                         {{-- Acciones --}}
-                        <td class="actions">
+                        <td class="actions" data-label="Acciones">
                             {{-- Botón para firmar (lápiz) --}}
                             <button type="button"
                                     class="btn-icon btn-firmar-conductor"
@@ -285,7 +285,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
-    const baseAsset = "{{ asset('') }}"; // ej. https://tudominio.com/
+    const baseAsset = "{{ asset('') }}";
 
     /* ==============================================
        🔔 MENSAJES DE LARAVEL → ALERTIFY
@@ -314,11 +314,61 @@ document.addEventListener('DOMContentLoaded', () => {
     if (canvasA && window.SignaturePad) {
         signaturePadA = new SignaturePad(canvasA);
     }
+    function ajustarCanvasAnexo(canvas, pad){
+        if (!canvas || !pad) return;
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        const datos = pad.isEmpty() ? null : pad.toData();
+
+        let ancho = canvas.offsetWidth;
+        let alto  = canvas.offsetHeight;
+        if (!ancho || ancho < 1){
+            const cont = canvas.parentElement;
+            ancho = (cont && cont.clientWidth ? cont.clientWidth - 20 : 0) || 300;
+        }
+        if (!alto || alto < 1){ alto = 200; }
+
+        canvas.width  = ancho * ratio;
+        canvas.height = alto  * ratio;
+        canvas.getContext('2d').scale(ratio, ratio);
+
+        pad.clear();
+        if (datos) pad.fromData(datos);
+    }
+
+    function ajustarCanvasCuandoVisibleAnexo(canvas, pad){
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                ajustarCanvasAnexo(canvas, pad);
+                pad?.clear();
+            });
+        });
+    }
+
+    window.addEventListener('resize', () => {
+        ajustarCanvasAnexo(canvasA, signaturePadA);
+        if (typeof signaturePadC !== 'undefined'){
+            ajustarCanvasAnexo(
+                document.getElementById('signature-pad-conductor'),
+                signaturePadC
+            );
+        }
+    });
+    window.addEventListener('orientationchange', () => {
+        setTimeout(() => {
+            ajustarCanvasAnexo(canvasA, signaturePadA);
+            if (typeof signaturePadC !== 'undefined'){
+                ajustarCanvasAnexo(
+                    document.getElementById('signature-pad-conductor'),
+                    signaturePadC
+                );
+            }
+        }, 200);
+    });
 
     if (btnOpenA && modalA && signaturePadA) {
         btnOpenA.addEventListener('click', () => {
             modalA.style.display = 'flex';
-            signaturePadA.clear();
+            ajustarCanvasCuandoVisibleAnexo(canvasA, signaturePadA);
         });
 
         const btnClearA = document.getElementById('clear-signature');
@@ -388,7 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentConductorNombre  = '';
     let currentConductorRow     = null;
 
-    // Botones lápiz por fila
+
     const btnsFirmar = document.querySelectorAll('.btn-firmar-conductor');
 
     if (btnsFirmar && modalC && signaturePadC) {
@@ -410,11 +460,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 signaturePadC.clear();
                 modalC.style.display = 'flex';
+                ajustarCanvasCuandoVisibleAnexo(canvasC, signaturePadC);
             });
         });
     }
-
-    // Botones de limpiar / guardar del modal del conductor
     const btnClearC = document.getElementById('clear-conductor');
     const btnSaveC  = document.getElementById('save-conductor');
 
@@ -454,7 +503,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (resp.ok) {
                     alertify.success('Firma guardada correctamente para ' + (currentConductorNombre || 'conductor') + '.');
 
-                    // Actualizar la celda de firma SOLO de esta fila
                     if (resp.ruta_firma && currentConductorRow) {
                         const celdaFirma = currentConductorRow.querySelector('.firma-col');
                         if (celdaFirma) {
@@ -484,7 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Cerrar modales al hacer clic fuera
+
     window.addEventListener('click', (e) => {
         if (e.target === modalC) {
             modalC.style.display = 'none';
@@ -499,9 +547,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* =============================================
        📧 ENVÍO DE ANEXOS POR CORREO
-       - Mensaje "enviando..."
-       - Luego Laravel regresa con ->with('ok') y
-         lo mostramos arriba con alertify.success
     ============================================== */
 
     const formEnviarAnexos = document.getElementById('formEnviarAnexos');
@@ -509,7 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (formEnviarAnexos && btnEnviarAnexos) {
         formEnviarAnexos.addEventListener('submit', function (e) {
-            // Opcional: validar que haya al menos un conductor en la tabla
+
             const filas = document.querySelectorAll('#tbodyConductores tr');
             const hayConductores = filas.length > 0 && !filas[0].classList.contains('empty-row');
 
@@ -518,8 +563,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 alertify.warning('No hay conductores adicionales registrados para enviar anexos.');
                 return;
             }
-
-            // Mensaje mientras se procesa el cambio / envío de correo
             alertify.message('Se está procesando el anexo y enviando los correos, por favor espera...');
             btnEnviarAnexos.disabled = true;
         });
@@ -528,5 +571,3 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 @endsection
-
-

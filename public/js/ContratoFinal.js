@@ -65,45 +65,8 @@
     }
 
     function conectar() {
-        const overlay = $('vrUpdateOverlay');
-        if (!overlay) return;
-
-
-        overlay.addEventListener('click', () => {
-            if (overlay.classList.contains('is-success')) ocultar();
-        });
-
-
-        document.querySelectorAll('form[data-overlay-actualizacion]').forEach((form) => {
-            form.addEventListener('submit', function (e) {
-                if (e.defaultPrevented) return;
-                if (form.dataset.enviando) return;
-
-                e.preventDefault();
-                form.dataset.enviando = '1';
-
-                try { sessionStorage.setItem(CONFIG.claveSesion, '1'); } catch (_) {}
-
-                mostrar('loading');
-                setTimeout(() => form.submit(), CONFIG.retrasoEnvio);
-                setTimeout(() => {
-                    if (overlay.classList.contains('is-loading')) ocultar();
-                }, CONFIG.tiempoMaximo);
-            });
-        });
-
-        let veniaGuardando = false;
-        try {
-            veniaGuardando = sessionStorage.getItem(CONFIG.claveSesion) === '1';
-            sessionStorage.removeItem(CONFIG.claveSesion);
-        } catch (_) {}
-
-        const hayExito = !!document.querySelector(CONFIG.selectorExito);
-
-        if (hayExito && veniaGuardando) {
-            mostrar('success');
-            setTimeout(ocultar, CONFIG.duracionExito);
-        }
+        // Función desactivada - sin overlay automático
+        return;
     }
 
     global.OverlayActualizacion = {
@@ -113,11 +76,7 @@
         config:   CONFIG
     };
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', conectar);
-    } else {
-        conectar();
-    }
+    // No ejecutar conectar()
 
 })(window);
 
@@ -161,108 +120,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!resp.ok) {
       console.error("Error HTTP:", resp.status, data);
-
-      throw new Error(
-        data?.msg ||
-        data?.message ||
-        `Error ${resp.status}`
-      );
+      // Sin alertas - solo console.error
     }
 
     return data;
   }
 
-  let temporizadorNotificacion = null;
-
-  function notificar(tipo = "info", mensaje = "") {
-    const overlay = document.getElementById(
-      "notificacionOverlay"
-    );
-
-    const card = document.getElementById(
-      "notificacionCard"
-    );
-
-    const icono = document.getElementById(
-      "notificacionIcono"
-    );
-
-    const titulo = document.getElementById(
-      "notificacionTitulo"
-    );
-
-    const texto = document.getElementById(
-      "notificacionMensaje"
-    );
-
-    if (!overlay || !card || !icono || !titulo || !texto) {
-      console.warn(mensaje);
-      return;
-    }
-
-    const configuraciones = {
-      success: {
-        clase: "exito",
-        icono: "✓",
-        titulo: "¡Proceso completado!",
-      },
-
-      exito: {
-        clase: "exito",
-        icono: "✓",
-        titulo: "¡Proceso completado!",
-      },
-
-      error: {
-        clase: "error",
-        icono: "×",
-        titulo: "No se pudo completar",
-      },
-
-      warning: {
-        clase: "advertencia",
-        icono: "!",
-        titulo: "Revisa la información",
-      },
-
-      advertencia: {
-        clase: "advertencia",
-        icono: "!",
-        titulo: "Revisa la información",
-      },
-
-      info: {
-        clase: "info",
-        icono: "i",
-        titulo: "Información",
-      },
-    };
-
-    const tipoNormalizado = String(tipo).toLowerCase();
-
-    const configuracion =
-      configuraciones[tipoNormalizado] ||
-      configuraciones.info;
-
-    card.className =
-      `notificacion-card ${configuracion.clase}`;
-
-    icono.textContent = configuracion.icono;
-    titulo.textContent = configuracion.titulo;
-    texto.textContent = mensaje;
-
-    overlay.classList.remove("mostrar");
-
-    // Reiniciar la animación.
-    void overlay.offsetWidth;
-
-    overlay.classList.add("mostrar");
-
-    clearTimeout(temporizadorNotificacion);
-
-    temporizadorNotificacion = setTimeout(() => {
-      cerrarNotificacion();
-    }, 5000);
+  function notificar(tipo, mensaje) {
+    // Función desactivada - sin notificaciones
+    return;
   }
 
   function cerrarNotificacion() {
@@ -519,10 +385,8 @@ document.addEventListener("DOMContentLoaded", () => {
           );
 
           if (!data.ok) {
-            throw new Error(
-              data.msg ||
-              "No se pudo guardar la revisión."
-            );
+            console.error("Error:", data.msg || "No se pudo guardar la revisión.");
+            return;
           }
 
           marcarVisualmente(
@@ -531,12 +395,6 @@ document.addEventListener("DOMContentLoaded", () => {
           );
 
           const progreso = actualizarProgreso();
-
-          notificar(
-            "success",
-            data.msg ||
-            "Documento marcado como revisado."
-          );
 
           if (
             progreso.revisadas === progreso.total
@@ -551,11 +409,6 @@ document.addEventListener("DOMContentLoaded", () => {
             encabezadoActual?.setAttribute(
               "aria-expanded",
               "false"
-            );
-
-            notificar(
-              "success",
-              "Todos los documentos fueron revisados. Ya puedes enviar el correo."
             );
 
             // Subir automáticamente hasta el botón de correo
@@ -583,11 +436,6 @@ document.addEventListener("DOMContentLoaded", () => {
             textoBoton.textContent =
               textoOriginal;
           }
-
-          notificar(
-            "error",
-            `No se pudo guardar la revisión: ${error.message}`
-          );
         }
       });
     });
@@ -622,30 +470,56 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function ajustarCanvas(canvas, pad) {
-  if (!canvas || !pad) return;
+    if (!canvas || !pad) return;
 
-  const ratio = Math.max(window.devicePixelRatio || 1, 1);
-  const datos = pad.isEmpty() ? null : pad.toData();
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    const datos = pad.isEmpty() ? null : pad.toData();
 
-  canvas.width  = canvas.offsetWidth  * ratio;
-  canvas.height = canvas.offsetHeight * ratio;
-  canvas.getContext("2d").scale(ratio, ratio);
+    let ancho = canvas.offsetWidth;
+    let alto  = canvas.offsetHeight;
 
-  pad.clear();
-  if (datos) pad.fromData(datos);
-}
+    if (!ancho || ancho < 1) {
+      const cont = canvas.parentElement;
+      ancho = (cont && cont.clientWidth ? cont.clientWidth - 20 : 0) || 300;
+    }
+    if (!alto || alto < 1) {
+      alto = 170;
+    }
 
-window.addEventListener("resize", () => {
-  ajustarCanvas(canvasA, padArr);
-  ajustarCanvas(canvasAviso, padAviso);
-});
+    canvas.width  = ancho * ratio;
+    canvas.height = alto  * ratio;
+    canvas.getContext("2d").scale(ratio, ratio);
+
+    pad.clear();
+    if (datos) pad.fromData(datos);
+  }
+
+  function ajustarCanvasCuandoVisible(canvas, pad) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        ajustarCanvas(canvas, pad);
+        pad?.clear();
+      });
+    });
+  }
+
+  window.addEventListener("resize", () => {
+    ajustarCanvas(canvasA, padArr);
+    ajustarCanvas(canvasAviso, padAviso);
+  });
+
+  window.addEventListener("orientationchange", () => {
+    setTimeout(() => {
+      ajustarCanvas(canvasA, padArr);
+      ajustarCanvas(canvasAviso, padAviso);
+    }, 200);
+  });
 
   btnArr?.addEventListener("click", () => {
     if (!modalArr || !padArr) return;
 
     modalArr.style.display = "flex";
-    ajustarCanvas(canvasA, padArr);
-    padArr.clear();
+    ajustarCanvasCuandoVisible(canvasA, padArr);
   });
 
   clearArr?.addEventListener("click", () => {
@@ -657,18 +531,12 @@ window.addEventListener("resize", () => {
       if (!padArr) return;
 
       if (!id) {
-        notificar(
-          "error",
-          "No se detectó el ID del contrato."
-        );
+        console.error("No se detectó el ID del contrato.");
         return;
       }
 
       if (padArr.isEmpty()) {
-        notificar(
-          "warning",
-          "Primero debes realizar la firma."
-        );
+        console.warn("Realiza la firma.");
         return;
       }
 
@@ -683,18 +551,10 @@ window.addEventListener("resize", () => {
         }
       );
 
-      notificar(
-        "success",
-        "Firma del arrendador guardada."
-      );
-
       modalArr.style.display = "none";
       location.reload();
     } catch (error) {
-      notificar(
-        "error",
-        `No se pudo guardar la firma: ${error.message}`
-      );
+      console.error("No se pudo guardar la firma:", error.message);
     } finally {
       saveArr.disabled = false;
       saveArr.textContent = "Guardar firma";
@@ -741,8 +601,7 @@ window.addEventListener("resize", () => {
     }
 
     modalAviso.style.display = "flex";
-    ajustarCanvas(canvasAviso, padAviso);
-    padAviso?.clear();
+    ajustarCanvasCuandoVisible(canvasAviso, padAviso);
   });
 
   cancelarAviso?.addEventListener("click", () => {
@@ -760,22 +619,14 @@ window.addEventListener("resize", () => {
     async () => {
       try {
         if (!id) {
-          notificar(
-            "error",
-            "No se detectó el ID del contrato."
-          );
-
+          console.error("No se detectó el ID del contrato.");
           return;
         }
 
         if (!padAviso) return;
 
         if (padAviso.isEmpty()) {
-          notificar(
-            "warning",
-            "Por favor realiza la firma para confirmar el aviso."
-          );
-
+          console.warn("Por favor realiza la firma para confirmar el aviso.");
           return;
         }
 
@@ -785,7 +636,7 @@ window.addEventListener("resize", () => {
         confirmarAviso.disabled = true;
         confirmarAviso.textContent = "Enviando...";
 
-        // El coche acompaña la generación del PDF y el envío
+        // Mostrar overlay de carga con mensajes de preparación
         OverlayActualizacion.cargando({
           mensajes: [
             "Generando el contrato…",
@@ -804,12 +655,12 @@ window.addEventListener("resize", () => {
         );
 
         if (!data.ok) {
-          throw new Error(
-            data.msg ||
-            "No se pudo enviar el contrato."
-          );
+          console.error("Error:", data.msg || "No se pudo enviar el contrato.");
+          OverlayActualizacion.ocultar();
+          return;
         }
 
+        // Mostrar overlay de éxito
         OverlayActualizacion.exito({
           titulo: "¡Contrato enviado!",
           subtitulo: "El correo salió con el PDF adjunto"
@@ -820,20 +671,9 @@ window.addEventListener("resize", () => {
           modalAviso.style.display = "none";
         }, 1400);
 
-        notificar(
-          "success",
-          data.msg ||
-          "Contrato enviado correctamente."
-        );
       } catch (error) {
-        console.error(error);
-
+        console.error("Error al enviar correo:", error.message);
         OverlayActualizacion.ocultar();
-
-        notificar(
-          "error",
-          `Error al enviar correo: ${error.message}`
-        );
       } finally {
         confirmarAviso.disabled = false;
         confirmarAviso.textContent =

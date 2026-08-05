@@ -1,6 +1,6 @@
-// ==========================
+// ==============================
 // DEBUG HELPER
-// ==========================
+// ==============================
 const DEBUG_CAMBIO_AUTO = true;
 function debugCambioAuto(...args) {
     if (DEBUG_CAMBIO_AUTO) {
@@ -33,19 +33,17 @@ function debugCambioAuto(...args) {
         18: "Llanta trasera derecha",
     };
 
-    // URLs que vienen del data-* del contenedor
     const urlGuardarDano            = root.dataset.urlGuardarDano;
     const urlEliminarDanoBase       = root.dataset.urlEliminarDanoBase;
     const urlVehiculosCategoriaBase = root.dataset.urlVehiculosCategoriaBase;
     const urlSetVehiculoNuevo       = root.dataset.urlSetVehiculoNuevo;
 
-    // Token CSRF
     const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
     const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
 
-    // ==========================
-    // COMPRESIÓN DE IMÁGENES
-    // ==========================
+    // ==============================
+    // COMPRESION DE IMAGENES
+    // ==============================
     function compressImage(file, maxWidth = 1600, quality = 0.7) {
         return new Promise((resolve, reject) => {
             try {
@@ -98,7 +96,6 @@ function debugCambioAuto(...args) {
                 img.onerror = () => reject(new Error('No se pudo leer la imagen'));
                 const url = URL.createObjectURL(file);
                 img.onloadend = () => {
-                    // liberamos el objectURL cuando ya no se necesita
                     URL.revokeObjectURL(url);
                 };
                 img.src = url;
@@ -108,10 +105,10 @@ function debugCambioAuto(...args) {
         });
     }
 
-    let contextoActual = null;  // empresa | cliente
-    let zonaActual = null;      // número de zona
-    let puntoActual = null;     // referencia al <circle> clickeado
-    let fotoTemporalUrl = null; // para la vista previa
+    let contextoActual = null;
+    let zonaActual = null;
+    let puntoActual = null;
+    let fotoTemporalUrl = null;
 
     const modal = document.getElementById("modalDano");
     const modalZonaLabel = document.getElementById("modalZonaLabel");
@@ -123,9 +120,9 @@ function debugCambioAuto(...args) {
     const fotoInput = document.getElementById("fotoDano");
     const previewFoto = document.getElementById("previewFotoDano");
 
-    // ==========================
-    // HELPERS PARA TABLAS
-    // ==========================
+    // ==============================
+    // HELPERS TABLAS
+    // ==============================
     function recalcularTotal(contexto) {
         const filas = document.querySelectorAll(
             '.cl2-danos-table[data-context="' + contexto + '"] tbody tr.cl2-dano-row'
@@ -153,7 +150,6 @@ function debugCambioAuto(...args) {
         );
         if (!tbody) return;
 
-        // Quitar fila "Sin daños registrados" si existe
         const vacia = tbody.querySelector('.cl2-danos-empty');
         if (vacia) {
             vacia.remove();
@@ -165,7 +161,7 @@ function debugCambioAuto(...args) {
         tr.dataset.zona = data.zona;
         tr.dataset.costo = data.costo_estimado || 0;
         if (data.id) {
-            tr.dataset.id = data.id; // id_foto_cambio
+            tr.dataset.id = data.id;
         }
 
         const costoNum = parseFloat(data.costo_estimado || '0');
@@ -187,24 +183,17 @@ function debugCambioAuto(...args) {
         `;
 
         tbody.appendChild(tr);
-
-        // Recalcular total para ese contexto
         recalcularTotal(contexto);
     }
 
-    // Flag para "Son los mismos daños del checklist"
     let mismosDaniosEmpresa = false;
-
-    // Botón que activa/desactiva el modo
     const btnMismos = document.getElementById("btnMismosDaniosEmpresa");
 
     if (btnMismos) {
         btnMismos.addEventListener("click", () => {
-            // Cambiamos el estado (ON/OFF)
             mismosDaniosEmpresa = !mismosDaniosEmpresa;
 
             if (mismosDaniosEmpresa) {
-                // Modo ACTIVADO → deshabilitar puntos de EMPRESA
                 btnMismos.classList.add("is-active");
                 btnMismos.textContent = "✅ Son los mismos daños del checklist";
 
@@ -212,7 +201,6 @@ function debugCambioAuto(...args) {
                     .querySelectorAll('.car-svg[data-context="empresa"] .point-dot')
                     .forEach(circ => circ.classList.add("disabled"));
             } else {
-                // Modo DESACTIVADO → volver a habilitar puntos de EMPRESA
                 btnMismos.classList.remove("is-active");
                 btnMismos.textContent = "Son los mismos daños del checklist";
 
@@ -223,7 +211,6 @@ function debugCambioAuto(...args) {
         });
     }
 
-    // Hacer clic en toda la caja "uploader" para abrir la cámara/galería
     const uploaderCaja = document.querySelector("#modalDano .uploader");
     if (uploaderCaja && fotoInput) {
         uploaderCaja.addEventListener("click", (e) => {
@@ -236,14 +223,11 @@ function debugCambioAuto(...args) {
     const btnGuardar = document.getElementById("guardarDano");
     const btnCancelar = document.getElementById("cancelarDano");
 
-    // Inicializar listeners en los SVG
     document.querySelectorAll(".car-svg").forEach(svg => {
-        const contexto = svg.dataset.context; // empresa / cliente
+        const contexto = svg.dataset.context;
 
         svg.querySelectorAll(".point-dot").forEach(circle => {
             circle.addEventListener("click", () => {
-
-                // Si es contexto EMPRESA y está activo "mismos daños", no hacemos nada
                 if (contexto === "empresa" && mismosDaniosEmpresa) {
                     return;
                 }
@@ -259,7 +243,6 @@ function debugCambioAuto(...args) {
                     ? "AUTO RECIBIDO POR EMPRESA"
                     : "AUTO ENTREGADO A CLIENTE";
 
-                // Limpiar campos del modal
                 tipoInput.value = "";
                 comentarioInput.value = "";
                 costoInput.value = "";
@@ -276,7 +259,6 @@ function debugCambioAuto(...args) {
         });
     });
 
-    // Vista previa de foto + COMPRESIÓN para cada daño
     if (fotoInput) {
         fotoInput.addEventListener("change", async (e) => {
             const file = e.target.files[0];
@@ -291,18 +273,15 @@ function debugCambioAuto(...args) {
             }
 
             try {
-                // Solo comprimimos si es imagen
                 let finalFile = file;
                 if (file.type && file.type.startsWith('image/')) {
                     finalFile = await compressImage(file, 1600, 0.7);
                 }
 
-                // Reemplazar el archivo original del input por el comprimido
                 const dt = new DataTransfer();
                 dt.items.add(finalFile);
                 fotoInput.files = dt.files;
 
-                // Actualizar preview con el archivo comprimido
                 if (fotoTemporalUrl) {
                     URL.revokeObjectURL(fotoTemporalUrl);
                 }
@@ -317,12 +296,8 @@ function debugCambioAuto(...args) {
 
             } catch (err) {
                 console.error(err);
-                if (window.alertify) {
-                    alertify.error('No se pudo procesar la fotografía del daño. Intenta con otra imagen.');
-                } else {
-                    alert('No se pudo procesar la fotografía del daño. Intenta con otra imagen.');
-                }
-                // Limpiamos por seguridad
+                // NOTIFICACIÓN DESACTIVADA - solo console
+                console.warn('No se pudo procesar la fotografía del daño. Intenta con otra imagen.');
                 fotoInput.value = '';
                 previewFoto.style.display = "none";
             }
@@ -351,7 +326,6 @@ function debugCambioAuto(...args) {
         btnCancelar.addEventListener("click", cerrarModal);
     }
 
-    // Cerrar modal al hacer clic fuera
     if (modal) {
         modal.addEventListener("click", (e) => {
             if (e.target === modal) {
@@ -360,24 +334,15 @@ function debugCambioAuto(...args) {
         });
     }
 
-    // Guardar daño → llamar al backend por AJAX
     if (btnGuardar) {
         btnGuardar.addEventListener("click", async () => {
             if (!contextoActual || !zonaActual) {
-                if (window.alertify) {
-                    alertify.warning('Selecciona primero un punto del diagrama.');
-                } else {
-                    alert('Selecciona primero un punto del diagrama.');
-                }
+                console.warn('Selecciona primero un punto del diagrama.');
                 return;
             }
 
             if (!fotoInput.files[0]) {
-                if (window.alertify) {
-                    alertify.warning('La fotografía del daño es obligatoria.');
-                } else {
-                    alert('La fotografía del daño es obligatoria.');
-                }
+                console.warn('La fotografía del daño es obligatoria.');
                 return;
             }
 
@@ -386,7 +351,7 @@ function debugCambioAuto(...args) {
             const costoVal = costoInput.value || '';
 
             const formData = new FormData();
-            formData.append('contexto', contextoActual); // empresa / cliente
+            formData.append('contexto', contextoActual);
             formData.append('zona', zonaActual);
             formData.append('tipo_dano', tipoVal);
             formData.append('comentario', comentarioVal);
@@ -434,27 +399,19 @@ function debugCambioAuto(...args) {
                     costo_estimado: costoVal
                 });
 
-                if (window.alertify) {
-                    alertify.success('Daño guardado correctamente.');
-                } else {
-                    alert('Daño guardado correctamente.');
-                }
+                console.log('Daño guardado correctamente.');
                 cerrarModal();
 
             } catch (error) {
                 console.error(error);
-                if (window.alertify) {
-                    alertify.error('Ocurrió un error al guardar el daño.');
-                } else {
-                    alert('Ocurrió un error al guardar el daño.');
-                }
+                console.error('Ocurrió un error al guardar el daño.');
             }
         });
     }
 
-    // =======================================
-    // ELIMINAR DAÑO (click en la X)
-    // =======================================
+    // ==============================
+    // ELIMINAR DAÑO
+    // ==============================
     document.addEventListener('click', function (e) {
         const btn = e.target.closest('.cl2-dano-delete');
         if (!btn) return;
@@ -465,6 +422,7 @@ function debugCambioAuto(...args) {
 
         debugCambioAuto('Click eliminar daño', { idFoto, contexto });
 
+        // Confirmación desactivada - acción directa
         const ejecutarEliminacion = async () => {
             try {
                 const url = urlEliminarDanoBase.replace('__ID__', idFoto);
@@ -504,38 +462,20 @@ function debugCambioAuto(...args) {
 
                 recalcularTotal(contexto);
 
-                if (window.alertify) {
-                    alertify.success('Daño eliminado.');
-                } else {
-                    alert('Daño eliminado.');
-                }
+                console.log('Daño eliminado.');
             } catch (error) {
                 console.error(error);
-                if (window.alertify) {
-                    alertify.error('Ocurrió un error al eliminar el daño.');
-                } else {
-                    alert('Ocurrió un error al eliminar el daño.');
-                }
+                console.error('Ocurrió un error al eliminar el daño.');
             }
         };
 
-        if (window.alertify) {
-            alertify.confirm(
-                'Eliminar daño',
-                '¿Seguro que deseas eliminar este daño?',
-                function () { ejecutarEliminacion(); },
-                function () { /* cancelado */ }
-            );
-        } else {
-            if (confirm('¿Seguro que deseas eliminar este daño?')) {
-                ejecutarEliminacion();
-            }
-        }
+        // Eliminación directa sin confirmación
+        ejecutarEliminacion();
     });
 
-    // ==========================================================
-    //   CAMBIO DE AUTO – LADO CLIENTE (MODAL VEHÍCULOS)
-    // ==========================================================
+    // ==============================
+    // CAMBIO DE AUTO
+    // ==============================
     const selectCategoriaCliente = document.getElementById('categoriaCliente');
     const modalVehiculos  = document.getElementById('modalVehiculos');
     const listaVehiculos  = document.getElementById('listaVehiculos');
@@ -674,11 +614,7 @@ function debugCambioAuto(...args) {
 
             } catch (error) {
                 console.error(error);
-                if (window.alertify) {
-                    alertify.error('No se pudieron cargar los vehículos de esa categoría.');
-                } else {
-                    alert('No se pudieron cargar los vehículos de esa categoría.');
-                }
+                console.error('No se pudieron cargar los vehículos de esa categoría.');
             }
         });
     }
@@ -742,28 +678,19 @@ function debugCambioAuto(...args) {
                     throw new Error(data.message || 'Error al asignar el vehículo nuevo.');
                 }
 
-                if (window.alertify) {
-                    alertify.success('Vehículo seleccionado para el cambio (en proceso).');
-                } else {
-                    alert('Vehículo seleccionado para el cambio (en proceso).');
-                }
-
+                console.log('Vehículo seleccionado para el cambio (en proceso).');
                 cerrarModalVehiculos();
 
             } catch (error) {
                 console.error(error);
-                if (window.alertify) {
-                    alertify.error('No se pudo asignar el vehículo nuevo.');
-                } else {
-                    alert('No se pudo asignar el vehículo nuevo.');
-                }
+                console.error('No se pudo asignar el vehículo nuevo.');
             }
         });
     }
 
-    // ===================================
-    //  Sincronizar altura de extra-block
-    // ===================================
+    // ==============================
+    // SYNC ALTURA
+    // ==============================
     function syncExtraBlocksHeight() {
         const blocks = document.querySelectorAll('.cl2-extra-block');
         if (blocks.length < 2) return;
@@ -781,14 +708,14 @@ function debugCambioAuto(...args) {
         });
     }
 
-    // ================================
-    //  FOTOS DEL CAMBIO DE AUTO
-    // ================================
+    // ==============================
+    // FOTOS CAMBIO
+    // ==============================
     const inputCambio = document.getElementById('inputFotosCambio');
     const previewCambio = document.getElementById('preview-fotosCambio');
     const msgCambio = document.querySelector('#uploaderCambioAuto .cl2-photo-msg');
 
-    let filesCambio = []; // aquí guardamos TODAS las fotos seleccionadas (ya comprimidas)
+    let filesCambio = [];
 
     function actualizarInputCambio() {
         if (!inputCambio) return;
@@ -829,11 +756,9 @@ function debugCambioAuto(...args) {
             previewCambio.appendChild(thumb);
         });
 
-        // cada vez que cambian las fotos, reajustamos la altura de los bloques
         syncExtraBlocksHeight();
     }
 
-    // Selección de nuevas fotos de CAMBIO + COMPRESIÓN
     if (inputCambio) {
         inputCambio.addEventListener('change', async (e) => {
             const nuevas = Array.from(e.target.files || []);
@@ -852,21 +777,17 @@ function debugCambioAuto(...args) {
                     comprimidas.push(compressed);
                 } catch (err) {
                     console.error('Error al comprimir imagen de cambio:', err);
-                    comprimidas.push(file); // peor caso, usamos la original
+                    comprimidas.push(file);
                 }
             }
 
             filesCambio = filesCambio.concat(comprimidas);
-
-            // limpiamos el input nativo para poder volver a abrir cámara/galería
             inputCambio.value = '';
-
             renderPreviewCambio();
             actualizarInputCambio();
         });
     }
 
-    // Eliminar una sola foto de CAMBIO con la X
     if (previewCambio) {
         previewCambio.addEventListener('click', (e) => {
             const btn = e.target.closest('.cl2-photo-remove');
@@ -881,11 +802,9 @@ function debugCambioAuto(...args) {
         });
     }
 
-    // Recalcular totales al cargar (por si ya venían daños desde BD)
     recalcularTotal('empresa');
     recalcularTotal('cliente');
 
-    // Ajustar alturas iniciales de los bloques
     syncExtraBlocksHeight();
 
     window.addEventListener('load', syncExtraBlocksHeight);

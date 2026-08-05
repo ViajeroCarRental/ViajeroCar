@@ -3,7 +3,43 @@
 
 @section('css-vistaContrato')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="{{ asset('css/Contrato2.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/Contrato2.css') }}?v={{ @filemtime(public_path('css/Contrato2.css')) ?: time() }}">
+
+    {{-- ===== Layout de botones del paso 4 (Atrás + Continuar sin Guardar | Guardar y Continuar) ===== --}}
+    <style>
+        .acciones-finales {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .acciones-finales .btn-group-izq {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .acciones-finales .btn-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        @media (max-width: 600px) {
+            .acciones-finales,
+            .acciones-finales .btn-group-izq,
+            .acciones-finales .btn-group {
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .acciones-finales .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
 @endsection
 
 @section('contenidoContrato')
@@ -23,6 +59,12 @@
                     <span class="brand-subtitle">Gestión de Contrato</span>
                 </div>
 
+                {{-- 📅 Contador de días de renta --}}
+                <div class="contador-dias-contrato" title="Días de renta (entrega → devolución)">
+                    <i class="fas fa-calendar-day"></i>
+                    <span class="contador-dias-num">{{ $diasTotales }}</span>
+                    <span class="contador-dias-txt">{{ $diasTotales == 1 ? 'día' : 'días' }}</span>
+                </div>
                 <div class="contrato-info">
                     <span class="contrato-numero">
                         <i class="fas fa-hashtag"></i>
@@ -32,6 +74,34 @@
                 </div>
 
                 <div class="nav-actions-contrato">
+                {{-- 🔔 Campanita de comentarios --}}
+<div class="campanita-wrapper">
+    <button type="button" class="btn-campanita-contrato" id="btnToggleComentarios"
+        aria-label="Comentarios de la reservación">
+        <i class="fas fa-bell"></i>
+        <span class="campanita-badge is-empty" id="campanitaBadge">0</span>
+    </button>
+
+    <div class="comentarios-desplegable" id="comentariosDesplegable" style="display:none;">
+        <div class="comentarios-card">
+            <div class="comentarios-head">
+                <i class="fas fa-comment-dots"></i> Comentarios de la reservación
+            </div>
+            <div class="comentarios-lista" id="comentariosLista">
+                <div class="comentarios-vacio">Cargando comentarios…</div>
+            </div>
+            <div class="comentarios-form">
+                <textarea id="comentarioInput" class="comentario-textarea" rows="3"
+                    placeholder="Escribe un comentario…"></textarea>
+                <button type="button" class="btn-agregar-comentario" id="btnAgregarComentario">
+                    <i class="fas fa-paper-plane"></i> Agregar comentario
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{{-- fin campanita --}}
+
                     <div class="resumen-wrapper">
                         <button type="button" class="btn-resumen-contrato" id="btnToggleDetalle">
                             <i class="fas fa-shopping-cart"></i>
@@ -643,11 +713,13 @@
 
                             {{-- BOTONES DE NAVEGACIÓN Y GUARDADO --}}
                             <div class="acciones-finales">
-                                <button class="btn gray" id="back_to_step3" type="button">Atrás</button>
+                                <div class="btn-group-izq">
+                                    <button class="btn gray" id="back_to_step3" type="button">Atrás</button>
+                                    <button class="btn success btn-saltar" id="btnSaltarDoc" type="button">Continuar sin Guardar</button>
+                                </div>
 
                                 <div class="btn-group">
-                                    <button class="btn primary" id="btnContinuarDoc" type="submit">Guardar y Revisar</button>
-                                    <button class="btn success btn-saltar" id="btnSaltarDoc" type="button">Continuar a Revisión </button>
+                                    <button class="btn primary" id="btnContinuarDoc" type="submit">Guardar y Continuar</button>
                                 </div>
                             </div>
                         </form>
@@ -1380,5 +1452,5 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
     <script src="{{ asset('js/ContratoGlobal.js') }}" defer></script>
-    <script src="{{ asset('js/contrato2.js') }}" defer></script>
+    <script src="{{ asset('js/contrato2.js') }}?v={{ @filemtime(public_path('js/contrato2.js')) ?: time() }}" defer></script>
 @endsection

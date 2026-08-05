@@ -5472,22 +5472,6 @@ input.flatpickr-input.field-success {
     letter-spacing: -0.2px;
 }
 
-.btn-cart-header .cart-header-badge {
-    background: #ef4444;
-    color: white;
-    font-size: 10px;
-    font-weight: 900;
-    padding: 2px 6px;
-    border-radius: 30px;
-    min-width: 18px;
-    text-align: center;
-    display: none;
-}
-
-.btn-cart-header .cart-header-badge:not(:empty) {
-    display: inline-flex;
-}
-
 .modal-head {
     display: flex;
     justify-content: space-between;
@@ -6528,17 +6512,6 @@ input.flatpickr-input.field-success {
     color: #ffffff !important;
 }
 
-#proteccionPop .btn-cart-header .cart-header-badge {
-    background: #ef4444 !important;
-    color: white !important;
-    font-size: 10px !important;
-    font-weight: 900 !important;
-    padding: 2px 6px !important;
-    border-radius: 30px !important;
-    min-width: 18px !important;
-    text-align: center !important;
-}
-
 /* Botón de cerrar en el header */
 #proteccionPop #proteClose {
     background: rgba(255, 255, 255, 0.15) !important;
@@ -7127,4 +7100,106 @@ input.flatpickr-input.field-success {
   .vr-emoji-stage { width: 100%; max-width: 240px; }
   .vr-update-msg { font-size: .95rem; }
   .vr-icon-thumb { width: 64px; height: 64px; }
+}
+
+
+/* =========================================================
+   FILTRO PROTECCIONES INDIVIDUALES + SCROLL HORIZONTAL COLISIÓN
+   (agregado)
+========================================================= */
+
+/* ---- Barra de filtros (chips) ---- */
+#proteccionPop .filtro-individuales {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 2px 16px;
+    margin-bottom: 4px;
+}
+#proteccionPop .filtro-chip {
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    color: #374151;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: .15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+#proteccionPop .filtro-chip:hover {
+    background: #f8fafc;
+    border-color: #d1d5db;
+}
+/* Chip activo (rojo) */
+#proteccionPop .filtro-chip.is-active {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(239, 68, 68, .25);
+}
+/* Chip con protección seleccionada (verde + palomita) */
+#proteccionPop .filtro-chip.has-selection {
+    background: #dcfce7;
+    border-color: #86efac;
+    color: #15803d;
+}
+#proteccionPop .filtro-chip.has-selection::after {
+    content: " \2713";
+    font-weight: 900;
+}
+/* Si un chip está activo y además tiene selección, gana el estilo activo */
+#proteccionPop .filtro-chip.is-active.has-selection {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: #ffffff;
+}
+
+/* ---- Colisión y robo: scroll horizontal (una sola fila) en escritorio ---- */
+@media (min-width: 769px) {
+    #proteccionPop #insColisionTrack {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        gap: 20px !important;
+        padding: 8px 4px 18px 4px !important;
+        margin-bottom: 24px !important;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+    }
+    #proteccionPop #insColisionTrack .ins-card,
+    #proteccionPop #insColisionTrack .individual-item {
+        flex: 0 0 300px !important;
+        width: 300px !important;
+        min-width: 300px !important;
+        max-width: 300px !important;
+        margin: 0 !important;
+        display: block !important;
+        scroll-snap-align: start;
+    }
+    #proteccionPop #insColisionTrack::-webkit-scrollbar {
+        height: 8px;
+    }
+    #proteccionPop #insColisionTrack::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+    }
+    #proteccionPop #insColisionTrack::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+}
+
+/* Ocultar grupos filtrados (gana a los display:grid/flex !important por especificidad) */
+#proteccionPop .cat-title.filtro-oculto,
+#proteccionPop .grid-vertical-individuales.filtro-oculto,
+#proteccionPop #insColisionTrack.filtro-oculto {
+    display: none !important;
 }
