@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function loadData() {
 
         tbody.innerHTML = `
-            <tr><td colspan="8" style="text-align:center;padding:20px">Cargando…</td></tr>
+            <tr><td colspan="9" style="text-align:center;padding:20px">Cargando…</td></tr>
         `;
  
         const params = new URLSearchParams({
@@ -67,37 +67,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 lastPage = json.last_page;
                 pgInfo.textContent = `Página ${page} de ${lastPage}`;
-
                 tbody.innerHTML = "";
 
                 json.data.forEach(r => {
-
-    const pago = paymentStatus(r.status_pago);
 
     const tr = document.createElement("tr");
 
     // 🔒 Guardamos el id_contrato real en la fila (oculto)
     tr.dataset.id = r.id_contrato;
 
+    const nombreUsuario = `${r.nombre ?? ""} ${r.apellidos ?? ""}`.trim() || "—";
+
+    let dropoff = "—";
+    if (Number(r.tiene_dropoff) === 1) {
+        if (Number(r.delivery_ubicacion) === 0) {
+            dropoff = r.delivery_direccion || "Sin dirección";
+        } else {
+            dropoff = [r.ubic_estado, r.ubic_destino]
+                .filter(Boolean)
+                .join(" - ") || "Sin ubicación";
+        }
+    }
+
     tr.innerHTML = `
         <td>
             <button class="btnToggle" type="button" aria-label="Ver detalles">+</button>
         </td>
 
-        <td>${r.numero_contrato ?? "—"}</td>
         <td>${formatDate(r.fecha_fin)}</td>
         <td>${formatTime(r.hora_entrega)}</td>
-        <td class="col-categoria">${escapeHtml(r.categoria ?? "—")}</td>
-        <td>${!r.tiene_dropoff ? "---" : r.delivery_ubicacion == 0 ? (r.delivery_direccion ?? "Sin dirección")
-            : `${r.ubic_estado ?? ""} - ${r.ubic_destino ?? ""}`}</td>
-        <td>
-            <span class="status-tag status-${String(r.estado ?? "").toLowerCase()}">
-                ${r.estado ?? "—"}
-            </span>
-        </td>
-        <td>
-            <span class="payment-tag ${pago.css}">${pago.text}</span>
-        </td>
+        <td>${escapeHtml(r.numero_contrato ?? "—")}</td>
+        <td>${escapeHtml(dropoff)}</td>
+        <td>${escapeHtml(nombreUsuario)}</td>
+        <td>$${Number(r.tarifa_diaria ?? 0).toFixed(2)}</td>
+        <td>${Number(r.dias_renta ?? 1)}</td>
+        <td>$${Number(r.total_renta ?? 0).toFixed(2)}</td>
     `;
 
     tbody.appendChild(tr);
@@ -107,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .catch(err => {
                 console.error("❌ ERROR FETCH:", err);
                 tbody.innerHTML = `
-                    <tr><td colspan="8" style="text-align:center;padding:20px;color:red">
+                    <tr><td colspan="9" style="text-align:center;padding:20px;color:red">
                         Error al cargar datos
                     </td></tr>`;
             });
@@ -194,7 +198,7 @@ const id  = tr.dataset.id;
             };
 
             row.innerHTML = `
-    <td colspan="8">
+    <td colspan="9">
         <div class="reserva-summary contrato-summary">
 
             <div class="summary-contract-head summary-full">

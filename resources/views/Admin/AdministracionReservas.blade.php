@@ -40,16 +40,17 @@
         <div class="table-wrap">
             <table class="table" id="tbl">
                 <thead>
-                    <tr>
-                        <th class="col-toggle"></th>
-                        <th>No. Contrato</th>
-                        <th>Fecha Checkout</th>
-                        <th>Hora Checkout</th>
-                        <th>Categoría</th>
-                        <th>Dropoff</th>
-                        <th>Estatus de contrato</th>
-                        <th>Estatus de pago</th>
-                    </tr>
+                            <tr>
+                                <th class="col-toggle"></th>
+                                <th>Fecha Checkout</th>
+                                <th>Hora Checkout</th>
+                                <th>No. Contrato</th>
+                                <th>Drop off</th>
+                                <th>Usuario</th>
+                                <th>Tarifa diaria</th>
+                                <th>Días de renta</th>
+                                <th>Total de la renta</th>
+                            </tr>
                 </thead>
                 <tbody id="tbody"></tbody>
             </table>

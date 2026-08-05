@@ -31,6 +31,7 @@ class ContratosAbiertosController extends Controller
     'c.id_contrato',
     'c.numero_contrato',
     'c.estado',
+    'r.fecha_inicio',
     'r.fecha_fin',
     'r.hora_entrega',
     'cat.codigo AS categoria',
@@ -38,8 +39,17 @@ class ContratosAbiertosController extends Controller
     'r.delivery_direccion',
     'r.metodo_pago',
     'r.status_pago',
+    'r.tarifa_base AS tarifa_diaria',
+    'r.total AS total_renta',
     'us.estado AS ubic_estado',
     'us.destino AS ubic_destino',
+
+    DB::raw("
+        GREATEST(
+            DATEDIFF(r.fecha_fin, r.fecha_inicio),
+            1
+        ) AS dias_renta
+    "),
 
      DB::raw("
         EXISTS(
@@ -74,8 +84,11 @@ class ContratosAbiertosController extends Controller
     if ($fechaCierre !== '') {
         $query->whereDate('r.fecha_fin', $fechaCierre);
     }
+    
 
-    $total = $query->count();
+    $total = (clone $query)
+        ->distinct()
+        ->count('c.id_contrato');
 
     $rows = $query
         ->orderBy('r.fecha_fin', 'ASC')
@@ -89,7 +102,7 @@ class ContratosAbiertosController extends Controller
         'data' => $rows,
         'total' => $total,
         'page' => $page,
-        'last_page' => ceil($total / $size),
+        'last_page' => max(1, (int) ceil($total / $size)),
     ]);
 }
 

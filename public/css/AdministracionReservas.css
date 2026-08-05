@@ -367,7 +367,3 @@ a { color: inherit; text-decoration: none; }
   .summary-vehicle, .summary-actions { align-items: stretch; flex-direction: column; }
   .pager { justify-content: center; flex-wrap: wrap; }
 }
-.table tbody td.col-categoria {
-    font-weight: 800;
-    color: #101828;
-}
