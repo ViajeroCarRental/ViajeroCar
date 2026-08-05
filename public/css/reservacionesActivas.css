@@ -3377,3 +3377,8 @@ span.flatpickr-weekday { color: var(--brand) !important; font-weight: 900 !impor
     width: 100%;
   }
 }
+/* Únicamente los datos de No. de reservación */
+.table .row > div:nth-child(2) {
+    color: #b91c1c;
+    font-weight: 700;
+}
