@@ -1079,10 +1079,20 @@
         Selecciona una o varias protecciones individuales.
     </div>
 
-    <div class="contenedor-principal-individuales">
+    <!-- FILTRO PROTECCIONES INDIVIDUALES -->
+                    <div class="filtro-individuales" id="filtroIndividuales">
+                        <button type="button" class="filtro-chip is-active" data-filtro="todas">Todas</button>
+                        <button type="button" class="filtro-chip" data-filtro="colision">Colisión y robo</button>
+                        <button type="button" class="filtro-chip" data-filtro="medicos">Gastos médicos</button>
+                        <button type="button" class="filtro-chip" data-filtro="camino">Asistencia para el camino</button>
+                        <button type="button" class="filtro-chip" data-filtro="terceros">Daños a terceros</button>
+                        <button type="button" class="filtro-chip" data-filtro="auto">Protecciones automáticas</button>
+                    </div>
+
+                    <div class="contenedor-principal-individuales">
 
         {{-- GRUPO: COLISIÓN Y ROBO --}}
-        <h4 class="cat-title">Colisión y robo</h4>
+        <h4 class="cat-title" data-grupo="colision">Colisión y robo</h4>
         <div class="grid-vertical-individuales" id="insColisionTrack">
             @php
                 $colisionOrdenado = ($grupo_colision ?? collect())->sortByDesc('precio_por_dia');
@@ -1115,7 +1125,7 @@
         </div>
 
         {{-- GRUPO: GASTOS MÉDICOS --}}
-        <h4 class="cat-title">Gastos médicos</h4>
+        <h4 class="cat-title" data-grupo="medicos">Gastos médicos</h4>
         <div class="grid-vertical-individuales" id="insMedicosTrack">
             @php
                 $medicosOrdenado = ($grupo_medicos ?? collect())->sortByDesc('precio_por_dia');
@@ -1148,7 +1158,7 @@
         </div>
 
         {{-- GRUPO: ASISTENCIA PARA EL CAMINO --}}
-        <h4 class="cat-title">Asistencia para el camino</h4>
+        <h4 class="cat-title" data-grupo="camino">Asistencia para el camino</h4>
         <div class="grid-vertical-individuales" id="insCaminoTrack">
             @php
                 $asistenciaOrdenado = ($grupo_asistencia ?? collect())->sortByDesc('precio_por_dia');
@@ -1181,7 +1191,7 @@
         </div>
 
         {{-- GRUPO: DAÑOS A TERCEROS --}}
-        <h4 class="cat-title">Daños a terceros</h4>
+        <h4 class="cat-title" data-grupo="terceros">Daños a terceros</h4>
         <div class="grid-vertical-individuales" id="insTercerosTrack">
             @php
                 $tercerosOrdenado = ($grupo_terceros ?? collect())->sortByDesc('precio_por_dia');
@@ -1214,7 +1224,7 @@
         </div>
 
         {{-- GRUPO: PROTECCIONES AUTOMÁTICAS --}}
-        <h4 class="cat-title">Protecciones automáticas</h4>
+        <h4 class="cat-title" data-grupo="auto">Protecciones automáticas</h4>
         <div class="grid-vertical-individuales" id="insAutoTrack">
             @php
                 $autoOrdenado = ($grupo_protecciones ?? collect())->sortByDesc('precio_por_dia');

@@ -2112,6 +2112,86 @@ function init() {
         return map[trackId] || "";
     }
 
+    /* ==============================
+       FILTRO INDIVIDUALES + ACOPLE COLISIÓN/AUTOMÁTICAS
+    ============================== */
+    // true si hay al menos una protección de "Colisión y robo" seleccionada.
+    function hayColisionSeleccionada() {
+        const cards = qsa('#insColisionTrack .individual-item');
+        for (const c of cards) {
+            if (state.individuales.has(String(c.dataset.id || ""))) return true;
+        }
+        return false;
+    }
+
+    // Prende/apaga las protecciones automáticas (LOU y LA) según haya o no
+    // una protección de "Colisión y robo" seleccionada.
+    function syncAutoConColision() {
+        const prender = hayColisionSeleccionada();
+        qsa('#insAutoTrack .individual-item').forEach((c) => {
+            const id = String(c.dataset.id || "");
+            if (!id) return;
+            if (prender) {
+                if (!state.individuales.has(id)) {
+                    const precio = Number(c.dataset.precio || 0);
+                    const nombre = c.querySelector("h4")?.textContent?.trim() || "Protección automática";
+                    const desc = c.querySelector(".tooltip-text")?.textContent?.trim() || c.dataset.descripcion || "";
+                    state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo: "Protecciones automáticas" });
+                }
+            } else {
+                state.individuales.delete(id);
+            }
+        });
+    }
+
+    const FILTRO_GRUPO_LABEL = {
+        colision: "Colisión y robo",
+        medicos: "Gastos médicos",
+        camino: "Asistencia para el camino",
+        terceros: "Daños a terceros",
+        auto: "Protecciones automáticas",
+    };
+
+    // Marca en verde (+ palomita) los chips cuyo grupo tiene alguna selección.
+    function actualizarChipsFiltro() {
+        const gruposSeleccionados = new Set();
+        state.individuales.forEach((it) => { if (it.grupo) gruposSeleccionados.add(it.grupo); });
+        qsa('#filtroIndividuales .filtro-chip').forEach((chip) => {
+            const key = chip.dataset.filtro;
+            if (key === "todas") return;
+            chip.classList.toggle("has-selection", gruposSeleccionados.has(FILTRO_GRUPO_LABEL[key]));
+        });
+    }
+
+    // Muestra sólo el grupo elegido (o todos con "todas").
+    function aplicarFiltroIndividuales(filtro) {
+        qsa('#tab-individuales .cat-title').forEach((titulo) => {
+            const grupo = titulo.dataset.grupo;
+            if (!grupo) return;
+            const ocultar = !(filtro === "todas" || grupo === filtro);
+            titulo.classList.toggle("filtro-oculto", ocultar);
+            const grid = titulo.nextElementSibling;
+            if (grid && grid.classList.contains("grid-vertical-individuales")) {
+                grid.classList.toggle("filtro-oculto", ocultar);
+            }
+        });
+        qsa('#filtroIndividuales .filtro-chip').forEach((chip) => {
+            chip.classList.toggle("is-active", chip.dataset.filtro === filtro);
+        });
+    }
+
+    // Enlaza los clics de los chips (una sola vez).
+    function initFiltroIndividuales() {
+        const barra = qs('#filtroIndividuales');
+        if (!barra || barra.dataset.bound === "1") return;
+        barra.dataset.bound = "1";
+        qsa('#filtroIndividuales .filtro-chip').forEach((chip) => {
+            chip.addEventListener("click", () => aplicarFiltroIndividuales(chip.dataset.filtro || "todas"));
+        });
+        aplicarFiltroIndividuales("todas");
+        actualizarChipsFiltro();
+    }
+
     function toggleIndividualFromCard(card) {
         if (!card) return;
         if (state.proteccion) setProteccion(null);
@@ -2137,11 +2217,18 @@ function init() {
 
         const yaSeleccionado = state.individuales.has(id);
 
+        // Las "Protecciones automaticas" (LA y LOU) se pueden prender de forma
+        // independiente: prender una NO apaga la otra. En los demas grupos se
+        // mantiene el comportamiento de una sola opcion por grupo.
+        const grupoPermiteMultiples = (grupo === "Protecciones automáticas");
+
         let otroSeleccionadoId = null;
-        for (const [existingId, item] of state.individuales.entries()) {
-            if (item.grupo === grupo && existingId !== id) {
-                otroSeleccionadoId = existingId;
-                break;
+        if (!grupoPermiteMultiples) {
+            for (const [existingId, item] of state.individuales.entries()) {
+                if (item.grupo === grupo && existingId !== id) {
+                    otroSeleccionadoId = existingId;
+                    break;
+                }
             }
         }
 
@@ -2154,69 +2241,9 @@ function init() {
             state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
         }
 
-        function obtenerIdsProteccionesAutomaticas() {
-            const autoTrack = document.getElementById("insAutoTrack");
-            if (!autoTrack) return [];
-            const autoCards = autoTrack.querySelectorAll(".individual-item");
-            const ids = [];
-            autoCards.forEach(card => {
-                const cardId = card.dataset.id;
-                if (cardId) ids.push(String(cardId));
-            });
-            return ids;
-        }
-
-        function contarSeleccionesActivas() {
-            let count = 0;
-            for (const item of state.individuales.values()) {
-                if (item.grupo !== "Protecciones automáticas") {
-                    count++;
-                }
-            }
-            return count;
-        }
-
-        const autoIds = obtenerIdsProteccionesAutomaticas();
-        const totalActivas = contarSeleccionesActivas();
-
-        if (totalActivas > 0) {
-            autoIds.forEach(autoId => {
-                if (!state.individuales.has(autoId)) {
-                    const autoCard = document.querySelector(`.individual-item[data-id="${autoId}"]`);
-                    if (autoCard) {
-                        const autoNombre = autoCard.querySelector("h4")?.textContent?.trim() || "Protección Auto";
-                        const autoPrecio = Number(autoCard.dataset.precio || 0);
-                        const autoDesc = autoCard.dataset.descripcion || "";
-
-                        state.individuales.set(autoId, {
-                            id: autoId,
-                            nombre: autoNombre,
-                            desc: autoDesc,
-                            precio: autoPrecio,
-                            charge: "por_dia",
-                            grupo: "Protecciones automáticas"
-                        });
-
-                        autoCard.classList.add("is-selected");
-                        const autoSwitch = autoCard.querySelector(".switch-individual");
-                        if (autoSwitch) autoSwitch.classList.add("is-on");
-                    }
-                }
-            });
-        } else {
-            autoIds.forEach(autoId => {
-                if (state.individuales.has(autoId)) {
-                    state.individuales.delete(autoId);
-
-                    const autoCard = document.querySelector(`.individual-item[data-id="${autoId}"]`);
-                    if (autoCard) {
-                        autoCard.classList.remove("is-selected");
-                        const autoSwitch = autoCard.querySelector(".switch-individual");
-                        if (autoSwitch) autoSwitch.classList.remove("is-on");
-                    }
-                }
-            });
-        }
+        // Acople: al prender cualquier protección de "Colisión y robo" se prenden
+        // las dos protecciones automáticas (LOU y LA); si no queda ninguna, se apagan.
+        syncAutoConColision();
 
         syncIndividualesHidden();
         repaintIndividualesUI();
@@ -2234,6 +2261,7 @@ function init() {
             const sw = card.querySelector(".switch-individual");
             if (sw) sw.classList.toggle("is-on", on);
         });
+        actualizarChipsFiltro();
     }
 
     function refreshProteccionUIHeader() {
@@ -4551,7 +4579,7 @@ if (!validateBeforeSubmit()) return;
             await loadProtecciones();
             if (!modalProteccionesInicializado) {
                 modalProteccionesInicializado = true;
-                preseleccionarProteccionesIndividuales(false);
+                preseleccionarProteccionesIndividuales(true);
             }
             repaintIndividualesUI();
             refreshProteccionUIHeader();
@@ -4695,6 +4723,7 @@ if (!validateBeforeSubmit()) return;
         syncTelefonoFinal();
 
         bindUI();
+        initFiltroIndividuales();
         initAddonsWithSwitch();
 
         setTimeout(() => {
@@ -5702,7 +5731,6 @@ if (!validateBeforeSubmit()) return;
             cartHeaderBtn.innerHTML = `
                 <i class="fas fa-shopping-cart"></i>
                 <span class="cart-header-total">$0.00 MXN</span>
-                <span class="cart-header-badge">0</span>
             `;
             cartHeaderBtn.setAttribute('aria-label', 'Ver resumen completo');
             cartHeaderBtn.setAttribute('type', 'button');
@@ -5734,21 +5762,6 @@ if (!validateBeforeSubmit()) return;
             return 0;
         }
 
-        function contarItemsSeleccionados() {
-            // El badge depende de la pestaña activa del modal:
-            // - Paquetes: solo cuenta el paquete seleccionado (0 o 1)
-            // - Individuales: cuenta las protecciones individuales seleccionadas
-            const tabIndividualesActiva = document
-                .querySelector('#proteccionPop .tab-btn[data-tab="tab-individuales"]')
-                ?.classList.contains('is-active');
-
-            if (tabIndividualesActiva) {
-                return state.individuales.size;
-            }
-
-            return state.proteccion !== null ? 1 : 0;
-        }
-
         function tieneItemsConCosto() {
             if (!state.categoria) return false;
             const totalGeneral = obtenerTotalGeneral();
@@ -5763,18 +5776,10 @@ if (!validateBeforeSubmit()) return;
             actualizarPildoraDiasEnModal();
 
             const totalGeneral = obtenerTotalGeneral();
-            const count = contarItemsSeleccionados();
 
             const totalSpan = cartHeaderBtn.querySelector('.cart-header-total');
-            const badge = cartHeaderBtn.querySelector('.cart-header-badge');
-
             if (totalSpan) {
                 totalSpan.textContent = money(totalGeneral);
-            }
-
-            if (badge) {
-                badge.textContent = count;
-                badge.style.display = count > 0 ? 'inline-flex' : 'none';
             }
 
             cartHeaderBtn.style.display = tieneItemsConCosto() ? 'inline-flex' : 'none';
@@ -6325,9 +6330,6 @@ function __bloquearCamposEdicion() {
     };
 
     const contratoIniciado = !!(window.reservacionEditar && window.reservacionEditar.contrato_iniciado);
-
-    // Edición: todos los campos quedan EDITABLES (se quitaron los bloqueos
-    // de fecha/hora de inicio y de los datos del cliente).
     const coment = document.getElementById("comentarios");
     if (coment) {
         coment.readOnly = false;

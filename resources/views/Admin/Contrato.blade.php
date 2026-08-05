@@ -11,6 +11,79 @@
 
     <!-- TU CSS de Contrato DEBE ir DESPUÉS para sobrescribir -->
     <link rel="stylesheet" href="{{ asset('css/Contrato.css') }}">
+
+    {{-- ===== Ajustes del modal de protecciones (badge, campanita y automáticas) ===== --}}
+    <style>
+        /* CAMBIO 1: ocultar el badge del carrito en el modal (por si algo lo pinta) */
+        #modalProtecciones #btnToggleDetalleModal .cart-badge {
+            display: none !important;
+        }
+
+        /* CAMBIO 2: campanita reubicada dentro del modal de protecciones */
+        #modalProtecciones .modal-header-right {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            gap: 10px;
+        }
+        .modal-header-right .campanita-wrapper.campanita-en-modal {
+            display: flex !important;
+            align-items: center;
+            margin-right: 4px;
+        }
+        #modalProtecciones .campanita-en-modal .btn-campanita-contrato {
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #fff;
+        }
+        #modalProtecciones .campanita-en-modal .comentarios-desplegable {
+            z-index: 100050 !important;
+        }
+        @media (max-width: 768px) {
+            #modalProtecciones .campanita-en-modal .comentarios-desplegable {
+                position: fixed !important;
+                top: 64px !important;
+                left: 12px !important;
+                right: 12px !important;
+                width: auto !important;
+                max-width: none !important;
+            }
+        }
+
+        /* CAMBIO 3: protecciones automáticas bloqueadas (no clicables a mano) */
+        #modal-vista-individuales .individual-card.card-automatica-bloqueada {
+            cursor: not-allowed;
+            position: relative;
+        }
+        #modal-vista-individuales .card-automatica-bloqueada .switch-pill,
+        #modal-vista-individuales .card-automatica-bloqueada .switch-pill input {
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        #modal-vista-individuales .card-automatica-bloqueada .slider-pill {
+            opacity: 0.85;
+        }
+        #modal-vista-individuales .card-automatica-bloqueada .individual-switch-wrapper::after {
+            content: "Automático" !important;
+            color: #64748b !important;
+        }
+        #modal-vista-individuales .card-automatica-bloqueada.selected .individual-switch-wrapper::after {
+            content: "Incluido · automático" !important;
+            color: #059669 !important;
+        }
+        #modal-vista-individuales .card-automatica-bloqueada::after {
+            content: "\f023"; /* fa-lock */
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            font-size: 12px;
+            color: #94a3b8;
+            pointer-events: none;
+        }
+    </style>
 @endsection
 
 @section('contenidoContrato')
@@ -31,6 +104,12 @@
                     <span class="brand-subtitle">Gestión de Contrato</span>
                 </div>
 
+                {{-- 📅 Contador de días de renta --}}
+                <div class="contador-dias-contrato" title="Días de renta (entrega → devolución)">
+                    <i class="fas fa-calendar-day"></i>
+                    <span class="contador-dias-num">{{ $diasTotales }}</span>
+                    <span class="contador-dias-txt">{{ $diasTotales == 1 ? 'día' : 'días' }}</span>
+                </div>
                 <div class="contrato-info">
                     <span class="contrato-numero">
                         <i class="fas fa-hashtag"></i>
@@ -40,6 +119,34 @@
                 </div>
 
                 <div class="nav-actions-contrato">
+                {{-- 🔔 Campanita de comentarios --}}
+<div class="campanita-wrapper">
+    <button type="button" class="btn-campanita-contrato" id="btnToggleComentarios"
+        aria-label="Comentarios de la reservación">
+        <i class="fas fa-bell"></i>
+        <span class="campanita-badge is-empty" id="campanitaBadge">0</span>
+    </button>
+
+    <div class="comentarios-desplegable" id="comentariosDesplegable" style="display:none;">
+        <div class="comentarios-card">
+            <div class="comentarios-head">
+                <i class="fas fa-comment-dots"></i> Comentarios de la reservación
+            </div>
+            <div class="comentarios-lista" id="comentariosLista">
+                <div class="comentarios-vacio">Cargando comentarios…</div>
+            </div>
+            <div class="comentarios-form">
+                <textarea id="comentarioInput" class="comentario-textarea" rows="3"
+                    placeholder="Escribe un comentario…"></textarea>
+                <button type="button" class="btn-agregar-comentario" id="btnAgregarComentario">
+                    <i class="fas fa-paper-plane"></i> Agregar comentario
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{{-- fin campanita --}}
+
                     <div class="resumen-wrapper">
                         <button type="button" class="btn-resumen-contrato" id="btnToggleDetalle">
                             <i class="fas fa-shopping-cart"></i>
@@ -236,6 +343,11 @@
                                             {{-- Tarjeta Entrega --}}
                                             <div class="tarjeta-fecha" id="tarjetaEntrega">
                                                 <div class="tarjeta-fecha-header">ENTREGA</div>
+                                                {{-- 🏢 Oficina de entrega (solo lectura, viene de la reservación) --}}
+                                                <div class="oficina-card-info">
+                                                    <i class="fas fa-map-marker-alt"></i>
+                                                    <span>{{ $reservacion->sucursal_retiro_nombre ?? 'Sin oficina asignada' }}</span>
+                                                </div>
                                                 <div class="tarjeta-fecha-body">
                                                     <span id="txtDiaEntrega"
                                                         class="fecha-numero">{{ $fechaInicio->format('d') }}</span>
@@ -254,7 +366,49 @@
                                             {{-- Tarjeta Devolución --}}
                                             <div class="tarjeta-fecha" id="tarjetaDevolucion">
                                                 <div class="tarjeta-fecha-header">DEVOLUCIÓN</div>
+                                                {{-- 🏢 Oficina de devolución (dropdown custom con iconos SVG) --}}
+                                                    @php
+                                                        $sucursalSeleccionada = $reservacion->sucursal_entrega ?? $reservacion->sucursal_retiro ?? null;
+
+                                                        // Tipo por nombre → usado para pintar el icono SVG en JS
+                                                        $tipoSucursal = function ($nombre) {
+                                                            $n = mb_strtolower($nombre);
+                                                            if (str_contains($n, 'aeropuerto')) return 'avion';
+                                                            if (str_contains($n, 'autobus') || str_contains($n, 'autobús')) return 'autobus';
+                                                            if (str_contains($n, 'oficina')) return 'oficina';
+                                                            return 'pin';
+                                                        };
+
+                                                        $sucSel = $sucursales->firstWhere('id_sucursal', $sucursalSeleccionada) ?? $sucursales->first();
+                                                    @endphp
+
+                                                    <div class="oficina-dropdown" id="oficinaDropdown" data-id-reservacion="{{ $reservacion->id_reservacion }}">
+                                                        {{-- Botón que muestra la selección actual --}}
+                                                        <button type="button" class="oficina-dropdown-btn" id="oficinaDropdownBtn">
+                                                            <span class="oficina-ico" data-tipo="{{ $sucSel ? $tipoSucursal($sucSel->nombre) : 'pin' }}"></span>
+                                                            <span class="oficina-label" id="oficinaLabelSel">{{ $sucSel->nombre ?? 'Selecciona oficina' }}</span>
+                                                            <span class="oficina-chevron" aria-hidden="true"></span>
+                                                        </button>
+                                                        <input type="hidden" id="sucursalDevolucionInput" value="{{ $sucSel->id_sucursal ?? '' }}">
+
+                                                        {{-- Panel de opciones --}}
+                                                        <div class="oficina-dropdown-panel" id="oficinaDropdownPanel">
+                                                            @foreach($sucursales->groupBy('ciudad') as $ciudad => $listaSuc)
+                                                                <div class="oficina-grupo-label">{{ $ciudad }}</div>
+                                                                @foreach($listaSuc as $suc)
+                                                                    <button type="button" class="oficina-opcion {{ (string)$sucursalSeleccionada === (string)$suc->id_sucursal ? 'is-selected' : '' }}"
+                                                                        data-id="{{ $suc->id_sucursal }}"
+                                                                        data-nombre="{{ $suc->nombre }}"
+                                                                        data-tipo="{{ $tipoSucursal($suc->nombre) }}">
+                                                                        <span class="oficina-ico" data-tipo="{{ $tipoSucursal($suc->nombre) }}"></span>
+                                                                        <span class="oficina-opcion-txt">{{ $suc->nombre }}</span>
+                                                                    </button>
+                                                                @endforeach
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
                                                 <div class="tarjeta-fecha-body">
+
                                                     <span id="txtDiaDevolucion"
                                                         class="fecha-numero">{{ $fechaFin->format('d') }}</span>
                                                     <div class="fecha-mes-anio">
@@ -438,21 +592,58 @@
                                                 <div class="extras-grid">
                                                     <div class="form-group">
                                                         <label>Ubicación</label>
-                                                        <select id="deliveryUbicacion" name="delivery_ubicacion"
-                                                            class="form-control-simple">
+
+                                                        {{-- Select oculto: FUENTE DE DATOS (no lo quites, la lógica del cálculo lo usa) --}}
+                                                        <select id="deliveryUbicacion" name="delivery_ubicacion" class="form-control-simple" style="display:none;">
                                                             <option value="">Seleccione...</option>
                                                             @foreach ($ubicaciones as $u)
-                                                                <option value="{{ $u->id_ubicacion }}"
-                                                                    data-km="{{ $u->km }}"
+                                                                <option value="{{ $u->id_ubicacion }}" data-km="{{ $u->km }}"
                                                                     {{ !empty($delivery->id_ubicacion) && $delivery->id_ubicacion == $u->id_ubicacion ? 'selected' : '' }}>
                                                                     {{ $u->destino }} ({{ $u->km }} km)
                                                                 </option>
                                                             @endforeach
-                                                            <option value="0"
-                                                                {{ isset($delivery->id_ubicacion) && $delivery->id_ubicacion == 0 ? 'selected' : '' }}>
+                                                            <option value="0" {{ isset($delivery->id_ubicacion) && $delivery->id_ubicacion == 0 ? 'selected' : '' }}>
                                                                 Dirección manual
                                                             </option>
                                                         </select>
+
+                                                    {{-- Dropdown custom (iconos + separadores por estado) --}}
+                                                    @php
+                                                        $tipoUbic = function ($nombre) {
+                                                            $n = mb_strtolower($nombre);
+                                                            if (str_contains($n, 'aeropuerto')) return 'avion';
+                                                            if (str_contains($n, 'autobus') || str_contains($n, 'autobús') || str_contains($n, 'central de autobuses')) return 'autobus';
+                                                            return 'pin';
+                                                        };
+                                                    @endphp
+                                                    <div class="deliv-dropdown" id="delivUbicDropdown">
+                                                        <button type="button" class="deliv-dropdown-btn" id="delivUbicBtn">
+                                                            <span class="deliv-ico" data-tipo="pin"></span>
+                                                            <span class="deliv-label" id="delivUbicLabel">Seleccione...</span>
+                                                            <span class="deliv-chevron"></span>
+                                                        </button>
+                                                        <div class="deliv-dropdown-panel" id="delivUbicPanel">
+                                                            @foreach ($ubicaciones->groupBy('estado') as $estado => $lista)
+                                                                <div class="deliv-grupo-label">{{ $estado }}</div>
+                                                                @foreach ($lista as $u)
+                                                                    <button type="button" class="deliv-opcion"
+                                                                        data-id="{{ $u->id_ubicacion }}"
+                                                                        data-km="{{ $u->km }}"
+                                                                        data-destino="{{ $u->destino }}"
+                                                                        data-tipo="{{ $tipoUbic($u->destino) }}">
+                                                                        <span class="deliv-ico" data-tipo="{{ $tipoUbic($u->destino) }}"></span>
+                                                                        <span class="deliv-opcion-txt">{{ $u->destino }}</span>
+                                                                        <span class="deliv-opcion-km">{{ $u->km }} km</span>
+                                                                    </button>
+                                                                @endforeach
+                                                            @endforeach
+                                                            <div class="deliv-grupo-label">Otra</div>
+                                                            <button type="button" class="deliv-opcion" data-id="0" data-km="" data-destino="" data-tipo="edit">
+                                                                <span class="deliv-ico" data-tipo="edit"></span>
+                                                                <span class="deliv-opcion-txt">Otra dirección (manual)</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                     </div>
                                                     <div id="groupDireccion" class="form-group"
                                                         style="display: {{ isset($delivery->id_ubicacion) && $delivery->id_ubicacion == 0 ? 'block' : 'none' }};">
@@ -460,21 +651,30 @@
                                                         <input type="text" id="deliveryDireccion"
                                                             class="form-control-simple" placeholder="Ej. Centro"
                                                             value="{{ $delivery->direccion ?? '' }}">
+                                                            <a id="deliveryMapsLink" class="delivery-maps-link" target="_blank" rel="noopener"
+                                                                data-origen="{{ $reservacion->sucursal_retiro_nombre ?? '' }}" href="#">
+                                                                    <span class="deliv-ico" data-tipo="maps"></span>
+                                                                    Consultar km en Google Maps
+                                                                </a>
+                                                        </div>
+                                                    </div>  {{-- cierra .extras-grid (ahora sin el Km) --}}
+
+                                                    {{-- Distancia (Km) + Costo Delivery, mitad y mitad --}}
+                                                    <div class="delivery-fila-km-costo">
+                                                        <div id="groupKm" class="form-group"
+                                                            style="display: {{ isset($delivery->id_ubicacion) && $delivery->id_ubicacion == 0 ? 'block' : 'none' }};">
+                                                            <label>Distancia (Km)</label>
+                                                            <input type="number" min="0" id="deliveryKm"
+                                                                class="form-control-simple" placeholder="0"
+                                                                value="{{ $delivery->kms ?? '' }}">
+                                                        </div>
+                                                        <div class="cargo-item-total delivery-costo-half">
+                                                            <span class="cargo-item-total-label">Costo Delivery</span>
+                                                            <span id="deliveryTotal" class="cargo-item-total-amount">
+                                                                ${{ number_format($delivery->total ?? 0, 2) }} MXN
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <div id="groupKm" class="form-group"
-                                                        style="display: {{ isset($delivery->id_ubicacion) && $delivery->id_ubicacion == 0 ? 'block' : 'none' }};">
-                                                        <label>Distancia (Km)</label>
-                                                        <input type="number" min="0" id="deliveryKm"
-                                                            class="form-control-simple" placeholder="0"
-                                                            value="{{ $delivery->kms ?? '' }}">
-                                                    </div>
-                                                </div>
-                                                <div class="cargo-item-total">
-                                                    <span class="cargo-item-total-label">Costo Delivery</span>
-                                                    <span id="deliveryTotal" class="cargo-item-total-amount">
-                                                        ${{ number_format($delivery->total ?? 0, 2) }} MXN
-                                                    </span>
-                                                </div>
                                                 <input type="hidden" id="deliveryPrecioKm"
                                                     value="{{ $costoKmCategoria ?? 0 }}">
                                                 <input type="hidden" id="deliveryTotalHidden"
@@ -506,17 +706,49 @@
                                                 <div class="extras-grid">
                                                     <div class="form-group">
                                                         <label>Ubicación</label>
-                                                        <select id="dropUbicacion" class="form-control-simple">
+
+                                                        {{-- Select oculto: fuente de datos (la lógica del dropoff lo usa) --}}
+                                                        <select id="dropUbicacion" class="form-control-simple" style="display:none;">
                                                             <option value="">Seleccione...</option>
                                                             @foreach ($ubicaciones as $u)
-                                                                <option value="{{ $u->id_ubicacion }}"
-                                                                    data-km="{{ $u->km }}"
+                                                                <option value="{{ $u->id_ubicacion }}" data-km="{{ $u->km }}"
                                                                     @selected(($dropIdUbicacion ?? null) == $u->id_ubicacion)>
-                                                                    {{ ($u->estado ?? '') . ' - ' . ($u->destino ?? '') }}
-                                                                    ({{ $u->km }} km)
+                                                                    {{ ($u->estado ?? '') . ' - ' . ($u->destino ?? '') }} ({{ $u->km }} km)
                                                                 </option>
                                                             @endforeach
                                                         </select>
+
+                                                        {{-- Dropdown custom (mismo estilo y orden que delivery) --}}
+                                                        @php
+                                                            $tipoUbicDrop = function ($nombre) {
+                                                                $n = mb_strtolower($nombre);
+                                                                if (str_contains($n, 'aeropuerto')) return 'avion';
+                                                                if (str_contains($n, 'autobus') || str_contains($n, 'autobús') || str_contains($n, 'central de autobuses')) return 'autobus';
+                                                                return 'pin';
+                                                            };
+                                                        @endphp
+                                                        <div class="deliv-dropdown" id="dropUbicDropdown">
+                                                            <button type="button" class="deliv-dropdown-btn" id="dropUbicBtn">
+                                                                <span class="deliv-ico" data-tipo="pin"></span>
+                                                                <span class="deliv-label" id="dropUbicLabel">Seleccione...</span>
+                                                                <span class="deliv-chevron"></span>
+                                                            </button>
+                                                            <div class="deliv-dropdown-panel" id="dropUbicPanel">
+                                                                @foreach ($ubicaciones->groupBy('estado') as $estado => $lista)
+                                                                    <div class="deliv-grupo-label">{{ $estado }}</div>
+                                                                    @foreach ($lista as $u)
+                                                                        <button type="button" class="deliv-opcion"
+                                                                            data-id="{{ $u->id_ubicacion }}"
+                                                                            data-km="{{ $u->km }}"
+                                                                            data-tipo="{{ $tipoUbicDrop($u->destino) }}">
+                                                                            <span class="deliv-ico" data-tipo="{{ $tipoUbicDrop($u->destino) }}"></span>
+                                                                            <span class="deliv-opcion-txt">{{ $u->destino }}</span>
+                                                                            <span class="deliv-opcion-km">{{ $u->km }} km</span>
+                                                                        </button>
+                                                                    @endforeach
+                                                                @endforeach
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -604,6 +836,12 @@
 
                                         <div class="modal-header-left">
                                             <h2 class="modal-title">Protecciones</h2>
+                                        </div>
+
+                                        {{-- 📅 Días de renta en modal de protecciones --}}
+                                        <div class="contador-dias-modal">
+                                            <i class="fas fa-calendar-day"></i>
+                                            <strong>{{ $diasTotales }}</strong> {{ $diasTotales == 1 ? 'día' : 'días' }}
                                         </div>
 
                                         <div class="modal-header-right">

@@ -28,27 +28,15 @@ const ContratoUI = {
                             <li>O instituciones externas autorizadas.</li>
                         </ul>
                     </div>`;
-                if (window.alertify) {
-                    alertify.alert("⚠️ Aviso Importante", msg).set('label', 'Entendido');
-                } else {
-                    alert("Este verificador es solo una herramienta de apoyo.\nNo cuenta con acceso a bases oficiales.");
-                }
+                // Notificación desactivada
+                console.log("Aviso Importante:", msg);
             });
         }
     },
     mostrarNotificacion: function (tipo, htmlMsg) {
-        const now = Date.now();
-        if (window.lastAlert === htmlMsg && window.lastAlertTime && (now - window.lastAlertTime) < 3000) return;
-        window.lastAlert = htmlMsg;
-        window.lastAlertTime = now;
-
-        if (typeof alertify !== 'undefined') {
-            if (tipo === 'error') alertify.error(htmlMsg);
-            else if (tipo === 'warning') alertify.warning(htmlMsg);
-            else alertify.success(htmlMsg);
-        } else {
-            alert(htmlMsg.replace(/<[^>]*>?/gm, ''));
-        }
+        // NOTIFICACIONES DESACTIVADAS - solo console
+        console.log(`[${tipo}]`, htmlMsg);
+        return;
     }
 };
 
@@ -331,7 +319,7 @@ const ContratoPaso5 = {
             if (inputReverso && persona.id_archivo_reverso) inputReverso.removeAttribute('required');
         }
 
-        ContratoUI.mostrarNotificacion('success', 'Persona cargada en el Titular.');
+        console.log('Persona cargada en el Titular.');
     },
 
     mostrarPreviewDesdeUrl: function (idx, tipo, url) {
@@ -356,7 +344,7 @@ const ContratoPaso5 = {
         padding: 0; box-sizing: border-box;
     `;
         prev.innerHTML = `
-        <img src="${url}" style="width:100%; height:100%; object-fit:contain; border-radius:inherit;" alt="Vista previa">
+        <img src="${url}" style="width:auto; height:auto; max-width:100%; max-height:100%; object-fit:contain; display:block; border-radius:inherit;" alt="Vista previa">
         <button type="button" title="Quitar imagen" style="
             position:absolute; top:8px; right:8px; background:#ef4444; color:white;
             border:none; border-radius:50%; width:26px; height:26px; cursor:pointer;
@@ -440,7 +428,7 @@ const ContratoPaso5 = {
                 padding: 0; box-sizing: border-box;
             `;
                 prev.innerHTML = `
-                <img src="${url}" style="width:100%; height:100%; object-fit:contain; border-radius:inherit;" alt="Vista previa">
+                <img src="${url}" style="width:auto; height:auto; max-width:100%; max-height:100%; object-fit:contain; display:block; border-radius:inherit;" alt="Vista previa">
                 <button type="button" title="Quitar imagen" style="
                     position:absolute; top:8px; right:8px; background:#ef4444; color:white;
                     border:none; border-radius:50%; width:26px; height:26px; cursor:pointer;
@@ -797,18 +785,20 @@ const ContratoPaso5 = {
                         left: 0;
                         width: 100%;
                         height: 100%;
+                        min-height: 190px;
                         background-color: #ffffff;
                         z-index: 10;
                         display: flex;
                         justify-content: center;
                         align-items: center;
-                        padding: 0;
+                        padding: 8px;
                         margin: 0;
                         box-sizing: border-box;
+                        overflow: hidden;
                     `;
 
                     prev.innerHTML = `
-                        <img src="${ev.target.result}" style="width:100%; height:100%; object-fit:contain; border-radius:inherit;" alt="Vista previa">
+                        <img src="${ev.target.result}" style="width:auto; height:auto; max-width:100%; max-height:100%; object-fit:contain; display:block; border-radius:inherit;" alt="Vista previa">
 
                         <button type="button" title="Quitar imagen" style="position:absolute; top:8px; right:8px; background:#ef4444; color:white; border:none; border-radius:50%; width:26px; height:26px; cursor:pointer; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.3); z-index:11; display:flex; justify-content:center; align-items:center; line-height:1;"
                         onclick="
@@ -870,7 +860,7 @@ const ContratoPaso5 = {
         if (primerError) {
             primerError.scrollIntoView({ behavior: 'smooth', block: 'center' });
             if (primerError.tagName !== 'DIV') primerError.focus();
-            ContratoUI.mostrarNotificacion('error', 'Faltan campos obligatorios por llenar.');
+            console.error('Faltan campos obligatorios por llenar.');
             return false;
         }
         return true;
@@ -931,7 +921,7 @@ const ContratoPaso5 = {
             })).json();
 
             if (res.success) {
-                ContratoUI.mostrarNotificacion('success', "¡Guardado exitoso!");
+                console.log("¡Guardado exitoso!");
                 ContratoNav.irAlPaso5();
                 if (typeof window.cargarPaso6 === 'function') window.cargarPaso6();
                 if (window.cargarResumenBasico) window.cargarResumenBasico();
@@ -1099,41 +1089,43 @@ const ContratoPaso6 = {
     },
 
     delegarEventosTabla: function () {
-        const payBody = ContratoUI.DOM.payBody;
-        if (!payBody) return;
-        payBody.addEventListener("click", (e) => {
-            const btn = e.target.closest(".btn-del-pago");
-            if (!btn) return;
-            alertify.confirm("Eliminar Pago", "¿Seguro que deseas eliminar este pago?",
-                async () => {
-                    btn.disabled = true; btn.innerText = "...";
-                    try {
-                        const res = await (await fetch(`/admin/contrato/pagos/${btn.dataset.del}/eliminar`, {
-                            method: "DELETE",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "Accept": "application/json",
-                                "X-CSRF-TOKEN": window.csrfToken
-                            }
-                        })).json();
-                        if (res.success !== false) {
-                            alertify.success("Pago eliminado.");
-                            this.cargarResumen();
-                            if (window.cargarResumenBasico) window.cargarResumenBasico();
-                        } else {
-                            alertify.error(res.msg || "Error");
-                            btn.disabled = false;
-                            btn.innerText = "✕";
-                        }
-                    } catch (e) {
-                        alertify.error("Error de conexión");
-                        btn.disabled = false;
-                        btn.innerText = "✕";
+    const payBody = ContratoUI.DOM.payBody;
+    if (!payBody) return;
+    payBody.addEventListener("click", (e) => {
+        const btn = e.target.closest(".btn-del-pago");
+        if (!btn) return;
+        console.log("Eliminar pago:", btn.dataset.del);
+        btn.disabled = true;
+        btn.innerText = "...";
+
+        const eliminarPago = async () => {
+            try {
+                const res = await (await fetch(`/admin/contrato/pagos/${btn.dataset.del}/eliminar`, {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        "X-CSRF-TOKEN": window.csrfToken
                     }
-                }, () => { }
-            ).set('labels', { ok: 'Sí, eliminar', cancel: 'Cancelar' });
-        });
-    },
+                })).json();
+                if (res.success !== false) {
+                    console.log("Pago eliminado.");
+                    this.cargarResumen();
+                    if (window.cargarResumenBasico) window.cargarResumenBasico();
+                } else {
+                    console.error(res.msg || "Error");
+                    btn.disabled = false;
+                    btn.innerText = "✕";
+                }
+            } catch (e) {
+                console.error("Error de conexión");
+                btn.disabled = false;
+                btn.innerText = "✕";
+            }
+        };
+        eliminarPago();
+    });
+},
 
     obtenerMontoPendienteReserva: function () {
         return parseFloat(this.ultimoResumen?.pagos?.saldo || 0) || 0;
@@ -1297,9 +1289,8 @@ const ContratoPaso6 = {
                     if (window.cargarResumenBasico) window.cargarResumenBasico();
 
                     if (flujoAnterior === "reserva" && this.obtenerMontoPendienteReserva() <= 0.009 && this.obtenerMontoPendienteGarantia() > 0.009) {
-                        alertify.alert("Garantía", "Procediendo con el pago de la garantía. Puedes editar el monto antes de guardarlo.", () => {
-                            this.abrirModalPago("garantia");
-                        });
+                        console.log("Procediendo con el pago de la garantía.");
+                        this.abrirModalPago("garantia");
                     } else {
                         console.log(flujoAnterior === "garantia" ? "Garantía registrada." : "Pago PayPal exitoso.");
                     }
@@ -1357,9 +1348,8 @@ const ContratoPaso6 = {
                 if (window.cargarResumenBasico) window.cargarResumenBasico();
 
                 if (flujoAnterior === "reserva" && this.obtenerMontoPendienteReserva() <= 0.009 && this.obtenerMontoPendienteGarantia() > 0.009) {
-                    alertify.alert("Garantía", "Procediendo con el pago de la garantía. Puedes editar el monto antes de guardarlo.", () => {
-                        this.abrirModalPago("garantia");
-                    });
+                    console.log("Procediendo con el pago de la garantía.");
+                    this.abrirModalPago("garantia");
                 } else {
                     console.log(flujoAnterior === "garantia" ? "Garantía registrada." : "Pago guardado.");
                 }
@@ -1768,13 +1758,11 @@ const ContratoNav = {
                 const data = await resp.json();
                 if (!data.ok) {
                     console.error('No se guardó la firma:', data.msg);
-                    ContratoUI.mostrarNotificacion('error', data.msg || 'No se pudo guardar la firma.');
                     if (btn) btn.disabled = false;
                     return;
                 }
             } catch (err) {
                 console.error('Error guardando firma:', err);
-                ContratoUI.mostrarNotificacion('error', 'Error de conexión al guardar la firma.');
                 if (btn) btn.disabled = false;
                 return;
             }
@@ -1809,7 +1797,7 @@ const ContratoNav = {
         const apePatTit = document.querySelector('input[name="conductores[0][apellido_paterno]"]')?.value.trim();
         const apeMatTit = document.querySelector('input[name="conductores[0][apellido_materno]"]')?.value.trim();
         const nombreFirma = [nomTit, apePatTit, apeMatTit].filter(Boolean).join(' ') || '—';
-        const firmaParrafo = document.querySelector('.signature-section p.txt-primary');
+        const firmaParrafo = document.querySelector('.signature-section .txt-primary');
         if (firmaParrafo) {
             firmaParrafo.textContent = nombreFirma;
         }
@@ -3101,3 +3089,119 @@ const ResumenFechas = {
         }));
     }
 };
+
+/* ================================ CAMPANITA DE COMENTARIOS ================================ */
+(function () {
+    function init() {
+        const btnCampanita = document.getElementById('btnToggleComentarios');
+        const panel        = document.getElementById('comentariosDesplegable');
+        const lista        = document.getElementById('comentariosLista');
+        const input        = document.getElementById('comentarioInput');
+        const btnAgregar   = document.getElementById('btnAgregarComentario');
+        const badge        = document.getElementById('campanitaBadge');
+
+        if (!btnCampanita || !panel || !lista) return;
+
+        const idReservacion = window.ID_RESERVACION;
+        const csrf = window.csrfToken;
+        const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        let comentariosActuales = '';
+
+        const escapar = (t) => { const d = document.createElement('div'); d.textContent = t == null ? '' : String(t); return d.innerHTML; };
+
+        const parsear = (txt) => !txt ? [] : String(txt).split('\n').map(l => l.trim()).filter(Boolean);
+
+        const separarFecha = (linea) => {
+            const m = linea.match(/^\[([^\]]+)\]\s*(.*)$/);
+            return m ? { fecha: m[1], texto: m[2] } : { fecha: null, texto: linea };
+        };
+
+        function render(comentarios) {
+            const items = parsear(comentarios);
+            if (badge) { badge.textContent = items.length; badge.classList.toggle('is-empty', items.length === 0); }
+
+            if (!items.length) { lista.innerHTML = '<div class="comentarios-vacio">Sin comentarios registrados.</div>'; return; }
+
+            lista.innerHTML = items.map(l => {
+                const { fecha, texto } = separarFecha(l);
+                const f = fecha ? `<span class="comentario-fecha">${escapar(fecha)}</span>` : '';
+                return `<div class="comentario-item">${f}${escapar(texto)}</div>`;
+            }).join('');
+            lista.scrollTop = lista.scrollHeight;
+        }
+
+        function marca() {
+            const d = new Date();
+            const p = (n) => String(n).padStart(2, '0');
+            return `${p(d.getDate())}-${MESES[d.getMonth()]}-${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+        }
+
+        async function cargar() {
+            if (!idReservacion) return;
+            try {
+                const resp = await fetch(`/admin/contrato/comentarios/${idReservacion}`, { headers: { 'Accept': 'application/json' } });
+                const data = await resp.json();
+                comentariosActuales = data.comentarios || '';
+                render(comentariosActuales);
+                if (parsear(comentariosActuales).length) {
+                    btnCampanita.classList.remove('tiene-comentarios'); void btnCampanita.offsetWidth;
+                    btnCampanita.classList.add('tiene-comentarios');
+                }
+            } catch (e) {
+                console.error('Error cargando comentarios:', e);
+                lista.innerHTML = '<div class="comentarios-vacio">No se pudieron cargar los comentarios.</div>';
+            }
+        }
+
+        async function agregar() {
+            const texto = (input?.value || '').trim();
+            if (!texto) { input?.focus(); return; }
+
+            const nuevaLinea = `[${marca()}] ${texto}`;
+            const nuevoTexto = comentariosActuales.trim() !== '' ? comentariosActuales.replace(/\s+$/, '') + '\n' + nuevaLinea : nuevaLinea;
+
+            btnAgregar.disabled = true;
+            const original = btnAgregar.innerHTML;
+            btnAgregar.innerHTML = 'Guardando…';
+            try {
+                const resp = await fetch('/admin/contrato/comentarios', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
+                    body: JSON.stringify({ id_reservacion: idReservacion, comentarios: nuevoTexto })
+                });
+                const data = await resp.json();
+                if (!data.success) throw new Error(data.message || 'Error al guardar');
+
+                comentariosActuales = nuevoTexto;
+                render(comentariosActuales);
+                if (input) input.value = '';
+                btnCampanita.classList.remove('tiene-comentarios'); void btnCampanita.offsetWidth;
+                btnCampanita.classList.add('tiene-comentarios');
+                console.log('Comentario agregado');
+            } catch (e) {
+                console.error('Error guardando comentario:', e);
+            } finally {
+                btnAgregar.disabled = false;
+                btnAgregar.innerHTML = original;
+            }
+        }
+
+        const abrir  = () => panel.style.display = 'block';
+        const cerrar = () => panel.style.display = 'none';
+
+        btnCampanita.addEventListener('click', (e) => { e.stopPropagation(); panel.style.display === 'block' ? cerrar() : abrir(); });
+        panel.addEventListener('click', (e) => e.stopPropagation());
+        btnAgregar?.addEventListener('click', agregar);
+        document.addEventListener('click', (e) => {
+            if (panel.style.display !== 'block') return;
+            if (btnCampanita.contains(e.target) || panel.contains(e.target)) return;
+            cerrar();
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && panel.style.display === 'block') cerrar(); });
+
+        cargar();
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+})();

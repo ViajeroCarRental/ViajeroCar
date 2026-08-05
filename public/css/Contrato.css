@@ -2,16 +2,6 @@
 * {
     box-sizing: border-box;
 }
-.h1 {
-    margin: 0 0 14px;
-    font-size: 24px;
-    font-weight: 1000;
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
 /* GRID */
 .grid {
     display: grid;
@@ -42,7 +32,6 @@
 .section .cnt, .card .cnt {
     padding: 16px;
 }
-
 /* BOTONES */
 .btn {
     border: none;
@@ -77,7 +66,6 @@
 .kv:last-child {
     border: none;
 }
-
 /* SWITCH */
 .switch {
     --on: #22c55e;
@@ -146,7 +134,6 @@
     opacity: 0.5;
     pointer-events: none;
 }
-
 /* TOPBAR */
 .topbar-contrato {
     position: relative;
@@ -217,15 +204,6 @@
 }
 .nav-actions-contrato {
     position: relative;
-}
-.resumen-dias {
-    color: #ffffff;
-    font-size: 0.85rem;
-    font-weight: 600;
-    border-right: 1px solid rgba(255, 255, 255, 0.4);
-    padding-right: 12px;
-    padding-top: 2px;
-    padding-bottom: 2px;
 }
 .resumen-totales-container {
     display: flex;
@@ -345,18 +323,22 @@
 .btn-resumen-contrato-detalle:hover {
     background: #eef2f6;
 }
-
 /* TOPBAR RESPONSIVE */
 @media (max-width: 768px) {
     .topbar-contrato {
         width: 100%;
         border-radius: 40px;
-        padding: 4px 26px;
-        margin: 0 auto 10px auto;
+        padding: 3px 10px;
+        margin: 0 auto 8px auto;
+        background: rgba(220, 60, 50, 0.92);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
     }
     .topbar-contrato.scrolled {
-        padding: 3px 12px;
+        padding: 3px 10px;
+        background: linear-gradient(135deg, #dc3c32 0%, #c4281f 100%);
     }
+
     .nav-contrato {
         display: flex !important;
         flex-direction: row !important;
@@ -365,18 +347,72 @@
         gap: 4px !important;
         padding: 0 !important;
         flex-wrap: nowrap !important;
+        min-height: 36px !important;
+    }
+
+    .brand-contrato {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 3px !important;
+        font-size: 0.7rem !important;
+        padding: 0 !important;
+        flex-wrap: nowrap !important;
+        flex-shrink: 0 !important;
+        max-width: 38% !important;
+        overflow: hidden !important;
+    }
+    .brand-contrato i {
+        font-size: 0.7rem !important;
+        flex-shrink: 0 !important;
+    }
+    .brand-separator {
+        display: none !important;
     }
     .brand-subtitle {
         display: none !important;
     }
+
+    .contador-dias-contrato {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 2px !important;
+        padding: 1px 6px !important;
+        border-radius: 999px !important;
+        background: rgba(255,255,255,0.2) !important;
+        border: 1px solid rgba(255,255,255,0.25) !important;
+        color: #fff !important;
+        font-weight: 800 !important;
+        font-size: 0.55rem !important;
+        white-space: nowrap !important;
+        line-height: 1.3 !important;
+        flex-shrink: 0 !important;
+        margin-left: 2px !important;
+    }
+    .contador-dias-contrato i {
+        font-size: 0.5rem !important;
+        opacity: 0.9 !important;
+    }
+    .contador-dias-num {
+        font-size: 0.6rem !important;
+        font-weight: 900 !important;
+    }
+    .contador-dias-txt {
+        display: inline !important;
+        font-size: 0.5rem !important;
+        font-weight: 700 !important;
+        opacity: 0.9 !important;
+    }
+
     .contrato-info {
         display: inline-block !important;
-        background: transparent !important;
-        padding: 0 !important;
-        border-radius: 0 !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        padding: 1px 8px !important;
+        border-radius: 20px !important;
         margin: 0 !important;
         width: auto !important;
         flex-shrink: 0 !important;
+        flex: 0 0 auto !important;
     }
     .contrato-numero {
         font-size: 0 !important;
@@ -384,31 +420,17 @@
         font-weight: 400 !important;
     }
     .contrato-numero strong {
-        font-size: 0.65rem !important;
+        font-size: 0.6rem !important;
         color: #ffffff !important;
-        background: rgba(255, 255, 255, 0.15) !important;
-        padding: 1px 6px !important;
-        border-radius: 12px !important;
-        margin-left: 0 !important;
-        font-weight: 700 !important;
-        display: inline-block !important;
-    }
-    .brand-contrato {
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
-        gap: 4px !important;
-        font-size: 0.85rem !important;
+        background: transparent !important;
         padding: 0 !important;
-        flex-wrap: nowrap !important;
-        flex-shrink: 0 !important;
+        border-radius: 0 !important;
+        margin-left: 0 !important;
+        font-weight: 800 !important;
+        display: inline-block !important;
+        letter-spacing: 0.3px !important;
     }
-    .brand-contrato i {
-        font-size: 0.8rem !important;
-    }
-    .brand-separator {
-        display: none !important;
-    }
+
     .nav-actions-contrato {
         display: flex !important;
         align-items: center !important;
@@ -416,28 +438,85 @@
         margin: 0 !important;
         padding: 0 !important;
         flex-shrink: 0 !important;
+        gap: 3px !important;
     }
+
+    .campanita-wrapper {
+        display: flex !important;
+        align-items: center !important;
+        flex-shrink: 0 !important;
+        position: relative !important;
+    }
+    .btn-campanita-contrato {
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 50% !important;
+        padding: 0 !important;
+        background: rgba(255,255,255,0.15) !important;
+        border: 1px solid rgba(255,255,255,0.2) !important;
+        color: #fff !important;
+        cursor: pointer !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s ease !important;
+        flex-shrink: 0 !important;
+    }
+    .btn-campanita-contrato i {
+        font-size: 0.7rem !important;
+    }
+    .campanita-badge {
+        position: absolute !important;
+        top: -2px !important;
+        right: -2px !important;
+        min-width: 14px !important;
+        height: 14px !important;
+        padding: 0 3px !important;
+        background: #fff !important;
+        color: var(--brand) !important;
+        border-radius: 999px !important;
+        font-size: 8px !important;
+        font-weight: 900 !important;
+        line-height: 14px !important;
+        text-align: center !important;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.25) !important;
+    }
+    .campanita-badge.is-empty {
+        display: none !important;
+    }
+
     .resumen-wrapper {
         display: flex !important;
         align-items: center !important;
-        justify-content: flex-end !important;
+        justify-content: center !important;
         width: auto !important;
-        padding: 0 !important;
-        gap: 2px !important;
-        background: transparent !important;
-        border-radius: 0 !important;
-    }
-    .resumen-dias {
-        display: none !important;
+        padding: 2px 8px 2px 5px !important;
+        gap: 3px !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        border-radius: 30px !important;
+        border: 1px solid rgba(255,255,255,0.15) !important;
+        min-height: 28px !important;
+        flex-shrink: 0 !important;
+        position: relative !important;
     }
     .btn-resumen-contrato {
-        gap: 2px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 3px !important;
         padding: 0 !important;
-        font-size: 0.7rem !important;
+        font-size: 0.6rem !important;
+        background: transparent !important;
+        border: none !important;
+        color: #ffffff !important;
+        font-weight: 800 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        min-height: 24px !important;
     }
     .btn-resumen-contrato i:first-child {
         font-size: 0.6rem !important;
-        opacity: 0.8 !important;
+        opacity: 0.9 !important;
+        flex-shrink: 0 !important;
     }
     .resumen-totales-container {
         display: flex !important;
@@ -447,26 +526,58 @@
         line-height: 1 !important;
     }
     #btnTotalTextContrato {
-        font-size: 0.7rem !important;
+        font-size: 0.65rem !important;
         font-weight: 900 !important;
         line-height: 1 !important;
+        letter-spacing: -0.2px !important;
+        white-space: nowrap !important;
     }
     .resumen-usd {
         display: none !important;
     }
     #iconoFlechaResumen {
-        font-size: 0.5rem !important;
-        opacity: 0.7 !important;
+        font-size: 0.45rem !important;
+        opacity: 0.8 !important;
+        flex-shrink: 0 !important;
+        transition: transform 0.2s ease !important;
     }
+    #iconoFlechaResumen.rotada {
+        transform: rotate(180deg) !important;
+    }
+
+    .cart-badge {
+        position: absolute !important;
+        top: -5px !important;
+        right: -4px !important;
+        min-width: 16px !important;
+        height: 16px !important;
+        padding: 0 4px !important;
+        background: #fff !important;
+        color: var(--brand) !important;
+        border-radius: 999px !important;
+        font-size: 9px !important;
+        font-weight: 900 !important;
+        line-height: 16px !important;
+        text-align: center !important;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.25) !important;
+        pointer-events: none !important;
+    }
+    .cart-badge.is-empty {
+        display: none !important;
+    }
+
     .resumen-desplegable-contrato {
         position: absolute !important;
         top: calc(100% + 6px) !important;
         right: 0 !important;
         left: auto !important;
         width: 320px !important;
+        max-width: calc(100vw - 20px) !important;
         z-index: 1001 !important;
+        display: none !important;
     }
-    .resumen-desplegable-contrato.visible {
+    .resumen-desplegable-contrato.visible,
+    .resumen-desplegable-contrato.abierto {
         display: block !important;
         animation: fadeInDownMobile 0.25s ease !important;
     }
@@ -484,6 +595,7 @@
         width: 100% !important;
         border-radius: 16px !important;
         max-height: 70vh !important;
+        overflow: hidden !important;
     }
     .resumen-card-contrato .cnt {
         max-height: 55vh !important;
@@ -491,129 +603,405 @@
     }
 }
 
-/* RESUMEN BARRA VERDE */
-.resumen-barra-verde {
-    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
-    color: #ffffff;
-    padding: 14px 20px;
-    border-radius: 60px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    width: 100%;
-    text-align: left;
-}
-.resumen-barra-verde:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    filter: brightness(1.02);
-}
-.resumen-textos {
-    display: flex;
-    flex-direction: column;
-}
-.resumen-lbl {
-    display: block;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    opacity: 0.85;
-    font-weight: 700;
-    margin-bottom: 2px;
-}
-.resumen-precio-mxn {
-    font-size: 1.4rem;
-    font-weight: 900;
-    line-height: 1;
-    margin-bottom: 2px;
-}
-.resumen-precio-usd {
-    font-size: 0.7rem;
-    font-weight: 500;
-    opacity: 0.8;
-    background: rgba(0, 0, 0, 0.15);
-    padding: 2px 8px;
-    border-radius: 20px;
-    display: inline-block;
-    width: fit-content;
-}
-.resumen-iconos {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.icono-flecha {
-    transition: transform 0.25s ease;
-    font-size: 0.8rem;
-}
-.icono-flecha.rotada {
-    transform: rotate(180deg);
-}
-.header-right {
-    position: relative;
-    min-width: 280px;
-}
-.resumen-detalle-desplegable {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    width: 380px;
-    background: transparent;
-    z-index: 5;
-    padding-top: 8px;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    opacity: 0;
-    transform: translateY(-8px);
-    pointer-events: none;
-}
-.resumen-detalle-desplegable.show {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-}
-.resumen-detalle-desplegable .resumen-card {
-    background: #fff;
-    margin: 0;
-    max-height: 85vh;
-    overflow-y: auto;
-    overflow-x: hidden;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
-    border-radius: 24px;
+/* MÓVIL MUY PEQUEÑO (≤ 480px) */
+@media (max-width: 480px) {
+    .topbar-contrato {
+        padding: 2px 6px !important;
+    }
+    .nav-contrato {
+        gap: 2px !important;
+        min-height: 32px !important;
+    }
+    .brand-contrato {
+        font-size: 0.6rem !important;
+        max-width: 32% !important;
+        gap: 2px !important;
+    }
+    .brand-contrato i {
+        font-size: 0.6rem !important;
+    }
+    .contador-dias-contrato {
+        font-size: 0.45rem !important;
+        padding: 1px 4px !important;
+    }
+    .contador-dias-num {
+        font-size: 0.5rem !important;
+    }
+    .contador-dias-txt {
+        font-size: 0.4rem !important;
+    }
+    .contrato-numero strong {
+        font-size: 0.5rem !important;
+    }
+    .btn-campanita-contrato {
+        width: 24px !important;
+        height: 24px !important;
+    }
+    .btn-campanita-contrato i {
+        font-size: 0.6rem !important;
+    }
+    .resumen-wrapper {
+        padding: 1px 5px 1px 3px !important;
+        min-height: 24px !important;
+    }
+    .btn-resumen-contrato {
+        font-size: 0.5rem !important;
+        min-height: 20px !important;
+    }
+    .btn-resumen-contrato i:first-child {
+        font-size: 0.5rem !important;
+    }
+    #btnTotalTextContrato {
+        font-size: 0.55rem !important;
+    }
+    #iconoFlechaResumen {
+        font-size: 0.4rem !important;
+    }
+    .campanita-badge {
+        min-width: 12px !important;
+        height: 12px !important;
+        font-size: 7px !important;
+        line-height: 12px !important;
+        top: -2px !important;
+        right: -2px !important;
+    }
+    .cart-badge {
+        min-width: 14px !important;
+        height: 14px !important;
+        font-size: 8px !important;
+        line-height: 14px !important;
+        top: -4px !important;
+        right: -3px !important;
+    }
+    .resumen-desplegable-contrato {
+        width: calc(100vw - 16px) !important;
+        right: 8px !important;
+        left: 8px !important;
+    }
 }
 
-/* RESUMEN CARD */
-.resumen-card {
-    border: 1px solid #e2e8f0;
-    border-radius: 24px;
-    overflow: hidden;
+/* ============================================================
+   TABLET VERTICAL - TODA LA INFO EN UNA SOLA LÍNEA
+   ============================================================ */
+@media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
+    .topbar-contrato {
+        padding: 4px 18px !important;
+        border-radius: 60px !important;
+        margin: 0 auto 10px auto !important;
+    }
+    .topbar-contrato.scrolled {
+        padding: 4px 18px !important;
+    }
+
+    .nav-contrato {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 8px !important;
+        padding: 0 !important;
+        flex-wrap: nowrap !important;
+        min-height: 40px !important;
+        width: 100% !important;
+    }
+
+    .brand-contrato {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 4px !important;
+        font-size: 0.85rem !important;
+        padding: 0 !important;
+        flex-wrap: nowrap !important;
+        flex-shrink: 0 !important;
+    }
+    .brand-contrato i {
+        font-size: 0.85rem !important;
+        flex-shrink: 0 !important;
+    }
+    .brand-separator {
+        display: inline !important;
+        opacity: 0.5 !important;
+        font-weight: 300 !important;
+        font-size: 0.7rem !important;
+        margin: 0 2px !important;
+    }
+    .brand-subtitle {
+        display: inline !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        opacity: 0.9 !important;
+        white-space: nowrap !important;
+    }
+
+    .contador-dias-contrato {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 3px !important;
+        padding: 2px 10px !important;
+        border-radius: 999px !important;
+        background: rgba(255,255,255,0.2) !important;
+        border: 1px solid rgba(255,255,255,0.25) !important;
+        color: #fff !important;
+        font-weight: 800 !important;
+        font-size: 0.7rem !important;
+        white-space: nowrap !important;
+        line-height: 1.3 !important;
+        flex-shrink: 0 !important;
+        margin-left: 4px !important;
+    }
+    .contador-dias-contrato i {
+        font-size: 0.6rem !important;
+        opacity: 0.9 !important;
+    }
+    .contador-dias-num {
+        font-size: 0.75rem !important;
+        font-weight: 900 !important;
+    }
+    .contador-dias-txt {
+        display: inline !important;
+        font-size: 0.6rem !important;
+        font-weight: 700 !important;
+        opacity: 0.9 !important;
+    }
+
+    .contrato-info {
+        display: inline-block !important;
+        background: rgba(255, 255, 255, 0.12) !important;
+        padding: 2px 14px !important;
+        border-radius: 20px !important;
+        margin: 0 !important;
+        width: auto !important;
+        flex-shrink: 0 !important;
+        flex: 0 0 auto !important;
+    }
+    .contrato-numero {
+        font-size: 0.7rem !important;
+        color: rgba(255,255,255,0.85) !important;
+        font-weight: 600 !important;
+        display: inline !important;
+        letter-spacing: 0.3px !important;
+    }
+    .contrato-numero strong {
+        font-size: 0.75rem !important;
+        color: #ffffff !important;
+        background: transparent !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        margin-left: 4px !important;
+        font-weight: 900 !important;
+        display: inline !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    .nav-actions-contrato {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        flex-shrink: 0 !important;
+        gap: 6px !important;
+    }
+
+    .campanita-wrapper {
+        display: flex !important;
+        align-items: center !important;
+        flex-shrink: 0 !important;
+        position: relative !important;
+    }
+    .btn-campanita-contrato {
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 50% !important;
+        padding: 0 !important;
+        background: rgba(255,255,255,0.15) !important;
+        border: 1px solid rgba(255,255,255,0.2) !important;
+        color: #fff !important;
+        cursor: pointer !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s ease !important;
+        flex-shrink: 0 !important;
+    }
+    .btn-campanita-contrato i {
+        font-size: 0.85rem !important;
+    }
+    .campanita-badge {
+        position: absolute !important;
+        top: -3px !important;
+        right: -3px !important;
+        min-width: 16px !important;
+        height: 16px !important;
+        padding: 0 4px !important;
+        background: #fff !important;
+        color: var(--brand) !important;
+        border-radius: 999px !important;
+        font-size: 8px !important;
+        font-weight: 900 !important;
+        line-height: 16px !important;
+        text-align: center !important;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.25) !important;
+    }
+    .campanita-badge.is-empty {
+        display: none !important;
+    }
+
+    .resumen-wrapper {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: auto !important;
+        padding: 4px 14px 4px 10px !important;
+        gap: 6px !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        border-radius: 30px !important;
+        border: 1px solid rgba(255,255,255,0.15) !important;
+        min-height: 32px !important;
+        flex-shrink: 0 !important;
+        position: relative !important;
+    }
+    .btn-resumen-contrato {
+        display: flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        padding: 0 !important;
+        font-size: 0.7rem !important;
+        background: transparent !important;
+        border: none !important;
+        color: #ffffff !important;
+        font-weight: 800 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        min-height: 28px !important;
+    }
+    .btn-resumen-contrato i:first-child {
+        font-size: 0.7rem !important;
+        opacity: 0.9 !important;
+        flex-shrink: 0 !important;
+    }
+    .resumen-totales-container {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: baseline !important;
+        gap: 4px !important;
+        line-height: 1 !important;
+    }
+    #btnTotalTextContrato {
+        font-size: 0.8rem !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        letter-spacing: -0.2px !important;
+        white-space: nowrap !important;
+    }
+    .resumen-usd {
+        display: inline !important;
+        font-size: 0.55rem !important;
+        font-weight: 600 !important;
+        opacity: 0.8 !important;
+        white-space: nowrap !important;
+        color: rgba(255,255,255,0.85) !important;
+    }
+    #iconoFlechaResumen {
+        font-size: 0.5rem !important;
+        opacity: 0.8 !important;
+        flex-shrink: 0 !important;
+        transition: transform 0.2s ease !important;
+        margin-left: 2px !important;
+    }
+    #iconoFlechaResumen.rotada {
+        transform: rotate(180deg) !important;
+    }
+
+    .cart-badge {
+        position: absolute !important;
+        top: -6px !important;
+        right: -5px !important;
+        min-width: 18px !important;
+        height: 18px !important;
+        padding: 0 5px !important;
+        background: #fff !important;
+        color: var(--brand) !important;
+        border-radius: 999px !important;
+        font-size: 9px !important;
+        font-weight: 900 !important;
+        line-height: 18px !important;
+        text-align: center !important;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.25) !important;
+        pointer-events: none !important;
+    }
+    .cart-badge.is-empty {
+        display: none !important;
+    }
+
+    .resumen-desplegable-contrato {
+        position: absolute !important;
+        top: calc(100% + 8px) !important;
+        right: 0 !important;
+        left: auto !important;
+        width: 380px !important;
+        max-width: calc(100vw - 40px) !important;
+        z-index: 1001 !important;
+        display: none !important;
+    }
+    .resumen-desplegable-contrato.visible,
+    .resumen-desplegable-contrato.abierto {
+        display: block !important;
+        animation: fadeInDownMobile 0.25s ease !important;
+    }
+    .resumen-card-contrato {
+        width: 100% !important;
+        border-radius: 16px !important;
+        max-height: 70vh !important;
+        overflow: hidden !important;
+    }
+    .resumen-card-contrato .cnt {
+        max-height: 55vh !important;
+        overflow-y: auto !important;
+    }
 }
-.resumen-card .head {
-    background: linear-gradient(135deg, #f8fafc, #ffffff);
-    border-bottom: 2px solid var(--brand);
-    color: var(--brand);
-    font-size: 1rem;
-    text-align: center;
-    padding: 16px 20px;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
+
+/* Ajuste fino para tablets más pequeñas (ej: iPad mini) */
+@media (min-width: 769px) and (max-width: 820px) and (orientation: portrait) {
+    .brand-contrato {
+        font-size: 0.75rem !important;
+    }
+    .brand-subtitle {
+        font-size: 0.6rem !important;
+    }
+    .contador-dias-contrato {
+        font-size: 0.6rem !important;
+        padding: 2px 7px !important;
+    }
+    .contador-dias-num {
+        font-size: 0.65rem !important;
+    }
+    .contrato-numero {
+        font-size: 0.6rem !important;
+    }
+    .contrato-numero strong {
+        font-size: 0.65rem !important;
+    }
+    .resumen-wrapper {
+        padding: 3px 10px 3px 7px !important;
+        min-height: 28px !important;
+    }
+    #btnTotalTextContrato {
+        font-size: 0.7rem !important;
+    }
+    .resumen-usd {
+        font-size: 0.5rem !important;
+    }
+    .btn-campanita-contrato {
+        width: 28px !important;
+        height: 28px !important;
+    }
+    .btn-campanita-contrato i {
+        font-size: 0.75rem !important;
+    }
 }
-.resumen-card .vehiculo-img {
-    max-width: 140px;
-    border-radius: 16px;
-    margin: 0 auto 12px;
-    background: #f8fafc;
-    padding: 8px;
-    border: 1px solid #eef2f7;
-}
+
 .res-block {
     background: #ffffff;
     border-radius: 20px;
@@ -724,7 +1112,7 @@
 .btn-icono-editar i {
     font-size: 12px;
 }
-.res-block p:hover, .det-lista li:hover, .resumen-item:hover, .seccion-total:hover {
+.res-block p:hover, .det-lista li:hover {
     background: #fef2f2;
     border-radius: 6px;
     padding-left: 12px;
@@ -759,30 +1147,6 @@
 }
 .cnt.resumen-detalle {
     padding: 0 12px 12px 12px !important;
-}
-.btn-resumen {
-    margin-top: 16px;
-    width: 100%;
-    padding: 12px 14px;
-    border-radius: 14px;
-    border: 1px solid #e5e7eb;
-    background: linear-gradient(180deg, #ffffff, #f7f8fb);
-    color: #0f172a;
-    font-size: 0.95rem;
-    font-weight: 1000;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-    box-shadow: 0 8px 18px rgba(16, 24, 40, 0.08);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-.btn-resumen:hover {
-    background: #ffffff;
-    border-color: #cbd5e1;
-    transform: translateY(-2px);
-    box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.15);
 }
 .totalBox {
     margin-top: 14px;
@@ -848,68 +1212,15 @@
     border-color: #94a3b8;
     background: #f1f5f9;
 }
-.titulo-seccion {
-    color: #0f172a;
-    font-size: 1.25rem;
-    margin-bottom: 24px;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
 .tarjeta-fecha:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
     border-color: var(--brand);
 }
-.input-oculto-fecha {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-    z-index: 10;
-}
 .imagen-vehiculo-container:hover {
     border-color: var(--brand);
 }
-
 /* ESPECIFICACIONES */
-.especificaciones-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-bottom: 36px;
-}
-.especificacion-item {
-    background: #f8fafc;
-    border: 2.5px solid #e2e8f0;
-    border-radius: 14px;
-    padding: 16px 14px;
-    text-align: center;
-    transition: all 0.25s ease;
-}
-.especificacion-item:hover {
-    background: #f1f5f9;
-    border-color: var(--brand);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-}
-.especificacion-label {
-    display: block;
-    font-size: 0.75rem;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 700;
-    margin-bottom: 6px;
-}
-.especificacion-valor {
-    font-weight: 900;
-    color: #0f172a;
-    font-size: 1.2rem;
-}
 .btn.secondary {
     background: #f8fafc;
     border: 2px solid var(--stroke);
@@ -920,7 +1231,6 @@
     background: #eef2f6;
     border-color: #cbd5e1;
 }
-
 /* RESPONSIVE */
 @media (max-width: 992px) {
     .grid-diseno-imagen {
@@ -934,36 +1244,9 @@
         font-size: 2.5rem;
     }
 }
-@media (max-width: 768px) {
-    .especificaciones-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-    }
-}
-@media (max-width: 480px) {
-    .especificaciones-grid {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-}
 .tarjeta-blanca:hover {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
     border-color: #cbd5e1;
-}
-.btn-cambiar-vehiculo {
-    background: var(--brand);
-    color: white;
-    border: none;
-    padding: 6px 16px;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-.btn-cambiar-vehiculo:hover {
-    background: var(--brand-2);
-    transform: scale(1.05);
 }
 .imagen-vehiculo-container:hover .imagen-vehiculo {
     transform: scale(1.05);
@@ -994,21 +1277,6 @@
         flex: 1;
         min-width: 120px;
     }
-}
-.servicios-seccion:last-of-type {
-    margin-bottom: 0;
-}
-.seccion-icono {
-    font-size: 1.1rem;
-}
-.seccion-badge {
-    background: #f3f4f6;
-    color: #6b7280;
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 2px 10px;
-    border-radius: 999px;
-    margin-left: auto;
 }
 .card-servicio, .cargo-item {
     background: linear-gradient(90deg, #ff1e2d 0%, #d6121f 100%) 0 0 / 100% 3px no-repeat, linear-gradient(180deg, #ffffff 0%, #f4f7fc 100%);
@@ -1045,7 +1313,7 @@
 .servicio-nombre {
     font-weight: 700;
     color: #111827;
-    font-size: 0.92rem;
+    font-size: 0.96rem !important;
     flex: 1;
     text-align: left;
     min-width: 100px;
@@ -1226,9 +1494,6 @@
     border-top: 1px solid #e8edf4;
     padding-top: 14px;
 }
-.cargo-item-icon, .servicio-descripcion, .cargo-item-desc {
-    display: none !important;
-}
 .extras-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -1261,12 +1526,6 @@
     border-color: #111827;
     outline: none;
     box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
-}
-.cargo-item-costo-km {
-    text-align: center;
-    font-size: 0.7rem;
-    color: #6b7280;
-    margin-bottom: 10px;
 }
 .cargo-item-total {
     display: flex;
@@ -1396,7 +1655,6 @@
         transform: translateX(18px);
     }
 }
-
 /* TOOLTIPS */
 .servicio-numero[data-tooltip] {
     position: relative;
@@ -1536,7 +1794,6 @@
 .categoria-titulo-individual:first-of-type {
     margin-top: 0;
 }
-
 /* FILTRO INDIVIDUALES */
 .filtro-individuales {
     display: flex;
@@ -1568,141 +1825,6 @@
     color: #ffffff;
     box-shadow: 0 4px 12px rgba(255, 30, 45, 0.25);
 }
-.paquetes-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 24px;
-    margin-bottom: 40px;
-}
-.paquete-card {
-    background: #ffffff;
-    border: 2px solid #e2e8f0;
-    border-radius: 16px;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-}
-.paquete-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.08);
-    border-color: #cbd5e1;
-}
-.paquete-card:has(input:checked) {
-    border-color: var(--brand);
-    box-shadow: 0 8px 24px rgba(255, 30, 45, 0.15);
-}
-.paquete-header {
-    background: #f8fafc;
-    color: #0f172a;
-    text-align: center;
-    padding: 16px;
-    font-weight: 900;
-    font-size: 1.1rem;
-    border-bottom: 1px solid #e2e8f0;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-.paquete-card:has(input:checked) .paquete-header {
-    background: var(--brand);
-    color: #ffffff;
-    border-bottom-color: var(--brand);
-}
-.paquete-body {
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    align-items: center;
-}
-.paquete-body .icon-check {
-    font-size: 2rem;
-    margin-bottom: 16px;
-    opacity: 0.2;
-    transition: opacity 0.3s ease;
-}
-.paquete-card:has(input:checked) .paquete-body .icon-check {
-    opacity: 1;
-    color: var(--brand);
-}
-.cobertura-lista {
-    font-size: 0.9rem;
-    color: #475569;
-    text-align: center;
-    line-height: 1.6;
-    margin-bottom: 24px;
-    flex-grow: 1;
-}
-.paquete-card .precio {
-    font-size: 1.4rem;
-    font-weight: 900;
-    color: #0f172a;
-    text-align: center;
-    margin-bottom: 20px;
-    padding-top: 20px;
-    border-top: 1px dashed #e2e8f0;
-    width: 100%;
-}
-.seleccion-toggle {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    margin-top: 10px;
-}
-.seleccion-toggle input {
-    display: none;
-}
-.seleccion-toggle label {
-    position: relative;
-    cursor: pointer;
-    padding-left: 48px;
-    user-select: none;
-    display: inline-flex;
-    align-items: center;
-    min-height: 24px;
-    font-weight: 700;
-    color: #64748b;
-    transition: color 0.3s;
-    background: transparent !important;
-    box-shadow: none !important;
-}
-.seleccion-toggle label::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 40px;
-    height: 24px;
-    background: #cbd5e1;
-    border-radius: 20px;
-    transition: background 0.3s ease;
-    box-shadow: none;
-}
-.seleccion-toggle label::after {
-    content: "";
-    position: absolute;
-    left: 3px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 18px;
-    height: 18px;
-    background: #ffffff;
-    border-radius: 50%;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: none;
-}
-.seleccion-toggle input:checked + label {
-    color: #0f172a;
-    box-shadow: none !important;
-}
-.seleccion-toggle input:checked + label::before {
-    background: var(--brand);
-}
-.seleccion-toggle input:checked + label::after {
-    transform: translate(16px, -50%);
-}
 .resumen-total-inline {
     background: #f8fafc;
     border: 2px dashed #cbd5e1;
@@ -1721,7 +1843,6 @@
     font-weight: 900;
     margin-left: 12px;
 }
-
 /* MODAL FULLSCREEN */
 .modal-fullscreen {
     position: fixed !important;
@@ -1744,7 +1865,7 @@
 .modal-title {
     font-size: 1.5rem;
     font-weight: 900;
-    color: #0f172a;
+    color: #f8fafc;
     margin: 0;
 }
 .modal-close-btn-modal:hover {
@@ -1919,7 +2040,6 @@
     overflow-y: auto;
     z-index: 999999 !important;
 }
-
 /* MODAL PROTECCIONES RESPONSIVE */
 @media (max-width: 768px) {
     #modal-vista-individuales {
@@ -2078,7 +2198,6 @@
         }
     }
 }
-
 /* PROTECCIONES COMPACTO */
 .protecciones-compacto-box {
     margin-top: 10px;
@@ -2128,7 +2247,6 @@
         font-size: 11px;
     }
 }
-
 /* CARRITO MODAL RESPONSIVE */
 @media (max-width: 768px) {
     .resumen-desplegable-modal {
@@ -2206,7 +2324,6 @@
         font-size: 22px !important;
     }
 }
-
 /* PAQUETES SCROLL */
 #modal-vista-paquetes .scroll-h {
     display: flex !important;
@@ -2668,7 +2785,6 @@
         font-size: 12px !important;
     }
 }
-
 /* INDIVIDUALES */
 #modal-vista-individuales .individuales-grid {
     display: flex;
@@ -3144,7 +3260,6 @@
         padding: 10px 14px;
     }
 }
-
 /* FLATPICKR */
 body.fp-modal-abierto::before {
     content: "";
@@ -3393,7 +3508,6 @@ body.fp-modal-abierto::before {
         font-size: 13px;
     }
 }
-
 /* MODAL VEHICULOS */
 #modalVehiculos {
     position: fixed;
@@ -3621,21 +3735,6 @@ body.fp-modal-abierto::before {
 .accion-header {
     background-color: #2563eb;
 }
-.modal-vehiculos-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    padding: 0;
-    background: #fff;
-    border-top: 1px solid #ccc;
-}
-.footer-boton-container {
-    padding: 15px;
-}
-.modal-cerrar-btn {
-    border: 1px solid #999;
-}
-
 /* UPGRADE MODAL */
 .upgrade-modal {
     position: fixed;
@@ -3797,7 +3896,6 @@ body.fp-modal-abierto::before {
 .btn-upgrade-accept:hover {
     background: #005fcc;
 }
-
 /* UTILIDADES */
 .btn-primary-modal {
     background: linear-gradient(135deg, #ff1e2d, #d6121f);
@@ -3816,7 +3914,6 @@ body.fp-modal-abierto::before {
     transform: translateY(-3px);
     box-shadow: 0 12px 32px rgba(255, 30, 45, 0.45);
 }
-
 /* MODAL CONFIRMAR VEHICULO */
 #modalConfirmarVehiculo {
     position: fixed !important;
@@ -4003,7 +4100,6 @@ body.fp-modal-abierto::before {
     opacity: 0 !important;
     pointer-events: none !important;
 }
-
 /* GASOLINA DROPDOWN */
 #modalConfirmarVehiculo .gas-dropdown {
     position: relative !important;
@@ -4378,19 +4474,16 @@ body.fp-modal-abierto::before {
         text-align: center !important;
     }
 }
-
 /* VARIABLES Y ESTRUCTURA */
 :root {
     --brand: #ff1e2d;
     --brand-2: #d6121f;
     --ink: #101828;
-    --muted: #667085;
     --stroke: #eaecf0;
     --bg: #f3f5f9;
     --paper: #fff;
     --radius-lg: 18px;
     --h-topbar-fix: 54px;
-    --h-stepper-fix: 72px;
     --gap-fix: 10px;
     --alto-disponible: 100vh;
 }
@@ -4415,11 +4508,6 @@ body > .container, body > .container-fluid, body > .wrapper, body > .content-wra
     max-height: 100vh;
     overflow: hidden;
 }
-.btn-regresar-wrapper {
-    flex: 0 0 auto;
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-}
 .main {
     padding: var(--gap-fix);
     display: flex;
@@ -4435,7 +4523,6 @@ body > .main {
     height: 100vh;
     flex: none;
 }
-
 /* TOPBAR Y STEPPER */
 .nav-contrato {
     display: flex;
@@ -4537,7 +4624,31 @@ body > .main {
     align-self: flex-start;
     margin-top: 16px;
 }
-
+/* ===== CONTADOR DE DÍAS ===== */
+.contador-dias-contrato {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 999px;
+    background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.25);
+    color: #fff; font-weight: 800; font-size: .82rem; white-space: nowrap; line-height: 1;
+}
+.contador-dias-contrato i { font-size: .8rem; opacity: .9; }
+.contador-dias-num { font-size: .98rem; font-weight: 900; }
+.contador-dias-txt { font-weight: 700; opacity: .95; }
+/* Variante dentro del modal de protecciones */
+.contador-dias-modal {
+    display: inline-flex !important; align-items: center; gap: 8px;
+    padding: 6px 14px; border-radius: 10px;
+    background: rgba(255,255,255,0.18) !important;
+    border: 1px solid rgba(255,255,255,0.25) !important;
+    color: #fff !important; font-weight: 700; font-size: .88rem; line-height: 1;
+    margin-left: 16px !important;
+}
+.contador-dias-modal i { font-size: .9rem; color: #fff !important; }
+.contador-dias-modal strong { font-weight: 900; color: #fff !important; }
+@media (max-width: 768px) {
+    .contador-dias-contrato { padding: 4px 9px; font-size: .75rem; }
+    .contador-dias-contrato .contador-dias-txt { display: none; }
+}
 /* CONTENEDOR DE PASOS */
 .grid, .grid.full-width-grid {
     flex: 1 1 auto !important;
@@ -4594,7 +4705,6 @@ body > .main {
     overflow: hidden;
     position: relative;
 }
-
 /* PASO 1 */
 .contrato-resumen {
     flex: 1 1 auto !important;
@@ -4773,7 +4883,55 @@ body > .main {
     cursor: pointer;
     z-index: 10;
 }
-
+/* ===== DROPDOWN CUSTOM OFICINA (paso 1) ===== */
+.oficina-card-info{
+    display: flex; align-items: center; gap: 7px;
+    margin: 10px 14px 0; padding: 7px 10px;
+    background: #f8fafc; border: 1px solid #eef2f6; border-radius: 10px;
+    font-size: .78rem; color: #334155; line-height: 1.25;
+}
+.oficina-card-info i { color: var(--brand); font-size: .8rem; flex: 0 0 auto; }
+.oficina-card-info span { font-weight: 700; }
+.oficina-dropdown { position: relative; margin: 10px 14px 0; }
+.oficina-dropdown-btn {
+    display: flex; align-items: center; gap: 8px; width: 100%;
+    padding: 8px 10px; background: #f8fafc; border: 1px solid #eef2f6;
+    border-radius: 10px; cursor: pointer; font-family: inherit;
+    font-size: .78rem; font-weight: 700; color: #334155; text-align: left;
+    transition: border-color .15s ease, background .15s ease;
+}
+.oficina-dropdown-btn:hover { background: #f1f5f9; border-color: #e2e8f0; }
+.oficina-dropdown.is-open .oficina-dropdown-btn { border-color: var(--brand); background: #fff; }
+.oficina-label { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.oficina-ico { flex: 0 0 auto; width: 18px; height: 18px; color: var(--brand); display: inline-flex; }
+.oficina-ico svg { width: 100%; height: 100%; display: block; }
+.oficina-chevron {
+    flex: 0 0 auto; width: 9px; height: 9px; border-right: 2px solid #94a3b8;
+    border-bottom: 2px solid #94a3b8; transform: rotate(45deg); margin-top: -3px;
+    transition: transform .2s ease;
+}
+.oficina-dropdown.is-open .oficina-chevron { transform: rotate(-135deg); margin-top: 2px; }
+.oficina-dropdown-panel {
+    display: none; position: fixed;
+    background: #fff; border: 1px solid var(--stroke); border-radius: 12px;
+    box-shadow: 0 15px 35px rgba(0,0,0,.18);
+    max-height: 300px; overflow-y: auto; padding: 6px;
+    z-index: 3000;
+}
+.oficina-dropdown.is-open .oficina-dropdown-panel { display: block; }
+.oficina-grupo-label {
+    font-weight: 800; color: var(--brand); font-size: .72rem; text-transform: uppercase;
+    letter-spacing: .4px; padding: 8px 10px 4px; position: sticky; top: 0; background: #fff;
+}
+.oficina-grupo-label:not(:first-child) { border-top: 1px solid #f1f5f9; margin-top: 4px; }
+.oficina-opcion {
+    display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 10px;
+    background: transparent; border: none; border-radius: 8px; cursor: pointer;
+    font-family: inherit; font-size: .78rem; font-weight: 600; color: #334155; text-align: left;
+}
+.oficina-opcion:hover { background: #f8fafc; }
+.oficina-opcion.is-selected { background: rgba(255,30,45,.08); color: var(--brand); font-weight: 800; }
+.oficina-opcion-txt { flex: 1 1 auto; }
 /* COLUMNA DEL VEHICULO */
 .vehiculo-horizontal, .imagen-vehiculo-container, .card-servicio, .cargo-item {
     min-height: 0 !important;
@@ -4913,11 +5071,7 @@ body > .main {
     text-align: center;
     white-space: normal;
 }
-
 /* PASO 2 */
-.servicios-seccion, .servicios-seccion.especiales, .servicios-seccion-titulo, .seccion-icono, .seccion-badge, .especiales-grid {
-    display: none !important;
-}
 #serviciosGrid.add-grid {
     display: flex;
     grid-template-columns: none;
@@ -4977,12 +5131,6 @@ body > .main {
     background: var(--brand);
     color: #ffffff;
 }
-.carrusel-flecha-izq {
-    left: -6px;
-}
-.carrusel-flecha-der {
-    right: -6px;
-}
 #serviciosGrid.add-grid::-webkit-scrollbar, #serviciosGrid.add-grid .cargo-item::-webkit-scrollbar {
     height: 8px;
 }
@@ -5004,7 +5152,56 @@ body > .main {
     background: #d1d5db;
     border-radius: 4px;
 }
-
+/* ===== DROPDOWN DELIVERY (ubicación) ===== */
+.deliv-dropdown { position: relative; }
+.deliv-dropdown-btn {
+    display: flex; align-items: center; gap: 8px; width: 100%;
+    padding: 8px 10px; background: #fff; border: 1.5px solid #e2e8f0;
+    border-radius: 10px; cursor: pointer; font-family: inherit;
+    font-size: .82rem; font-weight: 600; color: #334155; text-align: left;
+    transition: border-color .15s ease;
+}
+.deliv-dropdown-btn:hover { border-color: #cbd5e1; }
+.deliv-dropdown.is-open .deliv-dropdown-btn { border-color: var(--brand); }
+.deliv-label { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.deliv-ico { flex: 0 0 auto; width: 18px; height: 18px; color: var(--brand); display: inline-flex; }
+.deliv-ico svg { width: 100%; height: 100%; display: block; }
+.deliv-chevron {
+    flex: 0 0 auto; width: 9px; height: 9px; border-right: 2px solid #94a3b8;
+    border-bottom: 2px solid #94a3b8; transform: rotate(45deg); margin-top: -3px;
+    transition: transform .2s ease;
+}
+.deliv-dropdown.is-open .deliv-chevron { transform: rotate(-135deg); margin-top: 2px; }
+.deliv-dropdown-panel {
+    display: none; position: fixed; background: #fff; border: 1px solid var(--stroke);
+    border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,.18); z-index: 3000;
+    max-height: 300px; overflow-y: auto; padding: 6px;
+}
+.deliv-grupo-label {
+    font-weight: 800; color: var(--brand); font-size: .7rem; text-transform: uppercase;
+    letter-spacing: .4px; padding: 8px 10px 4px; position: sticky; top: 0; background: #fff;
+}
+.deliv-grupo-label:not(:first-child) { border-top: 1px solid #f1f5f9; margin-top: 4px; }
+.deliv-opcion {
+    display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 10px;
+    background: transparent; border: none; border-radius: 8px; cursor: pointer;
+    font-family: inherit; font-size: .8rem; font-weight: 600; color: #334155; text-align: left;
+}
+.deliv-opcion:hover { background: #f8fafc; }
+.deliv-opcion.is-selected { background: rgba(255,30,45,.08); color: var(--brand); font-weight: 800; }
+.deliv-opcion-txt { flex: 1 1 auto; }
+.deliv-opcion-km { flex: 0 0 auto; font-size: .72rem; font-weight: 700; color: #94a3b8; }
+/* Link de Maps — versión compacta (no rompe el layout sin scroll) */
+.delivery-maps-link {
+    display: inline-flex; align-items: center; gap: 5px; margin-top: 3px;
+    padding: 0; background: none; border: none;
+    color: var(--brand); font-weight: 700; font-size: .72rem;
+    text-decoration: underline; text-underline-offset: 2px;
+    transition: opacity .15s ease;
+}
+.delivery-maps-link:hover { opacity: .7; }
+.delivery-maps-link .deliv-ico { width: 13px; height: 13px; }
+.delivery-maps-link.is-disabled { opacity: .4; pointer-events: none; }
 /* PASO 3 */
 .paso3-body {
     flex: 1 1 auto;
@@ -5126,7 +5323,6 @@ body > .main {
 .flatpickr-calendar {
     z-index: 99999 !important;
 }
-
 /* AJUSTES POR ALTURA */
 @media (max-height: 820px) {
     :root {
@@ -5227,9 +5423,6 @@ body > .main {
         padding: 9px 12px;
         gap: 7px;
     }
-    .servicios-seccion-titulo {
-        font-size: 0.8rem;
-    }
     .tarjeta-fecha-header {
         padding: 8px 12px;
         font-size: 0.8rem;
@@ -5263,7 +5456,6 @@ body > .main {
         font-size: 0.82rem;
     }
 }
-
 /* AJUSTES POR ANCHO */
 @media (max-width: 992px) {
     .grid-diseno-imagen {
@@ -5276,7 +5468,6 @@ body > .main {
         min-height: 150px;
     }
 }
-
 /* RESPONSIVE MOVIL */
 @media (max-width: 768px) {
     html, body {
@@ -5705,7 +5896,6 @@ body > .main {
         -webkit-overflow-scrolling: touch !important;
     }
 }
-
 /* TELEFONOS PEQUEÑOS */
 @media (max-width: 480px) {
     .main, body > .main, .main.altura-calculada {
@@ -5750,12 +5940,10 @@ body > .main {
         min-width: 380px !important;
     }
 }
-
 /* FILTRO INDIVIDUALES OCULTO */
 .categoria-titulo-individual.filtrado-oculto, .individuales-grid.filtrado-oculto, #modal-vista-individuales .categoria-titulo-individual.filtrado-oculto, #modal-vista-individuales .individuales-grid.filtrado-oculto {
     display: none !important;
 }
-
 /* CARRITO MODAL PROTECCIONES */
 #modalProtecciones .modal-resumen-wrapper {
     position: relative;
@@ -5893,7 +6081,6 @@ body > .main {
         flex: 0 0 72px;
     }
 }
-
 /* PASO 2 - DOS CARRUSELES */
 .carrusel-wrap {
     position: relative;
@@ -5978,7 +6165,6 @@ body > .main {
         margin: 14px 0 8px;
     }
 }
-
 /* CHIPS FILTRO */
 #filtroIndividuales .filtro-chip.con-seleccion {
     background: #dcfce7 !important;
@@ -6010,7 +6196,6 @@ body > .main {
 #filtroIndividuales .filtro-chip.con-seleccion.activo::after {
     color: #ffffff;
 }
-
 /* PASO 2 COMPACTO */
 .step[data-step="2"], .step[data-step="2"] > .body, .step[data-step="2"] .section {
     overflow: hidden;
@@ -6066,10 +6251,6 @@ body > .main {
     height: clamp(24px, 2.9vh, 32px);
     font-size: clamp(0.7rem, 1.4vh, 0.88rem);
     flex-shrink: 0;
-}
-.step[data-step="2"] .add-grid .servicio-nombre {
-    font-size: clamp(0.73rem, 1.45vh, 0.88rem);
-    line-height: 1.15;
 }
 .step[data-step="2"] .add-grid .card-servicio {
     display: grid;
@@ -6152,7 +6333,7 @@ body > .main {
 .step[data-step="2"] .add-grid .cargo-item-fields .extras-grid {
     gap: clamp(3px, 0.6vh, 7px);
 }
-.step[data-step="2"] .add-grid .cargo-item-fields label, .step[data-step="2"] .add-grid .cargo-item-fields .campo-label {
+.step[data-step="2"] .add-grid .cargo-item-fields label {
     font-size: clamp(0.58rem, 1.1vh, 0.68rem);
     margin-bottom: 2px;
 }
@@ -6273,7 +6454,6 @@ body > .main {
         border-radius: 3px;
     }
 }
-
 /* PASO 2 ACTIVO Y TOPE 3 */
 .step[data-step="2"] .add-grid .card-servicio.servicio-activo {
     border-color: #16a34a;
@@ -6362,7 +6542,6 @@ body > .main {
         animation: none;
     }
 }
-
 /* PASO 2 TOOLTIPS */
 .step[data-step="2"] .add-grid .servicio-numero[data-tooltip]:hover::after {
     position: fixed;
@@ -6414,7 +6593,6 @@ body > .main {
         padding: 8px 12px;
     }
 }
-
 /* TABLET FIX */
 @media (min-width: 769px) and (max-width: 1024px) {
     html, body {
@@ -6465,7 +6643,6 @@ body > .main {
         padding-bottom: 0 !important;
     }
 }
-
 /* MODAL PROTECCIONES RESPONSIVE */
 @media (max-width: 768px) {
     #modalProtecciones .modal-fullscreen-header {
@@ -6665,7 +6842,6 @@ body > .main {
         max-height: none !important;
     }
 }
-
 /* BADGE CARRITO */
 @media (max-width: 768px) {
     #modalProtecciones #btnToggleDetalleModal {
@@ -6722,7 +6898,6 @@ body > .main {
         margin: 10px 0 7px 0 !important;
     }
 }
-
 /* INDIVIDUALES HUECO FINAL */
 @media (max-width: 768px) {
     #modal-vista-individuales {
@@ -6748,7 +6923,6 @@ body > .main {
         padding-bottom: 4px !important;
     }
 }
-
 /* TABLET MODAL */
 @media (min-width: 769px) and (max-width: 1024px) {
     #modal-vista-paquetes[style*="block"] {
@@ -6872,7 +7046,6 @@ body > .main {
         white-space: nowrap !important;
     }
 }
-
 /* TABLET PORTRAIT FIX */
 @media (min-width: 700px) and (max-width: 768px), (min-width: 700px) and (max-width: 1024px) and (orientation: portrait) {
     html, body {
@@ -7153,7 +7326,6 @@ body > .main {
         padding-right: 26px !important;
     }
 }
-
 /* IPAD 11 HORIZONTAL - MODAL PROTECCIONES */
 @media (min-width: 1100px) and (max-width: 1215px) and (max-height: 860px) and (orientation: landscape) and (any-pointer: coarse) {
     #modalProtecciones.modal-fullscreen {
@@ -7335,7 +7507,6 @@ body > .main {
         max-height: calc(100dvh - 120px) !important;
     }
 }
-
 /* IPAD 11 VERTICAL - MODAL PROTECCIONES */
 @media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
     #modalProtecciones.modal-fullscreen, #modalProtecciones .modal-fullscreen-content {
@@ -7442,11 +7613,9 @@ body > .main {
         font-size: 15px !important;
     }
 }
-
 /* =============================================================
    OVERLAY DE ACTUALIZACIÓN
    ============================================================= */
-
 .vr-update-overlay {
   position: fixed;
   inset: 0;
@@ -7462,13 +7631,11 @@ body > .main {
   pointer-events: none;
   transition: opacity .25s ease, visibility .25s ease;
 }
-
 .vr-update-overlay.show {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
 }
-
 .vr-update-card {
   background: linear-gradient(180deg, #fffdf8, #fff);
   border-radius: 22px;
@@ -7481,24 +7648,19 @@ body > .main {
   transform: translateY(12px) scale(.96);
   transition: transform .3s cubic-bezier(.2, .8, .2, 1);
 }
-
 .vr-update-overlay.show .vr-update-card {
   transform: translateY(0) scale(1);
 }
-
 #vrUpdateLoader,
 #vrUpdateSuccess {
   display: none;
 }
-
 .vr-update-overlay.is-loading #vrUpdateLoader {
   display: block;
 }
-
 .vr-update-overlay.is-success #vrUpdateSuccess {
   display: block;
 }
-
 .vr-emoji-stage {
   position: relative;
   width: 240px;
@@ -7506,7 +7668,6 @@ body > .main {
   margin: 0 auto 14px;
   overflow: hidden;
 }
-
 .vr-icon-car {
   position: absolute;
   top: 0;
@@ -7516,13 +7677,11 @@ body > .main {
   color: var(--vr-brand, #b22222);
   animation: vrDrive 2.2s ease-in-out infinite;
 }
-
 .vr-icon-car svg {
   width: 100%;
   height: 100%;
   filter: drop-shadow(0 6px 6px rgba(0, 0, 0, .12));
 }
-
 @keyframes vrDrive {
   0% {
     left: -70px;
@@ -7543,7 +7702,6 @@ body > .main {
     transform: translateY(0) rotate(0deg);
   }
 }
-
 .vr-update-msg {
   margin: 6px 0 0;
   font-weight: 700;
@@ -7553,7 +7711,6 @@ body > .main {
   letter-spacing: -.2px;
   animation: vrMsgFade .5s ease;
 }
-
 @keyframes vrMsgFade {
   from {
     opacity: 0;
@@ -7564,7 +7721,6 @@ body > .main {
     transform: none;
   }
 }
-
 .vr-icon-thumb {
   width: 74px;
   height: 74px;
@@ -7573,12 +7729,10 @@ body > .main {
   animation: vrThumbPop .6s cubic-bezier(.18, 1.3, .4, 1) both;
   transform-origin: 60% 80%;
 }
-
 .vr-icon-thumb svg {
   width: 100%;
   height: 100%;
 }
-
 @keyframes vrThumbPop {
   0% {
     transform: scale(0) rotate(-25deg);
@@ -7595,7 +7749,6 @@ body > .main {
     transform: scale(1) rotate(0);
   }
 }
-
 .vr-update-title {
   margin: 0 0 4px;
   font-size: 1.15rem;
@@ -7603,14 +7756,12 @@ body > .main {
   color: var(--vr-ink, #1f2937);
   letter-spacing: -.2px;
 }
-
 .vr-update-sub {
   margin: 0;
   font-size: .9rem;
   font-weight: 600;
   color: #6b7280;
 }
-
 /* Móvil */
 @media (max-width: 560px) {
   .vr-update-card { min-width: 0; width: 100%; padding: 26px 20px; border-radius: 18px; }
@@ -7618,3 +7769,174 @@ body > .main {
   .vr-update-msg { font-size: .95rem; }
   .vr-icon-thumb { width: 64px; height: 64px; }
 }
+/* ===== CAMPANITA DE COMENTARIOS ===== */
+.nav-actions-contrato { display: flex; align-items: center; gap: 10px; }
+.campanita-wrapper { position: relative; display: flex; align-items: center; }
+.btn-campanita-contrato {
+    position: relative; display: flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border-radius: 50%; padding: 0; cursor: pointer;
+    background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.25);
+    color: #fff; transition: all .2s ease;
+}
+.btn-campanita-contrato:hover { background: rgba(255,255,255,0.3); transform: translateY(-1px); }
+.btn-campanita-contrato i { font-size: 1rem; }
+.btn-campanita-contrato.tiene-comentarios i { animation: campanaSuena .6s ease; }
+@keyframes campanaSuena {
+    0%,100% { transform: rotate(0); } 20% { transform: rotate(-15deg); }
+    40% { transform: rotate(12deg); } 60% { transform: rotate(-8deg); } 80% { transform: rotate(5deg); }
+}
+.campanita-badge {
+    position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px;
+    background: #fff; color: var(--brand); border-radius: 999px; font-size: 11px; font-weight: 900;
+    line-height: 18px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,.25);
+}
+.campanita-badge.is-empty { display: none; }
+.comentarios-desplegable {
+    position: absolute; top: calc(100% + 12px); right: 0; width: 360px;
+    max-width: calc(100vw - 32px); z-index: 1500; animation: fadeInDown .25s ease;
+}
+.comentarios-card {
+    background: #fff; border-radius: 20px; border: 1px solid var(--stroke);
+    box-shadow: 0 25px 50px rgba(0,0,0,.25); overflow: hidden;
+    display: flex; flex-direction: column; max-height: calc(100vh - 120px);
+}
+.comentarios-head {
+    background: linear-gradient(135deg,#f8fafc,#fff); padding: 16px 20px; font-weight: 900;
+    color: var(--brand); border-bottom: 2px solid var(--brand); display: flex; align-items: center;
+    gap: 10px; font-size: .95rem; flex: 0 0 auto;
+}
+.comentarios-lista {
+    padding: 16px 18px; overflow-y: auto; flex: 1 1 auto; min-height: 60px; max-height: 320px;
+    display: flex; flex-direction: column; gap: 10px; background: #f8fafc;
+}
+.comentario-item {
+    background: #fff; border: 1px solid #eef2f6; border-left: 3px solid var(--brand);
+    border-radius: 10px; padding: 10px 14px; font-size: .85rem; color: #334155; line-height: 1.5;
+    word-break: break-word; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.comentario-item .comentario-fecha {
+    display: block; font-size: .68rem; font-weight: 800; color: #94a3b8;
+    text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px;
+}
+.comentarios-vacio { text-align: center; color: #94a3b8; font-style: italic; font-size: .85rem; padding: 24px 10px; }
+.comentarios-form { padding: 14px 16px; border-top: 1px solid var(--stroke); background: #fff; flex: 0 0 auto; }
+.comentario-textarea {
+    width: 100%; box-sizing: border-box; border: 1.5px solid #e2e8f0; border-radius: 12px;
+    padding: 10px 12px; font-size: .85rem; font-family: inherit; resize: vertical; min-height: 60px;
+    transition: border-color .2s ease;
+}
+.comentario-textarea:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(255,30,45,.12); }
+.btn-agregar-comentario {
+    width: 100%; margin-top: 10px; padding: 11px 14px; border: none; border-radius: 12px;
+    background: var(--brand); color: #fff; font-weight: 800; font-size: .88rem; cursor: pointer;
+    transition: all .2s ease; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-agregar-comentario:hover { background: var(--brand-2); transform: translateY(-1px); }
+.btn-agregar-comentario:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+@media (max-width: 768px) {
+    .nav-actions-contrato { gap: 6px; }
+    .btn-campanita-contrato { width: 32px; height: 32px; }
+    .btn-campanita-contrato i { font-size: .85rem; }
+    .comentarios-desplegable { position: fixed; top: 64px; left: 12px; right: 12px; width: auto; max-width: none; }
+}
+
+/* ============================================================================
+   AJUSTE DE ESPACIO VERTICAL (paso 2 sin scroll con delivery en modo manual).
+   Recupera altura del chrome (navbar/stepper/panel) y compacta los campos
+   de las cards de servicios para que 'Costo Delivery' quede visible.
+============================================================================ */
+:root { --gap-fix: 7px; }
+
+/* Chrome mas compacto (afecta a todos los pasos, solo libera espacio) */
+.stepper-navbar { padding: 9px 24px !important; }
+.stepper-item { gap: 5px !important; }
+.section .head, .card .head { padding: 9px 16px !important; }
+.section .cnt, .card .cnt { padding: 10px 16px !important; }
+
+/* Cards de servicios (paso 2) mas compactas */
+#serviciosGrid.add-grid { padding: 2px 3px 5px !important; }
+.cargo-item { padding: 12px 16px 12px !important; min-height: 0 !important; }
+.cargo-item-fields { margin-top: 6px !important; padding-top: 8px !important; }
+.extras-grid { gap: 6px !important; margin-bottom: 6px !important; }
+.cargo-item .form-group label { font-size: 0.58rem !important; margin-bottom: 2px !important; }
+.cargo-item .form-control-simple { padding: 5px 9px !important; }
+.cargo-item-total { padding: 6px 12px !important; }
+
+/* Fallback: si aun sobra alto, la card de servicio scrollea internamente */
+#serviciosGrid.add-grid .cargo-item-fields { overflow-y: auto !important; }
+
+/* ============================================================================
+   PASO 2 — que los botones (Continuar) siempre queden visibles.
+   Los dos .carrusel-wrap + grids + cards forzaban min-heights (210/180/165)
+   que sumaban más que el alto disponible y empujaban .acciones fuera de .cnt.
+============================================================================ */
+.step[data-step="2"] .carrusel-wrap { min-height: 0 !important; }
+.step[data-step="2"] #serviciosGrid.add-grid,
+.step[data-step="2"] #especialesGrid.add-grid { min-height: 0 !important; }
+.step[data-step="2"] #serviciosGrid .card-servicio,
+.step[data-step="2"] #especialesGrid .card-servicio,
+.step[data-step="2"] #serviciosGrid .cargo-item,
+.step[data-step="2"] #especialesGrid .cargo-item { min-height: 0 !important; }
+
+/* Adicionales ocupa solo su contenido; Servicios (delivery) toma el resto */
+.step[data-step="2"] .cnt > .carrusel-wrap:has(#serviciosGrid) { flex: 0 0 auto !important; }
+.step[data-step="2"] .cnt > .carrusel-wrap:has(#especialesGrid) { flex: 1 1 auto !important; min-height: 150px !important; }
+
+/* Botones fijos y visibles al fondo (la card de delivery scrollea internamente si hace falta) */
+.step[data-step="2"] .cnt > .acciones { flex: 0 0 auto !important; }
+
+/* ============================================================================
+   SUBIR NAVBAR + COMPACTAR CHROME (para que los botones del paso 2 quepan).
+   El botón "Regresar" es hermano de .main y su alto se le descuenta a .main;
+   reduciendo su margen + navbar + stepper se gana altura para el contenido.
+============================================================================ */
+:root { --h-topbar-fix: 46px; }
+
+/* Menos espacio entre "Regresar a menú ventas" y la navbar roja */
+.btn-regresar-wrapper { margin-top: 0 !important; margin-bottom: 4px !important; padding-top: 0 !important; }
+.main { padding-top: 2px !important; }
+
+/* Navbar roja más baja */
+.topbar-contrato { padding: 2px 26px !important; }
+.topbar-contrato.scrolled { padding: 2px 32px !important; }
+
+/* Stepper más compacto (circulos, títulos y padding) */
+.stepper-navbar { padding: 6px 24px !important; }
+.stepper-circle { width: 28px !important; height: 28px !important; font-size: 0.8rem !important; }
+.stepper-item { gap: 4px !important; }
+.stepper-title { font-size: 0.64rem !important; }
+
+/* ============================================================================
+   PASO 2 — BOTONES SIEMPRE VISIBLES (footer fijo, a prueba de cualquier alto).
+   Si el contenido excede el espacio, el área de servicios scrollea internamente
+   y los botones quedan pegados al fondo, siempre a la vista.
+============================================================================ */
+.step[data-step="2"] .section > .cnt { overflow-y: auto !important; overflow-x: hidden !important; }
+.step[data-step="2"] .carrusel-wrap,
+.step[data-step="2"] #serviciosGrid.add-grid,
+.step[data-step="2"] #especialesGrid.add-grid { flex: 0 0 auto !important; min-height: 0 !important; }
+.step[data-step="2"] #especialesGrid .cargo-item,
+.step[data-step="2"] #serviciosGrid .cargo-item { height: auto !important; }
+.step[data-step="2"] #especialesGrid .cargo-item-fields,
+.step[data-step="2"] #serviciosGrid .cargo-item-fields { overflow: visible !important; }
+.step[data-step="2"] .section > .cnt > .acciones {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: #ffffff !important;
+    z-index: 6 !important;
+    padding-bottom: 6px !important;
+    margin-top: 6px !important;
+}
+
+/* ============================================================================
+   DELIVERY — Distancia (Km) y Costo Delivery en una sola fila, mitad y mitad.
+   Ahorra un renglón para que los botones del paso 2 quepan.
+============================================================================ */
+.delivery-fila-km-costo { display: flex; gap: 8px; align-items: stretch; margin-top: 6px; }
+.delivery-fila-km-costo > * { flex: 1 1 0; min-width: 0; margin: 0 !important; }
+.delivery-costo-half {
+    display: flex; flex-direction: column; justify-content: center; gap: 2px;
+    padding: 6px 12px;
+}
+.delivery-costo-half .cargo-item-total-label { text-align: left; }
+.delivery-costo-half .cargo-item-total-amount { font-size: .9rem; }

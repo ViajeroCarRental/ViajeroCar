@@ -1,4 +1,3 @@
-
 (function (global) {
     'use strict';
 
@@ -20,102 +19,33 @@
     let temporizadorMsg = null;
 
     function rotarMensajes(lista) {
-        const el = $('vrUpdateMsg');
-        const mensajes = (lista && lista.length) ? lista : CONFIG.mensajes;
-        let i = 0;
-        if (el) el.textContent = mensajes[0];
-        clearInterval(temporizadorMsg);
-        temporizadorMsg = setInterval(() => {
-            i = (i + 1) % mensajes.length;
-            if (!el) return;
-            el.textContent = mensajes[i];
-            el.style.animation = 'none';
-            void el.offsetWidth;
-            el.style.animation = '';
-        }, CONFIG.intervaloMensajes);
+        // Función desactivada
+        return;
     }
 
     function mostrar(estado, opciones) {
-        const overlay = $('vrUpdateOverlay');
-        if (!overlay) return;
-
-        opciones = opciones || {};
-
-        overlay.classList.remove('is-loading', 'is-success');
-        overlay.classList.add('show', estado === 'success' ? 'is-success' : 'is-loading');
-        overlay.setAttribute('aria-hidden', 'false');
-        document.body.style.overflow = 'hidden';
-
-        if (estado === 'success') {
-            clearInterval(temporizadorMsg);
-            const t = $('vrUpdateTitle'), sub = $('vrUpdateSub');
-            if (t && opciones.titulo) t.textContent = opciones.titulo;
-            if (sub && opciones.subtitulo) sub.textContent = opciones.subtitulo;
-        } else {
-            rotarMensajes(opciones.mensajes);
-        }
+        // Función desactivada - sin overlay
+        return;
     }
 
     function ocultar() {
-        const overlay = $('vrUpdateOverlay');
-        if (!overlay) return;
-        clearInterval(temporizadorMsg);
-        overlay.classList.remove('show');
-        overlay.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
+        // Función desactivada - sin overlay
+        return;
     }
 
     function conectar() {
-        const overlay = $('vrUpdateOverlay');
-        if (!overlay) return;
-        overlay.addEventListener('click', () => {
-            if (overlay.classList.contains('is-success')) ocultar();
-        });
-
-        document.querySelectorAll('form[data-overlay-actualizacion]').forEach((form) => {
-            form.addEventListener('submit', function (e) {
-                if (e.defaultPrevented) return;
-                if (form.dataset.enviando) return;
-
-                e.preventDefault();
-                form.dataset.enviando = '1';
-
-                try { sessionStorage.setItem(CONFIG.claveSesion, '1'); } catch (_) {}
-
-                mostrar('loading');
-                setTimeout(() => form.submit(), CONFIG.retrasoEnvio);
-                setTimeout(() => {
-                    if (overlay.classList.contains('is-loading')) ocultar();
-                }, CONFIG.tiempoMaximo);
-            });
-        });
-
-        let veniaGuardando = false;
-        try {
-            veniaGuardando = sessionStorage.getItem(CONFIG.claveSesion) === '1';
-            sessionStorage.removeItem(CONFIG.claveSesion);
-        } catch (_) {}
-
-        const hayExito = !!document.querySelector(CONFIG.selectorExito);
-
-        if (hayExito && veniaGuardando) {
-            mostrar('success');
-            setTimeout(ocultar, CONFIG.duracionExito);
-        }
+        // Función desactivada - sin overlay automático
+        return;
     }
 
     global.OverlayActualizacion = {
-        cargando: (o) => mostrar('loading', o),
-        exito:    (o) => mostrar('success', o),
-        ocultar:  ocultar,
+        cargando: (o) => { /* Sin overlay */ },
+        exito:    (o) => { /* Sin overlay */ },
+        ocultar:  () => { /* Sin overlay */ },
         config:   CONFIG
     };
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', conectar);
-    } else {
-        conectar();
-    }
+    // No ejecutar conectar()
 
 })(window);
 
@@ -182,7 +112,7 @@ const CAT_IMAGES = {
     IB: '/img/avanza.webp', M: '/img/Odyssey.webp', L: '/img/Hiace.webp',
     H: '/img/Frontier.webp', HI: '/img/Tacoma.webp',
 };
-const IMG_FALLBACK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAQAAADwXcorAAAAeUlEQVR42u3PAQ0AAAgDoJvYv7Y6uI0LAtI6S0hISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISGg7CiwA98X9m8YAAAAASUVORK5CYII=';
+const IMG_FALLBACK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAQAAADwXcorAAAAeUlEQVR42u3PAQ0AAAgDoJvYv7Y6uI0LAtI6S0hISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISGg7CiwA98X9m8YAAAAASUVORK5CYII=';
 
 const getLocalImg = (codigo) => CAT_IMAGES[codigo] || '/img/Logotipo.png';
 
@@ -379,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await resp.json();
 
             if (data.success) {
-                window.alertify?.success('Vehículo asignado.');
+                console.log('Vehículo asignado.');
                 const cIni = document.getElementById('contratoInicial');
                 if (cIni) cIni.dataset.idVehiculo = String(idVehiculo);
 
@@ -387,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.cerrarModalVehiculos();
                 setTimeout(() => window.cargarResumenBasico?.(), 150);
             } else {
-                window.alertify?.error(data.error || 'Error al asignar.');
+                console.error(data.error || 'Error al asignar.');
                 if (btnEl) {
                     btnEl.disabled = false;
                     btnEl.innerHTML = 'Elegir';
@@ -395,7 +325,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (err) {
             console.error(err);
-            window.alertify?.error('Error de conexión.');
             if (btnEl) {
                 btnEl.disabled = false;
                 btnEl.innerHTML = 'Elegir';
@@ -472,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Función para confirmar la selección del vehículo (desde el modal de confirmación)
     async function confirmarSeleccionVehiculo() {
         if (!vehiculoSeleccionadoTemp) {
-            window.alertify?.error('No hay vehículo seleccionado.');
+            console.error('No hay vehículo seleccionado.');
             return;
         }
 
@@ -484,8 +413,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            OverlayActualizacion.cargando();
-
             const idVehiculo = vehiculoSeleccionadoTemp.id;
             const nuevoGas = parseInt(document.getElementById('confGasolinaSelect')?.value) || 16;
             const nuevoKm = parseInt(document.getElementById('confKilometrajeInput')?.value) || 0;
@@ -578,22 +505,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.cargarResumenBasico?.();
                 }, 300);
 
-                OverlayActualizacion.exito({
-                    titulo: '¡Vehículo asignado!',
-                    subtitulo: 'Los datos se guardaron correctamente'
-                });
-                setTimeout(() => OverlayActualizacion.ocultar(), 1200);
-
-                window.alertify?.success('Vehículo asignado correctamente.');
+                console.log('Vehículo asignado correctamente.');
             } else {
-                OverlayActualizacion.ocultar();
-                window.alertify?.error(data.error || 'Error al asignar el vehículo.');
+                console.error(data.error || 'Error al asignar el vehículo.');
                 cerrarConfirmacionVehiculo();
             }
         } catch (err) {
             console.error('Error al confirmar vehículo:', err);
-            OverlayActualizacion.ocultar();
-            window.alertify?.error('Error de conexión al guardar los datos.');
             cerrarConfirmacionVehiculo();
         } finally {
             if (btnConfirmar) {
@@ -607,12 +525,12 @@ document.addEventListener('DOMContentLoaded', () => {
     window.seleccionarVehiculoConConfirmacion = function(idVehiculo, fila) {
         if (fila) {
             if (fila.style.backgroundColor === '#fee2e2' || fila.style.opacity === '0.8') {
-                window.alertify?.warning('Este vehículo está ocupado por otra reservación.');
+                console.warn('Este vehículo está ocupado por otra reservación.');
                 return;
             }
             abrirConfirmacionVehiculo(idVehiculo, fila);
         } else {
-            window.alertify?.error('No se encontró la información del vehículo.');
+            console.error('No se encontró la información del vehículo.');
         }
     };
 
@@ -888,13 +806,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.actualizarFechasYRecalcular = async (tarifaManual = null, cortesiaManual = null) => {
         const cIni = document.getElementById('contratoInicial');
-        const inputE = document.getElementById('inputOcultoEntrega');
-        const inputD = document.getElementById('inputOcultoDevolucion');
 
-        if (!inputE?.value || !inputD?.value) return;
+        // 🔧 FIX: leer de los inputs del flatpickr (#pickerEntrega/#pickerDevolucion),
+        // que son los que existen en esta vista. Formato "Y-m-d H:i" (separador espacio).
+        // Fallback a #inputOculto* (formato ISO con 'T') por si otra vista los usara.
+        const pE  = document.getElementById('pickerEntrega');
+        const pD  = document.getElementById('pickerDevolucion');
+        const ioE = document.getElementById('inputOcultoEntrega');
+        const ioD = document.getElementById('inputOcultoDevolucion');
 
-        const [fechaInicio, horaInicio] = inputE.value.split('T');
-        const [fechaFin, horaFin] = inputD.value.split('T');
+        const valE = (pE?.value) || (ioE?.value ? ioE.value.replace('T', ' ') : '');
+        const valD = (pD?.value) || (ioD?.value ? ioD.value.replace('T', ' ') : '');
+
+        if (!valE || !valD) return;
+
+        const [fechaInicio, horaInicio] = valE.split(' ');
+        const [fechaFin, horaFin] = valD.split(' ');
         const idCategoria = cIni?.dataset.idCategoria;
 
         if (!fechaInicio || !fechaFin || !idCategoria) return;
@@ -920,6 +847,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 set('#diasBadge', `${data.dias} días`);
                 set('#resumenDiasCompacto', `Días de renta: ${data.dias}`);
                 set('#resumenFechasCompacto', `${data.fecha_inicio} / ${data.fecha_fin}`);
+
+                // 📅 FIX: contador de días de la navbar
+                const _n = document.querySelector('.contador-dias-num'); if (_n) _n.textContent = data.dias;
+                const _t = document.querySelector('.contador-dias-txt'); if (_t) _t.textContent = (data.dias == 1 ? 'día' : 'días');
 
                 if (cIni) {
                     cIni.dataset.inicio = fechaInicio;
@@ -965,11 +896,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (data.ok) {
                         await window.cargarResumenBasico?.();
                         if (window.$('#baseAmt')) window.cargarPaso6?.();
-                        window.alertify?.success('Tarifa actualizada');
+                        console.log('Tarifa actualizada');
                     } else throw new Error('Error backend');
                 } catch {
                     contenedor.textContent = window.money(precioActual);
-                    window.alertify?.error('Error al actualizar');
+                    console.error('Error al actualizar');
                 }
             } else {
                 contenedor.textContent = window.money(precioActual);
@@ -1002,7 +933,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         input.addEventListener('blur', async () => {
             let nuevoValor = parseInt(input.value);
-            if (nuevoValor > 3) { window.alertify?.error('El límite máximo de cortesía es de 3 horas.'); nuevoValor = 3; }
+            if (nuevoValor > 3) { console.warn('El límite máximo de cortesía es de 3 horas.'); nuevoValor = 3; }
             if (isNaN(nuevoValor) || nuevoValor < 1) nuevoValor = 1;
 
             contenedor.textContent = '...';
@@ -1011,7 +942,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 contenedor.textContent = nuevoValor;
             } catch {
                 contenedor.textContent = valorActual;
-                window.alertify?.error('Error al guardar la cortesía.');
+                console.error('Error al guardar la cortesía.');
             }
         });
 
@@ -1107,7 +1038,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     if (!idRes) return;
                     if (!document.getElementById('contratoInicial')?.dataset.idVehiculo) {
-                        return window.alertify?.warning('⚠️ Selecciona un vehículo primero.');
+                        console.warn('⚠️ Selecciona un vehículo primero.');
+                        return;
                     }
                     localStorage.setItem(`contratoPasoActual_${idRes}`, targetStep.toString());
                     window.location.href = `/admin/contrato2/${idRes}`;
