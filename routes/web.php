@@ -280,9 +280,6 @@ Route::get('/admin/contrato/{id}', [ContratoController::class, 'mostrarContrato'
 
 // Paso 1: Gestión de Fechas y Categoría
 Route::post('/admin/contrato/solicitar-cambio-fecha', [ContratoController::class, 'solicitarCambioFecha'])->name('contrato.solicitarCambioFecha');
-Route::get('/admin/contrato/cambio-fecha/aprobar/{token}', [ContratoController::class, 'aprobarCambioFecha'])->name('contrato.aprobarCambioFecha');
-Route::get('/admin/contrato/cambio-fecha/rechazar/{token}', [ContratoController::class, 'rechazarCambioFecha'])->name('contrato.rechazarCambioFecha');
-Route::get('/admin/contrato/cambio-fecha/estado/{id}', [ContratoController::class, 'estadoCambioFecha']);
 Route::post('/admin/contrato/{idReservacion}/recalcular-total', [ContratoController::class, 'recalcularYActualizarTotales']);
 
 // Paso 2: Servicios Adicionales
@@ -752,6 +749,11 @@ Route::post('/admin/reservaciones-activas/{id}/cancelar',
 
 
 }); // <- FIN grupo sesion.activa
+//Contrato cambio de fecha paso 1, fuera de admin para evitar el login
+Route::get('/admin/contrato/cambio-fecha/aprobar/{token}', [ContratoController::class, 'aprobarCambioFecha'])->name('contrato.aprobarCambioFecha');
+Route::get('/admin/contrato/cambio-fecha/rechazar/{token}', [ContratoController::class, 'rechazarCambioFecha'])->name('contrato.rechazarCambioFecha');
+Route::get('/admin/contrato/cambio-fecha/estado/{id}', [ContratoController::class, 'estadoCambioFecha']);
+
 Route::view('/politicas', 'Usuarios.Politicas')->name('rutaPoliticas');
 Route::get('/politicas', [ReservacionesController::class, 'politicas'])->name('rutaPoliticas');
 

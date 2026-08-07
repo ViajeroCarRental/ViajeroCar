@@ -186,11 +186,20 @@ document.addEventListener("DOMContentLoaded", () => {
                         sessionStorage.removeItem("solicitudCambio");
 
                         if (data.estado === "aprobado") {
-                            const inputE = $elId("inputOcultoEntrega");
-                            if (inputE) inputE.value = `${solicitud.f}T${solicitud.h}`;
-                            validarYPintarFechas();
-                            if (typeof window.actualizarFechasYRecalcular === 'function') await window.actualizarFechasYRecalcular();
+                            // Actualiza el calendario real (Flatpickr) con la fecha aprobada
+                            if (window.fpEntrega && solicitud.f) {
+                                const [yy, mm, dd] = solicitud.f.split('-').map(Number);
+                                const [hh, min] = (solicitud.h || '12:00').split(':').map(Number);
+                                const nueva = new Date(yy, mm - 1, dd, hh || 12, min || 0);
+                                window.fpEntrega.setDate(nueva, false);
+                                const pE = document.getElementById('pickerEntrega');
+                                if (pE) pE.value = window.fpEntrega.formatDate(nueva, "Y-m-d H:i");
+                            }
+                            if (typeof window.cargarResumenBasico === 'function') await window.cargarResumenBasico();
                             console.log("✅ Cambio de fecha aprobado.");
+
+                            // Recarga para reflejar todo desde el servidor de forma limpia
+                            setTimeout(() => window.location.reload(), 800);
                         } else {
                             console.log("❌ Solicitud de cambio rechazada.");
                         }
@@ -204,6 +213,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }, 8000);
         }
+
+        window.iniciarMonitoreoAprobacion = iniciarMonitoreoAprobacion;
 
         if (JSON.parse(sessionStorage.getItem("solicitudCambio") || "{}").activa) iniciarMonitoreoAprobacion();
 
@@ -483,81 +494,71 @@ document.addEventListener("DOMContentLoaded", () => {
         // PICKER ENTREGA
         // =============================================
         const fpEntrega = flatpickr(pickerE, {
-            ...commonOptions,
-            minDate: "today",
-            onChange: function (selectedDates, dateStr, instance) {
-                if (!selectedDates.length) return;
+    ...commonOptions,
+    minDate: "today",
+    onChange: function (selectedDates, dateStr, instance) {
+        if (!selectedDates.length) return;
 
-                const fechaSeleccionada = combinar(selectedDates[0], horaEntrega);
-                const fechaOriginal = new Date(originalValueE.replace(' ', 'T'));
+        const fechaSeleccionada = combinar(selectedDates[0], horaEntrega);
+        const fechaOriginal = new Date(originalValueE.replace(' ', 'T'));
 
-                if (fechaSeleccionada.toDateString() !== fechaOriginal.toDateString()) {
-                    // ✅ MODAL DE CONFIRMACIÓN RESTAURADO
-                    if (typeof alertify !== 'undefined') {
-                        alertify.confirm(
-                            "⚠️ Requiere Autorización",
-                            "Cambiar la fecha de Entrega requiere autorización de un supervisor. ¿Deseas enviar la solicitud de cambio?",
-                            async () => {
-                                try {
-                                    const f = fechaSeleccionada.toISOString().split('T')[0];
-                                    const h = `${String(fechaSeleccionada.getHours()).padStart(2, '0')}:${String(fechaSeleccionada.getMinutes()).padStart(2, '0')}`;
+        // Si cambia el DÍA de entrega → requiere autorización (abrimos el modal)
+        if (fechaSeleccionada.toDateString() !== fechaOriginal.toDateString()) {
 
-                                    await fetch('/admin/contrato/solicitar-cambio-fecha', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'X-CSRF-TOKEN': window.csrfToken
-                                        },
-                                        body: JSON.stringify({
-                                            id_reservacion: window.ID_RESERVACION,
-                                            nueva_fecha: f,
-                                            nueva_hora: h
-                                        })
-                                    });
-                                    console.log("Solicitud enviada.");
-                                } catch (e) {
-                                    instance.setDate(fechaOriginal, false);
-                                }
-                            },
-                            () => {
-                                instance.setDate(fechaOriginal, false);
-                            }
-                        );
-                    } else {
-                        console.log("⚠️ Cambio de fecha requiere autorización");
-                        try {
-                            const f = fechaSeleccionada.toISOString().split('T')[0];
-                            const h = `${String(fechaSeleccionada.getHours()).padStart(2, '0')}:${String(fechaSeleccionada.getMinutes()).padStart(2, '0')}`;
+            const revertirCalendario = () => {
+                // Volver al día original. Si ese día es HOY, refrescar a la hora actual del reloj.
+                const hoy = new Date();
+                const esHoy = fechaOriginal.toDateString() === hoy.toDateString();
 
-                            fetch('/admin/contrato/solicitar-cambio-fecha', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': window.csrfToken
-                                },
-                                body: JSON.stringify({
-                                    id_reservacion: window.ID_RESERVACION,
-                                    nueva_fecha: f,
-                                    nueva_hora: h
-                                })
-                            }).then(() => console.log("Solicitud enviada."));
-                        } catch (e) {
-                            instance.setDate(fechaOriginal, false);
-                        }
-                    }
-                } else {
-                    originalValueE = instance.formatDate(fechaSeleccionada, "Y-m-d H:i");
+                let destino = fechaOriginal;
+                if (esHoy) {
+                    const ahoraReloj = new Date();
+                    horaEntrega = `${String(ahoraReloj.getHours()).padStart(2, '0')}:${String(ahoraReloj.getMinutes()).padStart(2, '0')}`;
+                    destino = combinar(fechaOriginal, horaEntrega);
+                    originalValueE = instance.formatDate(destino, "Y-m-d H:i");
                     pickerE.value = originalValueE;
-                    actualizarUIFechas(fechaSeleccionada, 'entrega');
-
-                    sincronizarMinimoDevolucion(fechaSeleccionada);
-
-                    if (window.actualizarFechasYRecalcular) {
-                        window.actualizarFechasYRecalcular();
-                    }
                 }
+
+                instance.setDate(destino, false);
+                actualizarUIFechas(destino, 'entrega');
+            };
+
+            if (window.SolicitudFechaModal && typeof window.SolicitudFechaModal.abrir === 'function') {
+                window.SolicitudFechaModal.abrir(fechaSeleccionada, {
+                    fechaActual: fechaOriginal,
+                    onCancelar: revertirCalendario
+                });
+            } else {
+                console.warn('Modal de solicitud de cambio no disponible.');
+                revertirCalendario();
             }
-        });
+
+        } else {
+            // Mismo día (= día actual): tomar la HORA ACTUAL del reloj en este instante.
+            // Escenario: el asesor había elegido un día futuro (abrió el modal) y regresa a hoy.
+            const ahoraReloj = new Date();
+            const hoy = new Date();
+            const esHoy = selectedDates[0].toDateString() === hoy.toDateString();
+
+            let fechaFinal;
+            if (esHoy) {
+                // Actualizar la hora de entrega a la hora actual
+                horaEntrega = `${String(ahoraReloj.getHours()).padStart(2, '0')}:${String(ahoraReloj.getMinutes()).padStart(2, '0')}`;
+                fechaFinal = combinar(selectedDates[0], horaEntrega);
+            } else {
+                fechaFinal = fechaSeleccionada;
+            }
+
+            originalValueE = instance.formatDate(fechaFinal, "Y-m-d H:i");
+            pickerE.value = originalValueE;
+            actualizarUIFechas(fechaFinal, 'entrega');
+            sincronizarMinimoDevolucion(fechaFinal);
+            if (window.actualizarFechasYRecalcular) {
+                window.actualizarFechasYRecalcular();
+            }
+        }
+    }
+});
 
         // =============================================
         // PICKER DEVOLUCIÓN
@@ -4242,24 +4243,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ── Link de Maps: indicaciones oficina → dirección ──
-    function initMaps() {
-        const link = document.getElementById('deliveryMapsLink');
-        const dir  = document.getElementById('deliveryDireccion');
-        if (!link || !dir) return;
+function initMaps() {
+    const link = document.getElementById('deliveryMapsLink');
+    const dir  = document.getElementById('deliveryDireccion');
+    if (!link || !dir) return;
 
-        const actualizar = () => {
-            const destino = (dir.value || '').trim();
-            const origen  = (link.getAttribute('data-origen') || '').trim();
-            if (!destino) { link.classList.add('is-disabled'); link.href = '#'; return; }
-            link.classList.remove('is-disabled');
-            const base = 'https://www.google.com/maps/dir/?api=1';
-            link.href = origen
-                ? `${base}&origin=${encodeURIComponent(origen)}&destination=${encodeURIComponent(destino)}`
-                : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destino)}`;
-        };
-        dir.addEventListener('input', actualizar);
-        actualizar();
-    }
+    const actualizar = () => {
+        const destino = (dir.value || '').trim();
+        const origen  = (link.getAttribute('data-origen') || '').trim();
+        if (!destino) { link.classList.add('is-disabled'); link.href = '#'; return; }
+        link.classList.remove('is-disabled');
+        const base = 'https://www.google.com/maps/dir/?api=1';
+        link.href = origen
+            ? `${base}&origin=${encodeURIComponent(origen)}&destination=${encodeURIComponent(destino)}`
+            : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destino)}`;
+    };
+    dir.addEventListener('input', actualizar);
+    actualizar();
+}
 
     function run() { init(); initMaps(); }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
@@ -4336,6 +4337,260 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
     }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+})();
+/* ================= MODAL: SOLICITUD DE CAMBIO DE FECHA DE ENTREGA ================= */
+(function () {
+    const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    let modal, elFechaActual, elFechaNueva, inputNuevaFecha, selSolicitante,
+        toggleLugar, grupoLugar, selLugar, inputMotivo, btnEnviar, btnCancelar, btnCerrar;
+    let inputHora = null;   // select de hora del modal
+    let fpModal = null;     // instancia Flatpickr del modal
+    let cbCancelar = null;
+
+    const $ = (id) => document.getElementById(id);
+
+    function cachear() {
+        modal = $('modalSolicitudFecha');
+        if (!modal) return false;
+        elFechaActual   = $('msfFechaActual');
+        elFechaNueva    = $('msfFechaNuevaTexto');
+        inputNuevaFecha = $('msfNuevaFecha');
+        inputHora       = $('msfNuevaHora');
+        selSolicitante  = $('msfSolicitante');
+        toggleLugar     = $('msfCambiarLugar');
+        grupoLugar      = $('msfLugarGroup');
+        selLugar        = $('msfNuevoLugar');
+        inputMotivo     = $('msfMotivo');
+        btnEnviar       = $('msfEnviar');
+        btnCancelar     = $('msfCancelar');
+        btnCerrar       = $('msfCerrar');
+        return true;
+    }
+
+    function fmtLegible(d) {
+        if (!(d instanceof Date) || isNaN(d)) return '—';
+        const dia = String(d.getDate()).padStart(2,'0');
+        let h = d.getHours(); const min = String(d.getMinutes()).padStart(2,'0');
+        const ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+        return `${dia}/${MESES[d.getMonth()]}/${d.getFullYear()} · ${String(h).padStart(2,'0')}:${min} ${ampm}`;
+    }
+
+    function fmtInput(d) {
+        const p = (n) => String(n).padStart(2,'0');
+        return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+    }
+
+    // Llena el <select> de hora en intervalos de 30 min (00:00 a 23:30)
+    function llenarHoras() {
+        if (!inputHora || inputHora.options.length) return;
+        for (let h = 0; h < 24; h++) {
+            for (let m = 0; m < 60; m += 30) {
+                const hh = String(h).padStart(2, '0');
+                const mm = String(m).padStart(2, '0');
+                const val = `${hh}:${mm}`;
+                let hh12 = h % 12 || 12;
+                const ampm = h >= 12 ? 'PM' : 'AM';
+                const label = `${String(hh12).padStart(2, '0')}:${mm} ${ampm}`;
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = label;
+                inputHora.appendChild(opt);
+            }
+        }
+    }
+
+    // Asegura que una hora "HH:MM" exista como opción en el select y la selecciona
+    function asegurarHoraEnSelect(hhmm) {
+        if (!inputHora) return;
+        const m = String(hhmm || '').match(/(\d{1,2}):(\d{2})/);
+        if (!m) return;
+        const hh = String(parseInt(m[1], 10)).padStart(2, '0');
+        const mm = String(parseInt(m[2], 10)).padStart(2, '0');
+        const val = `${hh}:${mm}`;
+        // ¿ya existe?
+        let existe = false;
+        for (const opt of inputHora.options) { if (opt.value === val) { existe = true; break; } }
+        if (!existe) {
+            let hh12 = parseInt(hh, 10) % 12 || 12;
+            const ampm = parseInt(hh, 10) >= 12 ? 'PM' : 'AM';
+            const label = `${String(hh12).padStart(2, '0')}:${mm} ${ampm}`;
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.textContent = label;
+            // Insertar en orden correcto
+            let insertado = false;
+            for (const o of inputHora.options) {
+                if (o.value > val) { inputHora.insertBefore(opt, o); insertado = true; break; }
+            }
+            if (!insertado) inputHora.appendChild(opt);
+        }
+        inputHora.value = val;
+    }
+
+    // Combina la fecha del picker (Y-m-d) con la hora del select (HH:MM) → Date
+    function fechaHoraCombinada() {
+        if (!inputNuevaFecha.value) return null;
+        const fParts = inputNuevaFecha.value.split('-').map(Number); // [Y, M, D]
+        const hParts = (inputHora && inputHora.value ? inputHora.value : '08:00').split(':').map(Number);
+        if (fParts.length < 3) return null;
+        return new Date(fParts[0], fParts[1] - 1, fParts[2], hParts[0] || 0, hParts[1] || 0);
+    }
+
+    function pintarNueva() {
+        const d = fechaHoraCombinada();
+        elFechaNueva.textContent = d ? fmtLegible(d) : '—';
+    }
+
+    function marcarError(el) {
+        el.focus();
+        el.classList.add('msf-error');
+        setTimeout(() => el.classList.remove('msf-error'), 1500);
+    }
+
+    function abrir(fecha, opciones = {}) {
+        if (!cachear()) return;
+        const fechaObj = fecha instanceof Date ? fecha : new Date(fecha);
+        cbCancelar = typeof opciones.onCancelar === 'function' ? opciones.onCancelar : null;
+
+        elFechaActual.textContent = fmtLegible(opciones.fechaActual);
+
+        llenarHoras();
+
+        const p = (n) => String(n).padStart(2, '0');
+        const fechaSolo = `${fechaObj.getFullYear()}-${p(fechaObj.getMonth() + 1)}-${p(fechaObj.getDate())}`;
+        const horaSolo  = `${p(fechaObj.getHours())}:${p(fechaObj.getMinutes())}`;
+
+        // Inicializa Flatpickr solo-fecha, con el mismo estilo visual de las cards
+        if (!fpModal && typeof flatpickr === 'function') {
+            fpModal = flatpickr(inputNuevaFecha, {
+                enableTime: false,
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d-M-Y",
+                locale: (typeof flatpickr.l10ns !== 'undefined' && flatpickr.l10ns.es) ? 'es' : 'default',
+                disableMobile: true,
+                allowInput: false,
+                minDate: "today",
+                monthSelectorType: "dropdown",
+                appendTo: modal.querySelector('.msf-card') || modal,
+                onReady: function (sel, str, fp) {
+                    fp.calendarContainer.classList.add("fp-centrado");
+                    fp.calendarContainer.classList.add("fp-modal-solicitud");
+                    // El altInput es el visible; le damos la clase de estilo del modal
+                    if (fp.altInput) {
+                        fp.altInput.classList.add('msf-input');
+                        fp.altInput.classList.add('msf-fecha-visible');
+                        fp.altInput.readOnly = true;
+                    }
+                },
+                onChange: function () { pintarNueva(); }
+            });
+        }
+
+        if (fpModal) {
+            fpModal.setDate(fechaSolo, false);
+        } else {
+            // Fallback si Flatpickr no está disponible
+            inputNuevaFecha.value = fechaSolo;
+        }
+
+        if (inputHora) asegurarHoraEnSelect(horaSolo);
+        pintarNueva();
+
+        selSolicitante.value = '';
+        toggleLugar.checked = false;
+        grupoLugar.style.display = 'none';
+        selLugar.value = '';
+        inputMotivo.value = '';
+
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function cerrar(revertir) {
+        if (!modal) return;
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+        if (revertir && typeof cbCancelar === 'function') cbCancelar();
+    }
+
+    async function enviar() {
+        if (!selSolicitante.value) { marcarError(selSolicitante); return; }
+        if (!inputNuevaFecha.value) { marcarError(inputNuevaFecha); return; }
+        const cambiarLugar = !!toggleLugar.checked;
+        if (cambiarLugar && !selLugar.value) { marcarError(selLugar); return; }
+
+        const fechaObj = fechaHoraCombinada();
+        if (!fechaObj) { marcarError(inputNuevaFecha); return; }
+        const p = (n) => String(n).padStart(2, '0');
+        const f = `${fechaObj.getFullYear()}-${p(fechaObj.getMonth() + 1)}-${p(fechaObj.getDate())}`;
+        const h = `${p(fechaObj.getHours())}:${p(fechaObj.getMinutes())}`;
+        const lugarNombre = cambiarLugar ? (selLugar.options[selLugar.selectedIndex]?.textContent || '').trim() : '';
+
+        const payload = {
+            id_reservacion: window.ID_RESERVACION,
+            nueva_fecha: f,
+            nueva_hora: h,
+            solicitante: selSolicitante.value,
+            cambiar_lugar: cambiarLugar ? 1 : 0,
+            nueva_sucursal: cambiarLugar ? selLugar.value : null,
+            nueva_sucursal_nombre: lugarNombre,
+            motivo: (inputMotivo.value || '').trim()
+        };
+
+        btnEnviar.disabled = true;
+        const original = btnEnviar.innerHTML;
+        btnEnviar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+        try {
+            const resp = await fetch('/admin/contrato/solicitar-cambio-fecha', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': window.csrfToken },
+                body: JSON.stringify(payload)
+            });
+            const data = await resp.json().catch(() => ({}));
+            if (!resp.ok || data.error) throw new Error(data.error || 'No se pudo enviar la solicitud');
+
+            sessionStorage.setItem('solicitudCambio', JSON.stringify({
+                activa: true, id_reservacion: window.ID_RESERVACION, f, h
+            }));
+
+            if (typeof window.iniciarMonitoreoAprobacion === 'function') {
+                window.iniciarMonitoreoAprobacion();
+            }
+
+            console.log('✅ Solicitud de cambio enviada:', data.msg || 'Esperando aprobación');
+
+            // El cambio necesita aprobación → el calendario vuelve a la fecha original.
+            cerrar(true);
+        } catch (e) {
+            console.error('Error enviando solicitud de cambio:', e);
+            // El modal queda abierto para reintentar
+        } finally {
+            btnEnviar.disabled = false;
+            btnEnviar.innerHTML = original;
+        }
+    }
+
+    function init() {
+        if (!cachear()) return;
+        btnEnviar.addEventListener('click', enviar);
+        btnCancelar.addEventListener('click', () => cerrar(true));
+        btnCerrar.addEventListener('click', () => cerrar(true));
+        modal.addEventListener('click', (e) => { if (e.target === modal) cerrar(true); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('show')) cerrar(true);
+        });
+        toggleLugar.addEventListener('change', () => {
+            grupoLugar.style.display = toggleLugar.checked ? 'block' : 'none';
+        });
+        if (inputHora) inputHora.addEventListener('change', pintarNueva);
+
+        window.SolicitudFechaModal = { abrir, cerrar };
+    }
+
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
 })();

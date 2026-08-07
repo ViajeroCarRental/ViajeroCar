@@ -83,6 +83,98 @@
             color: #94a3b8;
             pointer-events: none;
         }
+
+        /* ===== Modal solicitud de cambio de fecha ===== */
+.modal-solicitud-fecha { display:none; position:fixed; inset:0; background:rgba(15,23,42,.55);
+    backdrop-filter:blur(3px); z-index:100060; justify-content:center; align-items:center; padding:16px; }
+.modal-solicitud-fecha.show { display:flex; animation:msfFadeIn .2s ease; }
+@keyframes msfFadeIn { from{opacity:0} to{opacity:1} }
+
+.msf-card { background:#fff; width:100%; max-width:480px; border-radius:16px; max-height:92vh;
+    box-shadow:0 20px 60px rgba(0,0,0,.3); overflow:hidden; display:flex; flex-direction:column;
+    animation:msfSlideUp .25s ease; }
+@keyframes msfSlideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+.msf-header { display:flex; align-items:flex-start; gap:14px; padding:20px 22px; position:relative;
+    background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%); border-bottom:1px solid #fcd34d; }
+.msf-header-icon { flex-shrink:0; width:44px; height:44px; border-radius:50%; background:#f59e0b; color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:20px; box-shadow:0 4px 10px rgba(245,158,11,.4); }
+.msf-header-text h3 { margin:0 0 4px; font-size:1.1rem; color:#92400e; font-weight:700; }
+.msf-header-text p { margin:0; font-size:.85rem; color:#b45309; line-height:1.35; }
+.msf-close { position:absolute; top:12px; right:14px; background:transparent; border:none; font-size:22px;
+    line-height:1; color:#92400e; cursor:pointer; opacity:.7; }
+.msf-close:hover { opacity:1; }
+
+.msf-body { padding:20px 22px; overflow-y:auto; }
+
+.msf-fecha-resumen { display:flex; align-items:center; gap:12px; background:#f8fafc; border:1px solid #e2e8f0;
+    border-radius:12px; padding:14px; margin-bottom:18px; }
+.msf-fecha-item { flex:1; text-align:center; }
+.msf-fecha-label { display:block; font-size:.7rem; text-transform:uppercase; letter-spacing:.03em;
+    color:#94a3b8; margin-bottom:4px; }
+.msf-fecha-valor { display:block; font-size:.9rem; font-weight:600; color:#1e293b; }
+.msf-fecha-nueva .msf-fecha-valor { color:#16a34a; }
+.msf-fecha-flecha { color:#cbd5e1; font-size:14px; }
+
+.msf-campo { margin-bottom:16px; }
+.msf-campo > label { display:block; font-size:.85rem; font-weight:600; color:#334155; margin-bottom:6px; }
+.msf-campo > label i { color:#64748b; margin-right:6px; }
+
+.msf-input { width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:.9rem;
+    color:#1e293b; background:#fff; transition:border-color .15s, box-shadow .15s; }
+.msf-input:focus { outline:none; border-color:#D6121F; box-shadow:0 0 0 3px rgba(214,18,31,.12); }
+.msf-input.msf-error { border-color:#dc2626; box-shadow:0 0 0 3px rgba(220,38,38,.15); }
+
+.msf-toggle-label { display:flex !important; flex-direction:row !important; align-items:center;
+    justify-content:space-between !important; gap:12px; cursor:pointer;
+    background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 14px;
+    font-size:.85rem; font-weight:700; color:#334155; margin-bottom:0; }
+.msf-toggle-label i { color:#64748b; margin-right:6px; }
+.msf-toggle-text { line-height:1.2; order:1; }
+.msf-switch { order:2; }
+
+/* Switch propio del modal: a la izquierda, alineado y verde al encender */
+.msf-switch { position:relative !important; display:inline-block !important; width:46px !important;
+    height:26px !important; flex-shrink:0; margin:0 !important; }
+.msf-switch input { opacity:0; width:0; height:0; position:absolute; margin:0; }
+.msf-slider { position:absolute !important; inset:0; cursor:pointer; background:#cbd5e1; border-radius:999px;
+    transition:background-color .2s ease; }
+.msf-slider::before { content:""; position:absolute; height:20px; width:20px; left:3px; top:3px;
+    background:#fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:transform .2s ease; }
+.msf-switch input:checked + .msf-slider { background:#16a34a; }
+.msf-switch input:checked + .msf-slider::before { transform:translateX(20px); }
+.msf-switch input:focus-visible + .msf-slider { box-shadow:0 0 0 3px rgba(22,163,74,.25); }
+
+/* Calendario Flatpickr dentro del modal: por encima del overlay y bien posicionado */
+.msf-card .flatpickr-calendar.fp-modal-solicitud { z-index:100070 !important; }
+
+/* Con altInput, Flatpickr muestra este input visible y esconde el original.
+   Nos aseguramos de que el visible se vea bien y ocupe todo el ancho. */
+.msf-fecha-visible {
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    width:100% !important;
+    height:auto !important;
+    padding:10px 12px !important;
+    border:1px solid #cbd5e1 !important;
+    border-radius:8px !important;
+    font-size:.9rem !important;
+    color:#1e293b !important;
+    background:#fff !important;
+    cursor:pointer !important;
+}
+
+.msf-footer { display:flex; justify-content:flex-end; gap:10px; padding:16px 22px; background:#f8fafc;
+    border-top:1px solid #e2e8f0; }
+.msf-footer .btn { min-width:120px; }
+
+@media (max-width:520px) {
+    .msf-fecha-resumen { flex-direction:column; }
+    .msf-fecha-flecha { transform:rotate(90deg); }
+    .msf-footer { flex-direction:column-reverse; }
+    .msf-footer .btn { width:100%; }
+}
     </style>
 @endsection
 
@@ -1446,7 +1538,6 @@
                                             </div>
 
                                             {{-- 4. Daños a terceros --}}
-                                            {{-- 4. Daños a terceros --}}
                                             @php
                                                 $tercerosFiltrados = collect($grupo_terceros)
                                                     ->filter(function ($item) {
@@ -1864,6 +1955,92 @@
                 </div>
             </div>
         </div>
+
+        {{-- Modal: Solicitud de cambio de fecha de entrega --}}
+<div id="modalSolicitudFecha" class="modal-solicitud-fecha">
+    <div class="msf-card">
+        <div class="msf-header">
+            <div class="msf-header-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="msf-header-text">
+                <h3>Requiere autorización</h3>
+                <p>Cambiar la fecha de entrega necesita el visto bueno de un supervisor. Completa los datos para enviar la solicitud.</p>
+            </div>
+            <button type="button" class="msf-close" id="msfCerrar">&times;</button>
+        </div>
+
+        <div class="msf-body">
+            <div class="msf-fecha-resumen">
+                <div class="msf-fecha-item">
+                    <span class="msf-fecha-label">Fecha actual</span>
+                    <span class="msf-fecha-valor" id="msfFechaActual">—</span>
+                </div>
+                <div class="msf-fecha-flecha"><i class="fas fa-arrow-right"></i></div>
+                <div class="msf-fecha-item msf-fecha-nueva">
+                    <span class="msf-fecha-label">Nueva fecha</span>
+                    <span class="msf-fecha-valor" id="msfFechaNuevaTexto">—</span>
+                </div>
+            </div>
+
+            <div class="msf-campo">
+                <label for="msfSolicitante"><i class="fas fa-user-tie"></i> ¿Quién solicita el cambio?</label>
+                <select id="msfSolicitante" class="msf-input">
+                    <option value="">Selecciona una persona...</option>
+                    {{-- CAMBIA ESTOS NOMBRES por los reales --}}
+                    <option value="Gerente de Sucursal">Gerente de Sucursal</option>
+                    <option value="Supervisor de Mostrador">Supervisor de Mostrador</option>
+                    <option value="Asesor de Ventas">Asesor de Ventas</option>
+                    <option value="Coordinador de Flotilla">Coordinador de Flotilla</option>
+                </select>
+            </div>
+
+            <div class="msf-campo">
+                <label for="msfNuevaFecha"><i class="fas fa-calendar-alt"></i> Fecha solicitada</label>
+                <input type="text" id="msfNuevaFecha" class="msf-input" readonly placeholder="Selecciona una fecha">
+            </div>
+
+            <div class="msf-campo">
+                <label for="msfNuevaHora"><i class="fas fa-clock"></i> Hora solicitada</label>
+                <select id="msfNuevaHora" class="msf-input"></select>
+            </div>
+
+            <div class="msf-campo msf-campo-toggle">
+                <label class="msf-toggle-label">
+                    <span class="msf-switch">
+                        <input type="checkbox" id="msfCambiarLugar">
+                        <span class="msf-slider"></span>
+                    </span>
+                    <span class="msf-toggle-text"><i class="fas fa-map-marker-alt"></i> ¿Desea cambiar el lugar de entrega?</span>
+                </label>
+            </div>
+
+            <div class="msf-campo" id="msfLugarGroup" style="display:none;">
+                <label for="msfNuevoLugar"><i class="fas fa-building"></i> Nuevo lugar de entrega</label>
+                <select id="msfNuevoLugar" class="msf-input">
+                    <option value="">Selecciona una oficina...</option>
+                    @foreach ($sucursales->where('ciudad', 'Querétaro')->groupBy('ciudad') as $ciudad => $listaSuc)
+                        <optgroup label="{{ $ciudad }}">
+                            @foreach ($listaSuc as $suc)
+                                <option value="{{ $suc->id_sucursal }}">{{ $suc->nombre }}</option>
+                            @endforeach
+                        </optgroup>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="msf-campo">
+                <label for="msfMotivo"><i class="fas fa-comment-dots"></i> Motivo (opcional)</label>
+                <textarea id="msfMotivo" class="msf-input" rows="2" placeholder="Ej. El cliente solicitó recoger un día antes"></textarea>
+            </div>
+        </div>
+
+        <div class="msf-footer">
+            <button type="button" class="btn gray" id="msfCancelar">Cancelar</button>
+            <button type="button" class="btn primary" id="msfEnviar">
+                <i class="fas fa-paper-plane"></i> Enviar solicitud
+            </button>
+        </div>
+    </div>
+</div>
 
 {{-- =============================================================
          OVERLAY DE ACTUALIZACIÓN

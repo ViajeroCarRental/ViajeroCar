@@ -127,18 +127,19 @@ class ContratoController extends ContratoBaseController
             }
 
             $timezone = 'America/Mexico_City';
+            $ahoraApertura = Carbon::now($timezone);
 
-            // Las fechas y horas siempre se toman de la reservación.
-            // Abrir Contratos no debe modificarlas.
-            $fechaInicio = Carbon::parse(
-                $reservacion->fecha_inicio,
-                $timezone
-            );
+            // ENTREGA: por defecto es el momento de apertura del contrato,
+            // pero si hubo un cambio de fecha aprobado, respetamos ESA fecha.
+            if (!empty($reservacion->aprobado_por_superadmin)) {
+                $fechaInicio = Carbon::parse($reservacion->fecha_inicio, $timezone);
+                $horaRetiro  = Carbon::parse($reservacion->hora_retiro ?? '12:00:00', $timezone);
+            } else {
+                $fechaInicio = $ahoraApertura->copy();
+                $horaRetiro  = $ahoraApertura->copy();
+            }
 
-            $horaRetiro = Carbon::parse(
-                $reservacion->hora_retiro ?? '12:00:00',
-                $timezone
-            );
+
 
             $fechaFin = Carbon::parse(
                 $reservacion->fecha_fin,
@@ -377,6 +378,58 @@ class ContratoController extends ContratoBaseController
         };
     }
 
+    /**
+     * Página de confirmación (tipo tarjeta/modal) para aprobar/rechazar cambio de fecha.
+     */
+    private function paginaResultadoCambio(string $tipo, string $titulo, string $mensaje): string
+    {
+        $aprobado = $tipo === 'aprobado';
+        $color    = $aprobado ? '#16a34a' : '#dc2626';
+        $colorBg  = $aprobado ? '#dcfce7' : '#fee2e2';
+        $icono    = $aprobado ? '&#10004;' : '&#10005;';
+
+        return "
+        <!DOCTYPE html>
+        <html lang='es'>
+        <head>
+            <meta charset='utf-8'>
+            <meta name='viewport' content='width=device-width,initial-scale=1'>
+            <title>{$titulo}</title>
+        </head>
+        <body style='margin:0;padding:0;min-height:100vh;background:#f1f5f9;
+            font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+            display:flex;align-items:center;justify-content:center;'>
+
+            <div style='background:#fff;max-width:420px;width:90%;border-radius:18px;
+                box-shadow:0 20px 50px rgba(15,23,42,.18);padding:40px 32px;text-align:center;
+                animation:pop .3s ease;'>
+
+                <div style='width:84px;height:84px;border-radius:50%;background:{$colorBg};
+                    display:flex;align-items:center;justify-content:center;margin:0 auto 22px;'>
+                    <span style='color:{$color};font-size:42px;line-height:1;'>{$icono}</span>
+                </div>
+
+                <h1 style='margin:0 0 10px;color:{$color};font-size:24px;font-weight:700;'>{$titulo}</h1>
+                <p style='margin:0 0 26px;color:#475569;font-size:15px;line-height:1.5;'>{$mensaje}</p>
+
+                <div style='border-top:1px solid #e2e8f0;padding-top:18px;'>
+                    <p style='margin:0;color:#94a3b8;font-size:13px;'>
+                        Ya puedes cerrar esta pestaña.
+                    </p>
+                </div>
+            </div>
+
+            <style>
+                @keyframes pop {
+                    from { transform:scale(.9); opacity:0; }
+                    to   { transform:scale(1);  opacity:1; }
+                }
+            </style>
+        </body>
+        </html>
+        ";
+    }
+
     protected function calcularDiasRenta($fechaInicio, $fechaFin): int
     {
         return max(1, Carbon::parse($fechaInicio)->diffInDays(Carbon::parse($fechaFin)));
@@ -388,10 +441,14 @@ class ContratoController extends ContratoBaseController
     {
         try {
             $data = $request->validate([
-                'id_reservacion' => 'required|integer|exists:reservaciones,id_reservacion',
-                'nueva_fecha'    => 'required|date',
-                'nueva_hora'     => 'nullable',
-                'motivo'         => 'nullable|string|max:500',
+                'id_reservacion'        => 'required|integer|exists:reservaciones,id_reservacion',
+                'nueva_fecha'           => 'required|date',
+                'nueva_hora'            => 'nullable',
+                'solicitante'           => 'nullable|string|max:120',
+                'cambiar_lugar'         => 'nullable|boolean',
+                'nueva_sucursal'        => 'nullable|integer|exists:sucursales,id_sucursal',
+                'nueva_sucursal_nombre' => 'nullable|string|max:150',
+                'motivo'                => 'nullable|string|max:500',
             ]);
 
             $res = DB::table('reservaciones')->where('id_reservacion', $data['id_reservacion'])->first();
@@ -399,6 +456,21 @@ class ContratoController extends ContratoBaseController
             if (!$res) {
                 return response()->json(['error' => 'Reservación no encontrada'], 404);
             }
+
+            $solicitante  = $data['solicitante'] ?? 'No especificado';
+            $cambiarLugar = !empty($data['cambiar_lugar']);
+            $lugarNombre  = $data['nueva_sucursal_nombre'] ?? null;
+
+            // La tabla contrato_cambio_fecha no tiene columnas dedicadas para solicitante/lugar,
+            // así que guardamos el detalle de forma legible dentro de "motivo".
+            $motivoPartes = ["Solicita: {$solicitante}"];
+            if ($cambiarLugar && $lugarNombre) {
+                $motivoPartes[] = "Cambio de lugar de entrega a: {$lugarNombre}";
+            }
+            if (!empty($data['motivo'])) {
+                $motivoPartes[] = "Nota: {$data['motivo']}";
+            }
+            $motivoFinal = implode(' | ', $motivoPartes);
 
             $token = bin2hex(random_bytes(32));
 
@@ -408,7 +480,7 @@ class ContratoController extends ContratoBaseController
                 'hora_anterior'    => $res->hora_retiro,
                 'fecha_solicitada' => $data['nueva_fecha'],
                 'hora_solicitada'  => $data['nueva_hora'],
-                'motivo'           => $data['motivo'] ?? null,
+                'motivo'           => $motivoFinal,
                 'token'            => $token,
                 'estado'           => 'pendiente',
                 'created_at'       => now(),
@@ -418,21 +490,129 @@ class ContratoController extends ContratoBaseController
             $linkAprobar  = url("/admin/contrato/cambio-fecha/aprobar/{$token}");
             $linkRechazar = url("/admin/contrato/cambio-fecha/rechazar/{$token}");
 
+            $filaLugar = $cambiarLugar && $lugarNombre
+                ? "<tr>
+                        <td style='padding:6px 0;color:#64748b;font-size:14px;'>Nuevo lugar de entrega</td>
+                        <td style='padding:6px 0;color:#0f172a;font-size:14px;font-weight:600;text-align:right;'>{$lugarNombre}</td>
+                    </tr>"
+                : "";
+
+            $motivoTexto = $data['motivo'] ?? 'No especificado';
+
             $html = "
-                <div style='font-family:sans-serif;'>
-                    <h2 style='color:#D6121F;'>Solicitud de cambio de fecha</h2>
-                    <p><b>Reservación:</b> {$res->codigo}</p>
-                    <p><b>Cliente:</b> {$res->nombre_cliente}</p>
-                    <p><b>Fecha actual:</b> {$res->fecha_inicio} {$res->hora_retiro}</p>
-                    <p><b>Nueva fecha solicitada:</b> {$data['nueva_fecha']} {$data['nueva_hora']}</p>
-                    <p><b>Motivo:</b> " . ($data['motivo'] ?? 'No especificado') . "</p>
-                    <p><a href='{$linkAprobar}' style='background:#16a34a;color:#fff;padding:10px 14px;border-radius:6px;text-decoration:none;'>Aprobar cambio</a></p>
-                    <p><a href='{$linkRechazar}' style='background:#dc2626;color:#fff;padding:10px 14px;border-radius:6px;text-decoration:none;'>Rechazar solicitud</a></p>
-                </div>
+            <!DOCTYPE html>
+            <html lang='es'>
+            <head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'></head>
+            <body style='margin:0;padding:0;background:#f1f5f9;'>
+                <table role='presentation' width='100%' cellpadding='0' cellspacing='0' style='background:#f1f5f9;padding:24px 0;'>
+                    <tr><td align='center'>
+                        <table role='presentation' width='560' cellpadding='0' cellspacing='0'
+                            style='width:560px;max-width:92%;background:#ffffff;border-radius:16px;overflow:hidden;
+                            box-shadow:0 10px 30px rgba(15,23,42,.12);font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;'>
+
+                            <!-- Encabezado -->
+                            <tr>
+                                <td style='background:linear-gradient(135deg,#D6121F 0%,#a10d17 100%);padding:28px 32px;'>
+                                    <table role='presentation' width='100%' cellpadding='0' cellspacing='0'>
+                                        <tr>
+                                            <td style='color:#fff;font-size:13px;letter-spacing:.08em;
+                                                text-transform:uppercase;opacity:.85;'>Viajero Car Rental</td>
+                                        </tr>
+                                        <tr>
+                                            <td style='color:#fff;font-size:22px;font-weight:700;padding-top:6px;'>
+                                                Solicitud de cambio de fecha
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+
+                            <!-- Aviso -->
+                            <tr>
+                                <td style='padding:24px 32px 8px;'>
+                                    <p style='margin:0;color:#334155;font-size:15px;line-height:1.5;'>
+                                        Se ha solicitado modificar la fecha de entrega de una reservación.
+                                        Revisa los datos y autoriza o rechaza el cambio.
+                                    </p>
+                                </td>
+                            </tr>
+
+                            <!-- Datos -->
+                            <tr>
+                                <td style='padding:12px 32px;'>
+                                    <table role='presentation' width='100%' cellpadding='0' cellspacing='0'
+                                        style='background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:8px 16px;'>
+                                        <tr>
+                                            <td style='padding:6px 0;color:#64748b;font-size:14px;'>Reservación</td>
+                                            <td style='padding:6px 0;color:#0f172a;font-size:14px;font-weight:600;text-align:right;'>{$res->codigo}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style='padding:6px 0;color:#64748b;font-size:14px;'>Cliente</td>
+                                            <td style='padding:6px 0;color:#0f172a;font-size:14px;font-weight:600;text-align:right;'>{$res->nombre_cliente}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style='padding:6px 0;color:#64748b;font-size:14px;'>Solicitado por</td>
+                                            <td style='padding:6px 0;color:#0f172a;font-size:14px;font-weight:600;text-align:right;'>{$solicitante}</td>
+                                        </tr>
+                                        <tr><td colspan='2' style='border-top:1px dashed #cbd5e1;padding:4px 0;'></td></tr>
+                                        <tr>
+                                            <td style='padding:6px 0;color:#64748b;font-size:14px;'>Fecha actual</td>
+                                            <td style='padding:6px 0;color:#0f172a;font-size:14px;text-align:right;'>{$res->fecha_inicio} {$res->hora_retiro}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style='padding:6px 0;color:#64748b;font-size:14px;'>Nueva fecha</td>
+                                            <td style='padding:6px 0;color:#16a34a;font-size:14px;font-weight:700;text-align:right;'>{$data['nueva_fecha']} {$data['nueva_hora']}</td>
+                                        </tr>
+                                        {$filaLugar}
+                                        <tr>
+                                            <td style='padding:6px 0;color:#64748b;font-size:14px;vertical-align:top;'>Motivo</td>
+                                            <td style='padding:6px 0;color:#0f172a;font-size:14px;text-align:right;'>{$motivoTexto}</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+
+                            <!-- Botones -->
+                            <tr>
+                                <td style='padding:20px 32px 8px;'>
+                                    <table role='presentation' width='100%' cellpadding='0' cellspacing='0'>
+                                        <tr>
+                                            <td style='padding:6px;' width='50%'>
+                                                <a href='{$linkAprobar}' style='display:block;text-align:center;background:#16a34a;
+                                                    color:#fff;padding:14px 0;border-radius:10px;text-decoration:none;
+                                                    font-size:15px;font-weight:600;'>&#10004; Aprobar cambio</a>
+                                            </td>
+                                            <td style='padding:6px;' width='50%'>
+                                                <a href='{$linkRechazar}' style='display:block;text-align:center;background:#fff;
+                                                    color:#dc2626;padding:14px 0;border-radius:10px;text-decoration:none;
+                                                    font-size:15px;font-weight:600;border:1px solid #fecaca;'>&#10005; Rechazar</a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+
+                            <!-- Pie -->
+                            <tr>
+                                <td style='padding:16px 32px 28px;'>
+                                    <p style='margin:0;color:#94a3b8;font-size:12px;line-height:1.5;text-align:center;'>
+                                        Este es un correo automático del sistema Viajero Car Rental.
+                                        Si no reconoces esta solicitud, puedes ignorarlo.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td></tr>
+                </table>
+            </body>
+            </html>
             ";
 
-            Mail::html($html, function ($message) {
-                $message->to(env('ADMIN_NOTIFICATION_EMAIL'))
+            // CORREO al aue se mandará la solicitud de cambio de fecha
+            $correoDestino = 'administrador@viajerocarental.com';
+
+            Mail::html($html, function ($message) use ($correoDestino) {
+                $message->to($correoDestino)
                     ->from(config('mail.from.address'), 'Sistema Viajero Car Rental')
                     ->subject('Solicitud de cambio de fecha');
             });
@@ -453,7 +633,11 @@ class ContratoController extends ContratoBaseController
                 ->first();
 
             if (!$sol) {
-                return "Solicitud inválida o ya procesada.";
+                return $this->paginaResultadoCambio(
+                    'rechazado',
+                    'Solicitud no válida',
+                    'Esta solicitud ya fue procesada o el enlace no es válido.'
+                );
             }
 
             DB::table('reservaciones')
@@ -482,10 +666,18 @@ class ContratoController extends ContratoBaseController
                 ->where('id', $sol->id)
                 ->update(['estado' => 'aprobado', 'autorizado_por' => 'superadmin', 'fecha_autorizacion' => now()]);
 
-            return "<h2 style='font-family:sans-serif;color:#16a34a'>Cambio aprobado ✔</h2><p>La fecha ha sido actualizada exitosamente.</p>";
+            return $this->paginaResultadoCambio(
+                'aprobado',
+                'Cambio aprobado',
+                'La fecha de entrega se actualizó correctamente en la reservación.'
+            );
         } catch (\Throwable $e) {
             Log::error("Error en aprobarCambioFecha: " . $e->getMessage());
-            return "Error interno.";
+            return $this->paginaResultadoCambio(
+                'rechazado',
+                'Ocurrió un error',
+                'No se pudo procesar la solicitud. Intenta nuevamente más tarde.'
+            );
         }
     }
 
@@ -498,17 +690,29 @@ class ContratoController extends ContratoBaseController
                 ->first();
 
             if (!$sol) {
-                return "Solicitud inválida o ya procesada.";
+                return $this->paginaResultadoCambio(
+                    'rechazado',
+                    'Solicitud no válida',
+                    'Esta solicitud ya fue procesada o el enlace no es válido.'
+                );
             }
 
             DB::table('contrato_cambio_fecha')
                 ->where('id', $sol->id)
                 ->update(['estado' => 'rechazado', 'autorizado_por' => 'superadmin', 'fecha_autorizacion' => now()]);
 
-            return "<h2 style='font-family:sans-serif;color:#dc2626'>Cambio rechazado ❌</h2><p>No se realizaron modificaciones en la reservación.</p>";
+            return $this->paginaResultadoCambio(
+                'rechazado',
+                'Solicitud rechazada',
+                'No se realizaron modificaciones en la reservación.'
+            );
         } catch (\Throwable $e) {
             Log::error("Error en rechazarCambioFecha: " . $e->getMessage());
-            return "Error interno.";
+            return $this->paginaResultadoCambio(
+                'rechazado',
+                'Ocurrió un error',
+                'No se pudo procesar la solicitud. Intenta nuevamente más tarde.'
+            );
         }
     }
 
@@ -1124,62 +1328,63 @@ class ContratoController extends ContratoBaseController
     }
 
     /**
- * 🔔 Obtiene los comentarios de la reservación (campanita del contrato)
- */
-public function obtenerComentarios($idReservacion)
-{
-    try {
-        $comentarios = DB::table('reservaciones')
-            ->where('id_reservacion', $idReservacion)
-            ->value('comentarios');
+     * 🔔 Obtiene los comentarios de la reservación (campanita del contrato)
+     */
+    public function obtenerComentarios($idReservacion)
+    {
+        try {
+            $comentarios = DB::table('reservaciones')
+                ->where('id_reservacion', $idReservacion)
+                ->value('comentarios');
 
-        return response()->json([
-            'success'     => true,
-            'comentarios' => $comentarios ?? ''
-        ]);
-    } catch (\Throwable $e) {
-        return response()->json(['success' => false, 'message' => $e->getMessage(), 'comentarios' => ''], 500);
+            return response()->json([
+                'success'     => true,
+                'comentarios' => $comentarios ?? ''
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage(), 'comentarios' => ''], 500);
+        }
     }
-}
 
-/**
- * 🔔 Guarda/actualiza los comentarios de la reservación
- */
-public function guardarComentarios(Request $request)
-{
-    try {
-        $data = $request->validate([
-            'id_reservacion' => 'required',
-            'comentarios'    => 'nullable|string'
-        ]);
+    /**
+     * 🔔 Guarda/actualiza los comentarios de la reservación
+     */
+    public function guardarComentarios(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'id_reservacion' => 'required',
+                'comentarios'    => 'nullable|string'
+            ]);
 
-        DB::table('reservaciones')
-            ->where('id_reservacion', $data['id_reservacion'])
-            ->update(['comentarios' => $data['comentarios'] ?? '', 'updated_at' => now()]);
+            DB::table('reservaciones')
+                ->where('id_reservacion', $data['id_reservacion'])
+                ->update(['comentarios' => $data['comentarios'] ?? '', 'updated_at' => now()]);
 
-        return response()->json(['success' => true]);
-    } catch (\Throwable $e) {
-        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return response()->json(['success' => true]);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
-}
-/**
- * 🏢 Actualiza la sucursal de devolución de la reservación (select paso 1)
- */
-public function actualizarSucursalDevolucion(Request $request)
-{
-    try {
-        $data = $request->validate([
-            'id_reservacion'   => 'required',
-            'sucursal_entrega' => 'required|integer|exists:sucursales,id_sucursal',
-        ]);
 
-        DB::table('reservaciones')
-            ->where('id_reservacion', $data['id_reservacion'])
-            ->update(['sucursal_entrega' => $data['sucursal_entrega'], 'updated_at' => now()]);
+    /**
+     * 🏢 Actualiza la sucursal de devolución de la reservación (select paso 1)
+     */
+    public function actualizarSucursalDevolucion(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'id_reservacion'   => 'required',
+                'sucursal_entrega' => 'required|integer|exists:sucursales,id_sucursal',
+            ]);
 
-        return response()->json(['success' => true]);
-    } catch (\Throwable $e) {
-        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            DB::table('reservaciones')
+                ->where('id_reservacion', $data['id_reservacion'])
+                ->update(['sucursal_entrega' => $data['sucursal_entrega'], 'updated_at' => now()]);
+
+            return response()->json(['success' => true]);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
-}
 }
