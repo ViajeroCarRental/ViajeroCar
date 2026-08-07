@@ -18,15 +18,26 @@ class ContratosAbiertosController extends Controller
 
     public function api(Request $req)
 {
-    $size = intval($req->size ?? 10);
-    $page = intval($req->page ?? 1);
+    $size = max(1, min(100, intval($req->size ?? 10)));
+    $page = max(1, intval($req->page ?? 1));
     $q    = trim($req->q ?? '');
     $fechaCierre = trim($req->fecha_cierre ?? '');
+    $categoria = trim($req->categoria ?? '');
+    $oficina = trim($req->oficina ?? '');
+    $estatus = trim($req->estatus ?? '');
+
+    $estadosPermitidos = [
+        'abierto',
+        'pendiente',
+        'cierre pendiente',
+        'cierre_pendiente',
+    ];
 
     $query = DB::table('contratos AS c')
         ->join('reservaciones AS r', 'c.id_reservacion', '=', 'r.id_reservacion')
         ->leftJoin('categorias_carros AS cat', 'r.id_categoria', '=', 'cat.id_categoria')
         ->leftJoin('ubicaciones_servicio AS us', 'r.delivery_ubicacion', '=', 'us.id_ubicacion')
+        ->leftJoin('sucursales AS sr', 'r.sucursal_retiro', '=', 'sr.id_sucursal')
         ->select(
     'c.id_contrato',
     'c.numero_contrato',
@@ -65,7 +76,7 @@ class ContratosAbiertosController extends Controller
 )
 
 
-        ->where('c.estado', 'abierto');
+        ->whereIn(DB::raw('LOWER(TRIM(c.estado))'), $estadosPermitidos);
 
     if ($q !== '') {
         $query->where(function ($w) use ($q) {
@@ -84,7 +95,48 @@ class ContratosAbiertosController extends Controller
     if ($fechaCierre !== '') {
         $query->whereDate('r.fecha_fin', $fechaCierre);
     }
-    
+
+    if ($oficina === '__otras__') {
+        // "Otras" agrupa los regresos con servicio de drop off.
+        $query->whereExists(function ($subquery) {
+            $subquery->select(DB::raw(1))
+                ->from('reservacion_servicio AS rs_filtro')
+                ->whereColumn('rs_filtro.id_reservacion', 'r.id_reservacion')
+                ->where('rs_filtro.id_servicio', 11);
+        });
+    } elseif ($oficina !== '') {
+        // Una sucursal y un drop off son opciones excluyentes en este filtro.
+        $query->where('r.sucursal_retiro', $oficina)
+            ->whereNotExists(function ($subquery) {
+                $subquery->select(DB::raw(1))
+                    ->from('reservacion_servicio AS rs_filtro')
+                    ->whereColumn('rs_filtro.id_reservacion', 'r.id_reservacion')
+                    ->where('rs_filtro.id_servicio', 11);
+            });
+    }
+
+    if ($estatus !== '') {
+        $query->whereRaw('LOWER(TRIM(c.estado)) = ?', [strtolower($estatus)]);
+    }
+
+    $conteoCategorias = (clone $query)
+        ->select([
+            DB::raw("COALESCE(cat.codigo, 'Sin categoría') AS categoria"),
+            DB::raw('COUNT(DISTINCT c.id_contrato) AS total'),
+        ])
+        ->groupBy('cat.codigo')
+        ->orderBy('cat.codigo', 'ASC')
+        ->get();
+
+    $totalFiltrado = $conteoCategorias->sum('total');
+
+    if ($categoria !== '') {
+        if ($categoria === 'Sin categoría') {
+            $query->whereNull('cat.codigo');
+        } else {
+            $query->where('cat.codigo', $categoria);
+        }
+    }
 
     $total = (clone $query)
         ->distinct()
@@ -98,11 +150,73 @@ class ContratosAbiertosController extends Controller
         ->take($size)
         ->get();
 
+    // Un contrato está vencido únicamente cuando ya pasó su fecha y hora
+    // programadas de checkout. La comparación usa la zona horaria de Laravel.
+    $zonaHoraria = config('app.timezone', 'America/Mexico_City');
+    $ahora = Carbon::now($zonaHoraria);
+
+    $rows->transform(function ($row) use ($ahora, $zonaHoraria) {
+        $row->es_vencido = false;
+
+        if (empty($row->fecha_fin) || empty($row->hora_entrega)) {
+            return $row;
+        }
+
+        try {
+            $checkout = Carbon::parse(
+                $row->fecha_fin . ' ' . $row->hora_entrega,
+                $zonaHoraria
+            );
+
+            $row->es_vencido = $checkout->lt($ahora);
+        } catch (\Throwable $e) {
+            // Si algún registro tiene una fecha u hora inválida, se muestra
+            // normalmente y no se interrumpe la carga del resto de la tabla.
+            $row->es_vencido = false;
+        }
+
+        return $row;
+    });
+
+    $oficinasFiltro = DB::table('contratos AS cf')
+        ->join('reservaciones AS rf', 'cf.id_reservacion', '=', 'rf.id_reservacion')
+        ->join('sucursales AS sf', 'rf.sucursal_retiro', '=', 'sf.id_sucursal')
+        ->whereIn(DB::raw('LOWER(TRIM(cf.estado))'), $estadosPermitidos)
+        ->select('sf.id_sucursal AS id', 'sf.nombre')
+        ->distinct()
+        ->orderBy('sf.nombre', 'ASC')
+        ->get();
+
+    $oficinasFiltro->push((object) [
+        'id' => '__otras__',
+        'nombre' => 'Otras',
+    ]);
+
+    $estatusFiltro = DB::table('contratos AS cf')
+        ->whereIn(DB::raw('LOWER(TRIM(cf.estado))'), $estadosPermitidos)
+        ->selectRaw('LOWER(TRIM(cf.estado)) AS valor')
+        ->distinct()
+        ->orderBy('valor', 'ASC')
+        ->get()
+        ->map(function ($item) {
+            return [
+                'valor' => $item->valor,
+                'etiqueta' => ucwords(str_replace('_', ' ', $item->valor)),
+            ];
+        })
+        ->values();
+
     return response()->json([
         'data' => $rows,
         'total' => $total,
         'page' => $page,
         'last_page' => max(1, (int) ceil($total / $size)),
+        'conteo_categorias' => $conteoCategorias,
+        'total_filtrado' => $totalFiltrado,
+        'filtros' => [
+            'oficinas' => $oficinasFiltro,
+            'estatus' => $estatusFiltro,
+        ],
     ]);
 }
 

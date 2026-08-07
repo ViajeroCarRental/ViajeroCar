@@ -7,10 +7,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const next = document.getElementById("next");
     const pgInfo = document.getElementById("pgInfo");
     const filtroFechaCierre = document.getElementById("filtroFechaCierre");
+    const filtroOficina = document.getElementById("filtroOficina");
+    const filtroEstatus = document.getElementById("filtroEstatus");
+    const btnLimpiarFiltros = document.getElementById("btnLimpiarFiltros");
+    const categoryFilters = document.getElementById("categoryFilters");
 
 
     let page = 1;
     let lastPage = 1;
+    let selectedCategory = "";
 
     // ============================================================
     // Cargar datos principales
@@ -48,17 +53,54 @@ document.addEventListener("DOMContentLoaded", () => {
             .replaceAll("'", "&#039;");
     }
 
+    function renderCategoryFilters(counts = [], total = 0) {
+        if (!categoryFilters) return;
+        const options = [
+            { categoria: "", total, label: "Todas" },
+            ...counts.map(item => ({
+                categoria: String(item.categoria ?? ""),
+                total: Number(item.total ?? 0),
+                label: String(item.categoria ?? "Sin categoría")
+            }))
+        ];
+        categoryFilters.innerHTML = options.map(item => {
+            const active = item.categoria === selectedCategory ? " is-active" : "";
+            return `<button class="category-chip${active}" type="button" data-category="${escapeHtml(item.categoria)}"><span>${escapeHtml(item.label)}</span><strong>${item.total}</strong></button>`;
+        }).join("");
+    }
+
+    function renderSelectOptions(select, items, emptyLabel, valueKey, labelKey) {
+        if (!select) return;
+
+        const currentValue = select.value;
+        select.innerHTML = [
+            `<option value="">${escapeHtml(emptyLabel)}</option>`,
+            ...items.map(item => `
+                <option value="${escapeHtml(item[valueKey])}">
+                    ${escapeHtml(item[labelKey])}
+                </option>
+            `)
+        ].join("");
+
+        if ([...select.options].some(option => option.value === currentValue)) {
+            select.value = currentValue;
+        }
+    }
+
     function loadData() {
 
         tbody.innerHTML = `
-            <tr><td colspan="9" style="text-align:center;padding:20px">Cargando…</td></tr>
+            <tr><td colspan="10" style="text-align:center;padding:20px">Cargando…</td></tr>
         `;
  
         const params = new URLSearchParams({
             q: search.value,
             size: size.value,
             page: page,
-            fecha_cierre: filtroFechaCierre?.value ?? ""
+            fecha_cierre: filtroFechaCierre?.value ?? "",
+            categoria: selectedCategory,
+            oficina: filtroOficina?.value ?? "",
+            estatus: filtroEstatus?.value ?? ""
         });
 
         fetch(`/api/contratos-abiertos?${params.toString()}`)
@@ -68,13 +110,33 @@ document.addEventListener("DOMContentLoaded", () => {
                 lastPage = json.last_page;
                 pgInfo.textContent = `Página ${page} de ${lastPage}`;
                 tbody.innerHTML = "";
+                renderCategoryFilters(json.conteo_categorias ?? [], Number(json.total_filtrado ?? 0));
+                renderSelectOptions(
+                    filtroOficina,
+                    json.filtros?.oficinas ?? [],
+                    "Todas",
+                    "id",
+                    "nombre"
+                );
+                renderSelectOptions(
+                    filtroEstatus,
+                    json.filtros?.estatus ?? [],
+                    "Todos",
+                    "valor",
+                    "etiqueta"
+                );
 
                 json.data.forEach(r => {
 
     const tr = document.createElement("tr");
+    const esVencido = Boolean(r.es_vencido);
 
     // 🔒 Guardamos el id_contrato real en la fila (oculto)
     tr.dataset.id = r.id_contrato;
+
+    if (esVencido) {
+        tr.classList.add("contract-expired");
+    }
 
     const nombreUsuario = `${r.nombre ?? ""} ${r.apellidos ?? ""}`.trim() || "—";
 
@@ -94,10 +156,16 @@ document.addEventListener("DOMContentLoaded", () => {
             <button class="btnToggle" type="button" aria-label="Ver detalles">+</button>
         </td>
 
-        <td>${formatDate(r.fecha_fin)}</td>
+        <td>
+            <div class="checkout-date-cell">
+                <span>${formatDate(r.fecha_fin)}</span>
+                ${esVencido ? '<span class="expired-badge">Vencido</span>' : ''}
+            </div>
+        </td>
         <td>${formatTime(r.hora_entrega)}</td>
         <td>${escapeHtml(r.numero_contrato ?? "—")}</td>
         <td>${escapeHtml(dropoff)}</td>
+        <td><strong class="category-code">${escapeHtml(r.categoria ?? "—")}</strong></td>
         <td>${escapeHtml(nombreUsuario)}</td>
         <td>$${Number(r.tarifa_diaria ?? 0).toFixed(2)}</td>
         <td>${Number(r.dias_renta ?? 1)}</td>
@@ -111,7 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .catch(err => {
                 console.error("❌ ERROR FETCH:", err);
                 tbody.innerHTML = `
-                    <tr><td colspan="9" style="text-align:center;padding:20px;color:red">
+                    <tr><td colspan="10" style="text-align:center;padding:20px;color:red">
                         Error al cargar datos
                     </td></tr>`;
             });
@@ -198,7 +266,7 @@ const id  = tr.dataset.id;
             };
 
             row.innerHTML = `
-    <td colspan="9">
+    <td colspan="10">
         <div class="reserva-summary contrato-summary">
 
             <div class="summary-contract-head summary-full">
@@ -532,6 +600,34 @@ const id  = tr.dataset.id;
     });
 
     filtroFechaCierre?.addEventListener("change", () => {
+        page = 1;
+        loadData();
+    });
+
+    filtroOficina?.addEventListener("change", () => {
+        page = 1;
+        loadData();
+    });
+
+    filtroEstatus?.addEventListener("change", () => {
+        page = 1;
+        loadData();
+    });
+
+    btnLimpiarFiltros?.addEventListener("click", () => {
+        search.value = "";
+        filtroFechaCierre.value = "";
+        filtroOficina.value = "";
+        filtroEstatus.value = "";
+        selectedCategory = "";
+        page = 1;
+        loadData();
+    });
+
+    categoryFilters?.addEventListener("click", (event) => {
+        const chip = event.target.closest(".category-chip");
+        if (!chip) return;
+        selectedCategory = chip.dataset.category ?? "";
         page = 1;
         loadData();
     });
